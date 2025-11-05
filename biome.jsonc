@@ -20,6 +20,18 @@
 	"formatter": {
 		"enabled": true
 	},
+	"javascript": {
+		"assist": {
+			"enabled": true
+		},
+		"formatter": {
+			"enabled": true,
+			"semicolons": "asNeeded"
+		},
+		"linter": {
+			"enabled": true
+		}
+	},
 	"linter": {
 		"enabled": true,
 		"rules": {
@@ -37,17 +49,6 @@
 	},
 	"html": {
 		"formatter": {
-			"enabled": true
-		}
-	},
-	"javascript": {
-		"assist": {
-			"enabled": true
-		},
-		"formatter": {
-			"enabled": true
-		},
-		"linter": {
 			"enabled": true
 		}
 	},
