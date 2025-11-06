@@ -20,7 +20,7 @@ export default function RootLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
 	return (
-		<html className={`${geist.variable}`} lang="en">
+		<html className={`${geist.variable} dark`} lang="en">
 			<body>
 				<TRPCReactProvider>{children}</TRPCReactProvider>
 			</body>
