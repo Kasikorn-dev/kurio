@@ -1,18 +1,15 @@
 import { api } from "@/trpc/react"
 
+/**
+ * Hook for fetching kurios list
+ * For mutations (create, update, delete), create them in components with specific options
+ */
 export function useKurio() {
-	const getAll = api.kurio.getAll.useQuery()
-	const create = api.kurio.create.useMutation()
-	const update = api.kurio.update.useMutation()
-	const deleteKurio = api.kurio.delete.useMutation()
+	const { data: kurios, isLoading, refetch } = api.kurio.getAll.useQuery()
 
 	return {
-		kurios: getAll.data,
-		isLoading: getAll.isLoading,
-		create,
-		update,
-		delete: deleteKurio,
-		refetch: getAll.refetch,
+		kurios,
+		isLoading,
+		refetch,
 	}
 }
-

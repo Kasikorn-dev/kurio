@@ -104,4 +104,3 @@ Return the response as JSON with this structure:
 		throw error
 	}
 }
-

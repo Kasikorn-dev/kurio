@@ -1,14 +1,8 @@
+import { desc, eq } from "drizzle-orm"
 import { z } from "zod"
-import { eq, desc } from "drizzle-orm"
 
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc"
-import {
-	kurios,
-	kurioResources,
-	units,
-	lessons,
-	exercises,
-} from "@/server/db/schemas"
+import { kurioResources, kurios } from "@/server/db/schemas"
 
 export const kurioRouter = createTRPCRouter({
 	getAll: protectedProcedure.query(async ({ ctx }) => {

@@ -59,4 +59,3 @@ export const useKurioStore = create<KurioFormState>((set) => ({
 	setAutoGenThreshold: (autoGenThreshold) => set({ autoGenThreshold }),
 	reset: () => set(initialState),
 }))
-

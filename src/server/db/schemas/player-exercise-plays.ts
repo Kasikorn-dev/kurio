@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm"
 import { createTable } from "../lib/utils"
-import { userProfiles } from "./user-profiles"
 import { exercises } from "./exercises"
+import { userProfiles } from "./user-profiles"
 
 export const playerExercisePlays = createTable("player_exercise_play", (d) => ({
 	id: d.uuid().primaryKey().defaultRandom(),

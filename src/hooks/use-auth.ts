@@ -1,12 +1,12 @@
 "use client"
 
-import { createClient } from "@/lib/supabase/client"
-import { api } from "@/trpc/react"
 import { useRouter } from "next/navigation"
+import { createBrowserSupabaseClient } from "@/lib/supabase/client"
+import { api } from "@/trpc/react"
 
 export function useAuth() {
 	const router = useRouter()
-	const supabase = createClient()
+	const supabase = createBrowserSupabaseClient()
 	const { data: profile } = api.auth.getProfile.useQuery()
 	const updateProfile = api.auth.updateProfile.useMutation()
 
@@ -22,4 +22,3 @@ export function useAuth() {
 		logout,
 	}
 }
-

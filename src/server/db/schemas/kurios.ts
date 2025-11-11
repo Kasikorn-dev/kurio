@@ -1,9 +1,9 @@
 import { relations } from "drizzle-orm"
 import { pgEnum } from "drizzle-orm/pg-core"
 import { createTable } from "../lib/utils"
-import { userProfiles } from "./user-profiles"
 import { kurioResources } from "./kurio-resources"
 import { units } from "./units"
+import { userProfiles } from "./user-profiles"
 
 export const kurioDifficultyLevelEnum = pgEnum("kurio_difficulty_level", [
 	"easy",

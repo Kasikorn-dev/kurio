@@ -1,9 +1,11 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { useKurioStore } from "@/stores/kurio-store"
 import { api } from "@/trpc/react"
@@ -27,6 +29,9 @@ export function KurioForm() {
 	} = useKurioStore()
 
 	const createKurio = api.kurio.create.useMutation({
+		onError: (error) => {
+			toast.error(error.message)
+		},
 		onSuccess: () => {
 			reset()
 			router.push("/kurios")
@@ -53,25 +58,25 @@ export function KurioForm() {
 	}
 
 	return (
-		<form onSubmit={handleSubmit} className="flex flex-col gap-6">
+		<form className="flex flex-col gap-6" onSubmit={handleSubmit}>
 			<div className="flex flex-col gap-2">
 				<Label htmlFor="title">Title</Label>
 				<Input
+					disabled={createKurio.isPending}
 					id="title"
-					value={title}
 					onChange={(e) => setTitle(e.target.value)}
 					required
-					disabled={createKurio.isPending}
+					value={title}
 				/>
 			</div>
 
 			<div className="flex flex-col gap-2">
 				<Label htmlFor="description">Description</Label>
 				<Textarea
-					id="description"
-					value={description}
-					onChange={(e) => setDescription(e.target.value)}
 					disabled={createKurio.isPending}
+					id="description"
+					onChange={(e) => setDescription(e.target.value)}
+					value={description}
 				/>
 			</div>
 
@@ -80,10 +85,10 @@ export function KurioForm() {
 			<div className="flex flex-col gap-2">
 				<Label>
 					<input
-						type="checkbox"
 						checked={autoGenEnabled}
-						onChange={(e) => setAutoGenEnabled(e.target.checked)}
 						disabled={createKurio.isPending}
+						onChange={(e) => setAutoGenEnabled(e.target.checked)}
+						type="checkbox"
 					/>
 					<span className="ml-2">Enable Auto-generation</span>
 				</Label>
@@ -91,15 +96,15 @@ export function KurioForm() {
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="threshold">Auto-gen Threshold (%)</Label>
 						<Input
+							disabled={createKurio.isPending}
 							id="threshold"
-							type="number"
-							min="0"
 							max="100"
-							value={autoGenThreshold}
+							min="0"
 							onChange={(e) =>
 								setAutoGenThreshold(Number.parseInt(e.target.value, 10))
 							}
-							disabled={createKurio.isPending}
+							type="number"
+							value={autoGenThreshold}
 						/>
 					</div>
 				)}
@@ -107,10 +112,10 @@ export function KurioForm() {
 
 			<InputSelector />
 
-			<Button type="submit" disabled={createKurio.isPending}>
+			<Button disabled={createKurio.isPending} type="submit">
+				{createKurio.isPending && <Spinner className="mr-2 size-4" />}
 				{createKurio.isPending ? "Creating..." : "Create Kurio"}
 			</Button>
 		</form>
 	)
 }
-

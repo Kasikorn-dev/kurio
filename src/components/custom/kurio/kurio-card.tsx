@@ -1,12 +1,27 @@
 "use client"
 
 import Link from "next/link"
-import { api } from "@/trpc/react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card"
 
-export function KurioCard({ kurio }: { kurio: { id: string; title: string; description: string | null; difficultyLevel: string; status: string } }) {
+export function KurioCard({
+	kurio,
+}: {
+	kurio: {
+		id: string
+		title: string
+		description: string | null
+		difficultyLevel: string
+		status: string
+	}
+}) {
 	return (
 		<Card>
 			<CardHeader>
@@ -19,12 +34,22 @@ export function KurioCard({ kurio }: { kurio: { id: string; title: string; descr
 						<Badge>{kurio.difficultyLevel}</Badge>
 						<Badge variant="outline">{kurio.status}</Badge>
 					</div>
-					<Link href={`/kurios/${kurio.id}`}>
-						<Button variant="outline">View</Button>
-					</Link>
+					<div className="flex gap-2">
+						{kurio.status === "ready" && (
+							<Link href={`/kurios/${kurio.id}/play`}>
+								<Button size="sm" variant="default">
+									Play
+								</Button>
+							</Link>
+						)}
+						<Link href={`/kurios/${kurio.id}`}>
+							<Button size="sm" variant="outline">
+								View
+							</Button>
+						</Link>
+					</div>
 				</div>
 			</CardContent>
 		</Card>
 	)
 }
-

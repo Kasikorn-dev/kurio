@@ -1,9 +1,9 @@
-import { createClient } from "@/lib/supabase/server"
-import { NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
+import { createServerSupabaseClient } from "@/lib/supabase/server"
 
 export async function POST(request: NextRequest) {
 	try {
-		const supabase = await createClient()
+		const supabase = await createServerSupabaseClient()
 		const {
 			data: { user },
 		} = await supabase.auth.getUser()
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 		const fileName = `${user.id}/${Date.now()}.${fileExt}`
 		const filePath = `kurio-resources/${fileName}`
 
-		const { data, error } = await supabase.storage
+		const { error } = await supabase.storage
 			.from("kurio-resources")
 			.upload(filePath, file)
 
@@ -40,11 +40,10 @@ export async function POST(request: NextRequest) {
 			path: filePath,
 			type: file.type,
 		})
-	} catch (error) {
+	} catch (_error) {
 		return NextResponse.json(
 			{ error: "Internal server error" },
 			{ status: 500 },
 		)
 	}
 }
-

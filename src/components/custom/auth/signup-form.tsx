@@ -1,12 +1,11 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { api } from "@/trpc/react"
+import { createBrowserSupabaseClient } from "@/lib/supabase/client"
 
 export function SignupForm() {
 	const router = useRouter()
@@ -15,7 +14,6 @@ export function SignupForm() {
 	const [displayName, setDisplayName] = useState("")
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
-	const createProfile = api.auth.createProfile.useMutation()
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -23,10 +21,15 @@ export function SignupForm() {
 		setError(null)
 
 		try {
-			const supabase = createClient()
+			const supabase = createBrowserSupabaseClient()
 			const { data, error: signUpError } = await supabase.auth.signUp({
 				email,
 				password,
+				options: {
+					data: {
+						display_name: displayName || undefined,
+					},
+				},
 			})
 
 			if (signUpError) {
@@ -35,60 +38,59 @@ export function SignupForm() {
 			}
 
 			if (data.user) {
-				// Create user profile
-				await createProfile.mutateAsync({
-					displayName: displayName || undefined,
-				})
-
+				// Profile will be created automatically by database trigger
+				// Trigger reads display_name from raw_user_meta_data
+				// No need to call createProfile mutation
 				router.push("/kurios")
 				router.refresh()
 			}
 		} catch (err) {
-			setError("An unexpected error occurred")
+			setError(
+				err instanceof Error ? err.message : "An unexpected error occurred",
+			)
 		} finally {
 			setIsLoading(false)
 		}
 	}
 
 	return (
-		<form onSubmit={handleSubmit} className="flex flex-col gap-4">
+		<form className="flex flex-col gap-4" onSubmit={handleSubmit}>
 			<div className="flex flex-col gap-2">
 				<Label htmlFor="displayName">Display Name</Label>
 				<Input
+					disabled={isLoading}
 					id="displayName"
+					onChange={(e) => setDisplayName(e.target.value)}
 					type="text"
 					value={displayName}
-					onChange={(e) => setDisplayName(e.target.value)}
-					disabled={isLoading}
 				/>
 			</div>
 			<div className="flex flex-col gap-2">
 				<Label htmlFor="email">Email</Label>
 				<Input
+					disabled={isLoading}
 					id="email"
-					type="email"
-					value={email}
 					onChange={(e) => setEmail(e.target.value)}
 					required
-					disabled={isLoading}
+					type="email"
+					value={email}
 				/>
 			</div>
 			<div className="flex flex-col gap-2">
 				<Label htmlFor="password">Password</Label>
 				<Input
+					disabled={isLoading}
 					id="password"
-					type="password"
-					value={password}
 					onChange={(e) => setPassword(e.target.value)}
 					required
-					disabled={isLoading}
+					type="password"
+					value={password}
 				/>
 			</div>
-			{error && <p className="text-sm text-destructive">{error}</p>}
-			<Button type="submit" disabled={isLoading}>
+			{error && <p className="text-destructive text-sm">{error}</p>}
+			<Button disabled={isLoading} type="submit">
 				{isLoading ? "Signing up..." : "Sign Up"}
 			</Button>
 		</form>
 	)
 }
-

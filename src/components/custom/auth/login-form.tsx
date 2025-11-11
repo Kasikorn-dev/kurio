@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { createBrowserSupabaseClient } from "@/lib/supabase/client"
 
 export function LoginForm() {
 	const router = useRouter()
@@ -20,12 +20,13 @@ export function LoginForm() {
 		setError(null)
 
 		try {
-			const supabase = createClient()
+			const supabase = createBrowserSupabaseClient()
 			const { error: signInError } = await supabase.auth.signInWithPassword({
 				email,
 				password,
 			})
 
+			console.log("signInError", signInError)
 			if (signInError) {
 				setError(signInError.message)
 				return
@@ -33,7 +34,7 @@ export function LoginForm() {
 
 			router.push("/kurios")
 			router.refresh()
-		} catch (err) {
+		} catch (_err) {
 			setError("An unexpected error occurred")
 		} finally {
 			setIsLoading(false)
@@ -41,34 +42,33 @@ export function LoginForm() {
 	}
 
 	return (
-		<form onSubmit={handleSubmit} className="flex flex-col gap-4">
+		<form className="flex flex-col gap-4" onSubmit={handleSubmit}>
 			<div className="flex flex-col gap-2">
 				<Label htmlFor="email">Email</Label>
 				<Input
+					disabled={isLoading}
 					id="email"
-					type="email"
-					value={email}
 					onChange={(e) => setEmail(e.target.value)}
 					required
-					disabled={isLoading}
+					type="email"
+					value={email}
 				/>
 			</div>
 			<div className="flex flex-col gap-2">
 				<Label htmlFor="password">Password</Label>
 				<Input
+					disabled={isLoading}
 					id="password"
-					type="password"
-					value={password}
 					onChange={(e) => setPassword(e.target.value)}
 					required
-					disabled={isLoading}
+					type="password"
+					value={password}
 				/>
 			</div>
-			{error && <p className="text-sm text-destructive">{error}</p>}
-			<Button type="submit" disabled={isLoading}>
+			{error && <p className="text-destructive text-sm">{error}</p>}
+			<Button disabled={isLoading} type="submit">
 				{isLoading ? "Signing in..." : "Sign In"}
 			</Button>
 		</form>
 	)
 }
-

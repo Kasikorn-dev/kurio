@@ -1,10 +1,10 @@
-import { createClient } from "@/lib/supabase/server"
+import { createServerSupabaseClient } from "@/lib/supabase/server"
 
 export async function uploadFile(
 	file: File,
 	path: string,
 ): Promise<{ url: string; path: string }> {
-	const supabase = await createClient()
+	const supabase = await createServerSupabaseClient()
 
 	const { data, error } = await supabase.storage
 		.from("kurio-resources")
@@ -25,7 +25,7 @@ export async function uploadFile(
 }
 
 export async function deleteFile(path: string): Promise<void> {
-	const supabase = await createClient()
+	const supabase = await createServerSupabaseClient()
 
 	const { error } = await supabase.storage
 		.from("kurio-resources")
@@ -35,4 +35,3 @@ export async function deleteFile(path: string): Promise<void> {
 		throw new Error(`Failed to delete file: ${error.message}`)
 	}
 }
-

@@ -1,17 +1,18 @@
 "use client"
 
+import { X } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
+import { useFileUpload } from "@/hooks/use-file-upload"
 import { useKurioStore } from "@/stores/kurio-store"
-import type { Resource } from "@/stores/kurio-store"
-import { X } from "lucide-react"
 
 export function InputSelector() {
-	const { resources, addResource, removeResource, updateResource } =
-		useKurioStore()
+	const { resources, addResource, removeResource } = useKurioStore()
+	const { uploadFile, isUploading } = useFileUpload()
 	const [newResourceType, setNewResourceType] = useState<
 		"text" | "file" | "image"
 	>("text")
@@ -28,18 +29,24 @@ export function InputSelector() {
 		setNewResourceContent("")
 	}
 
-	const handleAddFileResource = async (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleAddFileResource = async (
+		e: React.ChangeEvent<HTMLInputElement>,
+	) => {
 		const file = e.target.files?.[0]
 		if (!file) return
 
-		// File upload will be handled by upload API route
-		// For now, we'll just add a placeholder
-		addResource({
-			resourceType: file.type.startsWith("image/") ? "image" : "file",
-			resourceFileUrl: URL.createObjectURL(file),
-			resourceFileType: file.type,
-			orderIndex: resources.length,
-		})
+		const uploadResult = await uploadFile(file)
+		if (uploadResult) {
+			addResource({
+				resourceType: file.type.startsWith("image/") ? "image" : "file",
+				resourceFileUrl: uploadResult.url,
+				resourceFileType: file.type,
+				orderIndex: resources.length,
+			})
+		}
+
+		// Reset input
+		e.target.value = ""
 	}
 
 	return (
@@ -50,8 +57,8 @@ export function InputSelector() {
 			<div className="flex flex-col gap-2">
 				{resources.map((resource, index) => (
 					<div
-						key={index}
 						className="flex items-center gap-2 rounded-md border p-2"
+						key={index}
 					>
 						<div className="flex-1">
 							{resource.resourceType === "text" && (
@@ -63,10 +70,10 @@ export function InputSelector() {
 							)}
 						</div>
 						<Button
+							onClick={() => removeResource(index)}
+							size="icon"
 							type="button"
 							variant="ghost"
-							size="icon"
-							onClick={() => removeResource(index)}
 						>
 							<X className="h-4 w-4" />
 						</Button>
@@ -78,23 +85,23 @@ export function InputSelector() {
 			<div className="flex flex-col gap-2">
 				<div className="flex gap-2">
 					<Button
+						onClick={() => setNewResourceType("text")}
 						type="button"
 						variant="outline"
-						onClick={() => setNewResourceType("text")}
 					>
 						Add Text
 					</Button>
 					<Button
+						onClick={() => setNewResourceType("file")}
 						type="button"
 						variant="outline"
-						onClick={() => setNewResourceType("file")}
 					>
 						Add File
 					</Button>
 					<Button
+						onClick={() => setNewResourceType("image")}
 						type="button"
 						variant="outline"
-						onClick={() => setNewResourceType("image")}
 					>
 						Add Image
 					</Button>
@@ -103,29 +110,32 @@ export function InputSelector() {
 				{newResourceType === "text" && (
 					<div className="flex gap-2">
 						<Textarea
+							onChange={(e) => setNewResourceContent(e.target.value)}
 							placeholder="Enter text content..."
 							value={newResourceContent}
-							onChange={(e) => setNewResourceContent(e.target.value)}
 						/>
-						<Button type="button" onClick={handleAddTextResource}>
+						<Button onClick={handleAddTextResource} type="button">
 							Add
 						</Button>
 					</div>
 				)}
 
 				{(newResourceType === "file" || newResourceType === "image") && (
-					<Input
-						type="file"
-						accept={
-							newResourceType === "image"
-								? "image/*"
-								: "application/pdf,.doc,.docx,.txt"
-						}
-						onChange={handleAddFileResource}
-					/>
+					<div className="flex items-center gap-2">
+						<Input
+							accept={
+								newResourceType === "image"
+									? "image/*"
+									: "application/pdf,.doc,.docx,.txt"
+							}
+							disabled={isUploading}
+							onChange={handleAddFileResource}
+							type="file"
+						/>
+						{isUploading && <Spinner className="size-4" />}
+					</div>
 				)}
 			</div>
 		</div>
 	)
 }
-

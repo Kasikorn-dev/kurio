@@ -11,8 +11,9 @@
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
 		"db:push": "drizzle-kit push",
+		"db:setup": "node supabase/scripts/setup-db.mjs",
 		"db:studio": "drizzle-kit studio",
-		"dev": "next dev --turbo",
+		"dev": "copy .env.local .env && next dev --turbo",
 		"preview": "next build && next start",
 		"start": "next start",
 		"typecheck": "tsc --noEmit"
@@ -85,6 +86,7 @@
 		"@types/node": "^20.14.10",
 		"@types/react": "^19.0.0",
 		"@types/react-dom": "^19.0.0",
+		"dotenv": "^17.2.3",
 		"drizzle-kit": "^0.30.5",
 		"postcss": "^8.5.3",
 		"shadcn": "^3.5.0",

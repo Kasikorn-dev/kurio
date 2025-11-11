@@ -1,15 +1,22 @@
 "use client"
 
-import { api } from "@/trpc/react"
-import { KurioCard } from "./kurio-card"
-import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { useKurio } from "@/hooks/use-kurio"
+import { KurioCard } from "./kurio-card"
+import { KurioCardSkeleton } from "./kurio-card-skeleton"
 
 export function KurioList() {
-	const { data: kurios, isLoading } = api.kurio.getAll.useQuery()
+	const { kurios, isLoading } = useKurio()
 
 	if (isLoading) {
-		return <div>Loading...</div>
+		return (
+			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+				{[1, 2, 3].map((i) => (
+					<KurioCardSkeleton key={i} />
+				))}
+			</div>
+		)
 	}
 
 	if (!kurios || kurios.length === 0) {
@@ -31,4 +38,3 @@ export function KurioList() {
 		</div>
 	)
 }
-

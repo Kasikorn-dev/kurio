@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm"
 import { createTable } from "../lib/utils"
-import { userProfiles } from "./user-profiles"
 import { lessons } from "./lessons"
+import { userProfiles } from "./user-profiles"
 
 export const playerLessonProgress = createTable(
 	"player_lesson_progress",
