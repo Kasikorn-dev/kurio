@@ -34,7 +34,7 @@ export function KurioForm() {
 		},
 		onSuccess: () => {
 			reset()
-			router.push("/kurios")
+			router.push("/kurio")
 		},
 	})
 

@@ -41,7 +41,7 @@ export function SignupForm() {
 				// Profile will be created automatically by database trigger
 				// Trigger reads display_name from raw_user_meta_data
 				// No need to call createProfile mutation
-				router.push("/kurios")
+				router.push("/kurio")
 				router.refresh()
 			}
 		} catch (err) {

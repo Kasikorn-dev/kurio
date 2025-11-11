@@ -41,7 +41,9 @@ export async function updateSession(request: NextRequest) {
 	// Protect dashboard routes - redirect to login if not authenticated
 	if (
 		!user &&
-		request.nextUrl.pathname.startsWith("/kurios") &&
+		(request.nextUrl.pathname.startsWith("/kurio") ||
+			request.nextUrl.pathname.startsWith("/create-kurio") ||
+			request.nextUrl.pathname.startsWith("/profile")) &&
 		!request.nextUrl.pathname.startsWith("/login") &&
 		!request.nextUrl.pathname.startsWith("/signup")
 	) {
@@ -57,7 +59,7 @@ export async function updateSession(request: NextRequest) {
 			request.nextUrl.pathname.startsWith("/signup"))
 	) {
 		const url = request.nextUrl.clone()
-		url.pathname = "/kurios"
+		url.pathname = "/kurio"
 		return NextResponse.redirect(url)
 	}
 

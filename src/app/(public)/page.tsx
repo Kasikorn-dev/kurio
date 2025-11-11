@@ -16,7 +16,7 @@ export default async function Home() {
 					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
 						<Link
 							className="flex max-w-xs flex-col gap-4 rounded-xl border bg-card p-6 text-card-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-							href="/kurios"
+							href="/kurio"
 						>
 							<h3 className="font-bold text-2xl">My Kurios →</h3>
 							<div className="text-lg">
@@ -25,7 +25,7 @@ export default async function Home() {
 						</Link>
 						<Link
 							className="flex max-w-xs flex-col gap-4 rounded-xl border bg-card p-6 text-card-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-							href="/kurios/create"
+							href="/create-kurio"
 						>
 							<h3 className="font-bold text-2xl">Create Kurio →</h3>
 							<div className="text-lg">

@@ -34,14 +34,14 @@ export default function KurioDetailPage() {
 				</div>
 				<div className="flex gap-2">
 					{kurio.status === "ready" && kurio.units.length > 0 && (
-						<Link href={`/kurios/${kurio.id}/play`}>
+						<Link href={`/kurio/${kurio.id}/play`}>
 							<Button>Play Game</Button>
 						</Link>
 					)}
 					{kurio.status === "draft" && kurio.resources.length > 0 && (
 						<GenerateGameButton kurioId={kurio.id} />
 					)}
-					<Link href={`/kurios/${kurio.id}/edit`}>
+					<Link href={`/kurio/${kurio.id}/edit`}>
 						<Button variant="outline">Edit</Button>
 					</Link>
 					<DeleteKurioButton kurioId={kurio.id} kurioTitle={kurio.title} />

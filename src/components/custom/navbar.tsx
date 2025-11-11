@@ -49,7 +49,7 @@ export function Navbar({ initialUser = null }: NavbarProps) {
 				<div className="flex items-center gap-4">
 					{user ? (
 						<>
-							<Link href="/kurios">
+							<Link href="/kurio">
 								<Button variant="ghost">My Kurios</Button>
 							</Link>
 							<Link href="/profile">

@@ -32,7 +32,7 @@ export function LoginForm() {
 				return
 			}
 
-			router.push("/kurios")
+			router.push("/kurio")
 			router.refresh()
 		} catch (_err) {
 			setError("An unexpected error occurred")

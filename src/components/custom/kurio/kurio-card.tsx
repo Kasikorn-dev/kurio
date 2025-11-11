@@ -36,13 +36,13 @@ export function KurioCard({
 					</div>
 					<div className="flex gap-2">
 						{kurio.status === "ready" && (
-							<Link href={`/kurios/${kurio.id}/play`}>
+							<Link href={`/kurio/${kurio.id}/play`}>
 								<Button size="sm" variant="default">
 									Play
 								</Button>
 							</Link>
 						)}
-						<Link href={`/kurios/${kurio.id}`}>
+						<Link href={`/kurio/${kurio.id}`}>
 							<Button size="sm" variant="outline">
 								View
 							</Button>

@@ -23,7 +23,7 @@ export function KurioList() {
 		return (
 			<div className="flex flex-col items-center justify-center gap-4 py-12">
 				<p className="text-muted-foreground">No kurios yet</p>
-				<Link href="/kurios/create">
+				<Link href="/create-kurio">
 					<Button>Create your first Kurio</Button>
 				</Link>
 			</div>

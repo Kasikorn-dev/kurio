@@ -32,7 +32,7 @@ export function DeleteKurioButton({
 	const deleteKurio = api.kurio.delete.useMutation({
 		onSuccess: () => {
 			toast.success("Kurio deleted successfully")
-			router.push("/kurios")
+			router.push("/kurio")
 			router.refresh()
 		},
 		onError: (error) => {

@@ -21,7 +21,7 @@ export default function EditKurioPage() {
 
 	const updateKurio = api.kurio.update.useMutation({
 		onSuccess: () => {
-			router.push(`/kurios/${kurioId}`)
+			router.push(`/kurio/${kurioId}`)
 		},
 	})
 
