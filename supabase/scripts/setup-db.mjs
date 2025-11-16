@@ -16,15 +16,15 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const rootDir = join(__dirname, "..", "..")
 
-// Load environment variables from .env.local
-config({ path: join(rootDir, ".env.local") })
+// Load environment variables from .env
+config({ path: join(rootDir, ".env") })
 
 // Get DATABASE_URL from environment
 const databaseUrl = process.env.DATABASE_URL
 
 if (!databaseUrl) {
 	console.error("❌ DATABASE_URL is not set in environment variables")
-	console.error("Please set DATABASE_URL in .env.local file")
+	console.error("Please set DATABASE_URL in .env file")
 	process.exit(1)
 }
 

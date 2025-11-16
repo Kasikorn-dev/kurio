@@ -36,11 +36,12 @@ export class ErrorBoundary extends Component<
 				return this.props.fallback
 			}
 
+			// Don't expose error message to prevent information leakage
 			return (
 				<div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
 					<h2 className="font-bold text-2xl">Something went wrong</h2>
 					<p className="text-muted-foreground">
-						{this.state.error?.message || "An unexpected error occurred"}
+						An unexpected error occurred. Please try again later.
 					</p>
 					<Button
 						onClick={() => {

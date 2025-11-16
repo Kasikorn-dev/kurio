@@ -88,6 +88,10 @@ export const kurioRouter = createTRPCRouter({
 				})
 				.returning()
 
+			if (!newKurio) {
+				throw new Error("Failed to create kurio")
+			}
+
 			if (input.resources.length > 0) {
 				await ctx.db.insert(kurioResources).values(
 					input.resources.map((resource) => ({

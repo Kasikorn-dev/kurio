@@ -7,7 +7,7 @@ import { api } from "@/trpc/react"
 export function useAuth() {
 	const router = useRouter()
 	const supabase = createBrowserSupabaseClient()
-	const { data: profile } = api.auth.getProfile.useQuery()
+	const { data: profile, isLoading } = api.auth.getProfile.useQuery()
 	const updateProfile = api.auth.updateProfile.useMutation()
 
 	const logout = async () => {
@@ -18,6 +18,7 @@ export function useAuth() {
 
 	return {
 		profile,
+		isLoading,
 		updateProfile,
 		logout,
 	}

@@ -13,7 +13,8 @@
 		"db:push": "drizzle-kit push",
 		"db:setup": "node supabase/scripts/setup-db.mjs",
 		"db:studio": "drizzle-kit studio",
-		"dev": "copy .env.local .env && next dev --turbo",
+		"dev:local": "copy .env.dev .env && next dev --turbo",
+		"dev:prod": "copy .env.prod .env && next dev --turbo",
 		"preview": "next build && next start",
 		"start": "next start",
 		"typecheck": "tsc --noEmit"
