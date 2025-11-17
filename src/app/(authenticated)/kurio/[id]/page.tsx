@@ -74,12 +74,11 @@ export default function KurioDetailPage() {
 							{kurio.units.map((unit) => (
 								<div className="rounded-md border p-4" key={unit.id}>
 									<h3 className="font-semibold">{unit.title}</h3>
-									{unit.lessons.length > 0 && (
-										<ul className="mt-2 list-disc pl-6">
-											{unit.lessons.map((lesson) => (
-												<li key={lesson.id}>{lesson.title}</li>
-											))}
-										</ul>
+									{unit.games.length > 0 && (
+										<p className="mt-1 text-muted-foreground text-sm">
+											{unit.games.length}{" "}
+											{unit.games.length === 1 ? "game" : "games"}
+										</p>
 									)}
 								</div>
 							))}

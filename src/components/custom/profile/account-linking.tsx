@@ -9,7 +9,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client"
 import { api } from "@/trpc/react"
 
 export function AccountLinking() {
-	const router = useRouter()
+	const _router = useRouter()
 	const { data: identities, isLoading } = api.auth.getUserIdentities.useQuery()
 	const supabase = createBrowserSupabaseClient()
 

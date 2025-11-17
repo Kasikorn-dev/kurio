@@ -17,9 +17,9 @@ export default async function AuthenticatedLayout({
 	}
 
 	return (
-		<div className="flex min-h-screen flex-col">
+		<div className="flex h-screen flex-col overflow-hidden">
 			<Navbar initialUser={user} />
-			<main className="flex-1">{children}</main>
+			<main className="flex-1 overflow-y-auto">{children}</main>
 		</div>
 	)
 }

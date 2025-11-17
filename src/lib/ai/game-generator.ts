@@ -8,12 +8,11 @@ type Resource = {
 
 type GenerateGameParams = {
 	resources: Resource[]
-	difficultyLevel: "easy" | "medium" | "hard" | "mixed"
 	aiModel?: string
 }
 
 export async function generateGameContent(params: GenerateGameParams) {
-	const { resources, difficultyLevel, aiModel = "gpt-4o-mini" } = params
+	const { resources, aiModel = "gpt-5-nano-2025-08-07" } = params
 
 	// Prepare content from resources
 	const contentText = resources
@@ -26,37 +25,32 @@ export async function generateGameContent(params: GenerateGameParams) {
 		.filter(Boolean)
 		.join("\n\n")
 
-	const prompt = `Create an educational game based on the following content. Difficulty level: ${difficultyLevel}
+	const prompt = `Create an educational game based on the following content.
 
 Content:
 ${contentText}
 
 Please generate:
-1. A unit structure with lessons
-2. Exercises for each lesson (quiz, matching, fill_blank, or multiple_choice)
-3. Each exercise should have appropriate difficulty based on the level
+1. A list of units directly
+2. Games for each unit (quiz, matching, fill_blank, or multiple_choice)
+3. Each game should have appropriate difficulty (easy, medium, or hard)
 
 Return the response as JSON with this structure:
 {
   "units": [
     {
       "title": "Unit title",
-      "lessons": [
+      "games": [
         {
-          "title": "Lesson title",
-          "exercises": [
-            {
-              "title": "Exercise title",
-              "exerciseType": "quiz" | "matching" | "fill_blank" | "multiple_choice",
-              "difficultyLevel": "easy" | "medium" | "hard",
-              "content": {
-                "question": "...",
-                "options": [...],
-                "correctAnswer": "...",
-                ...
-              }
-            }
-          ]
+          "title": "Game title",
+          "gameType": "quiz" | "matching" | "fill_blank" | "multiple_choice",
+          "difficultyLevel": "easy" | "medium" | "hard",
+          "content": {
+            "question": "...",
+            "options": [...],
+            "correctAnswer": "...",
+            ...
+          }
         }
       ]
     }
@@ -88,14 +82,11 @@ Return the response as JSON with this structure:
 		return JSON.parse(responseContent) as {
 			units: Array<{
 				title: string
-				lessons: Array<{
+				games: Array<{
 					title: string
-					exercises: Array<{
-						title: string
-						exerciseType: "quiz" | "matching" | "fill_blank" | "multiple_choice"
-						difficultyLevel: "easy" | "medium" | "hard"
-						content: Record<string, unknown>
-					}>
+					gameType: "quiz" | "matching" | "fill_blank" | "multiple_choice"
+					difficultyLevel: "easy" | "medium" | "hard"
+					content: Record<string, unknown>
 				}>
 			}>
 		}

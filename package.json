@@ -12,6 +12,7 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:push": "drizzle-kit push",
 		"db:setup": "node supabase/scripts/setup-db.mjs",
+		"db:drop": "node supabase/scripts/drop-all-tables.mjs",
 		"db:studio": "drizzle-kit studio",
 		"dev:local": "copy .env.dev .env && next dev --turbo",
 		"dev:sup": "copy .env.prod .env && next dev --turbo",

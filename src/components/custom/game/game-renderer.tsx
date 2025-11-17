@@ -8,21 +8,18 @@ import { useExerciseTimer } from "@/hooks/use-exercise-timer"
 import { calculateScore, checkAnswer } from "@/lib/game/answer-checker"
 import { api } from "@/trpc/react"
 
-type ExerciseRendererProps = {
-	exercise: {
+type GameRendererProps = {
+	game: {
 		id: string
 		title: string
-		exerciseType: string
+		gameType: string
 		difficultyLevel: "easy" | "medium" | "hard"
 		content: Record<string, unknown>
 	}
 	onComplete?: () => void
 }
 
-export function ExerciseRenderer({
-	exercise,
-	onComplete,
-}: ExerciseRendererProps) {
+export function GameRenderer({ game, onComplete }: GameRendererProps) {
 	const [selectedAnswer, setSelectedAnswer] = useState<Record<
 		string,
 		unknown
@@ -46,19 +43,15 @@ export function ExerciseRenderer({
 		if (!selectedAnswer) return
 
 		stop()
-		const correct = checkAnswer(
-			exercise.exerciseType,
-			exercise.content,
-			selectedAnswer,
-		)
+		const correct = checkAnswer(game.gameType, game.content, selectedAnswer)
 		setIsCorrect(correct)
 		setIsSubmitted(true)
 
-		const score = calculateScore(correct, exercise.difficultyLevel, timeSpent)
+		const score = calculateScore(correct, game.difficultyLevel, timeSpent)
 
 		try {
 			await submitAnswer.mutateAsync({
-				exerciseId: exercise.id,
+				gameId: game.id,
 				userAnswer: selectedAnswer,
 				isCorrect: correct,
 				score,
@@ -86,15 +79,15 @@ export function ExerciseRenderer({
 		}
 	}
 
-	if (exercise.exerciseType === "multiple_choice") {
-		const options = (exercise.content.options as string[]) || []
-		const question = (exercise.content.question as string) || ""
-		const correctAnswer = exercise.content.correctAnswer as number | undefined
+	if (game.gameType === "multiple_choice") {
+		const options = (game.content.options as string[]) || []
+		const question = (game.content.question as string) || ""
+		const correctAnswer = game.content.correctAnswer as number | undefined
 
 		return (
 			<Card>
 				<CardHeader>
-					<CardTitle>{exercise.title}</CardTitle>
+					<CardTitle>{game.title}</CardTitle>
 					{isSubmitted && (
 						<div
 							className={`mt-2 rounded-md p-2 ${
@@ -142,15 +135,15 @@ export function ExerciseRenderer({
 		)
 	}
 
-	if (exercise.exerciseType === "quiz") {
-		const question = (exercise.content.question as string) || ""
-		const correctAnswer = (exercise.content.correctAnswer as string) || ""
+	if (game.gameType === "quiz") {
+		const question = (game.content.question as string) || ""
+		const correctAnswer = (game.content.correctAnswer as string) || ""
 		const [answer, setAnswerText] = useState("")
 
 		return (
 			<Card>
 				<CardHeader>
-					<CardTitle>{exercise.title}</CardTitle>
+					<CardTitle>{game.title}</CardTitle>
 					{isSubmitted && (
 						<div
 							className={`mt-2 rounded-md p-2 ${
@@ -190,9 +183,9 @@ export function ExerciseRenderer({
 		)
 	}
 
-	if (exercise.exerciseType === "fill_blank") {
-		const text = (exercise.content.text as string) || ""
-		const blanks = (exercise.content.blanks as Array<{ answer: string }>) || []
+	if (game.gameType === "fill_blank") {
+		const text = (game.content.text as string) || ""
+		const blanks = (game.content.blanks as Array<{ answer: string }>) || []
 		const [userBlanks, setUserBlanks] = useState<string[]>(
 			new Array(blanks.length).fill(""),
 		)
@@ -212,7 +205,7 @@ export function ExerciseRenderer({
 		return (
 			<Card>
 				<CardHeader>
-					<CardTitle>{exercise.title}</CardTitle>
+					<CardTitle>{game.title}</CardTitle>
 					{isSubmitted && (
 						<div
 							className={`mt-2 rounded-md p-2 ${
@@ -261,11 +254,11 @@ export function ExerciseRenderer({
 		)
 	}
 
-	if (exercise.exerciseType === "matching") {
-		const leftItems = (exercise.content.leftItems as string[]) || []
-		const rightItems = (exercise.content.rightItems as string[]) || []
+	if (game.gameType === "matching") {
+		const leftItems = (game.content.leftItems as string[]) || []
+		const rightItems = (game.content.rightItems as string[]) || []
 		const _pairs =
-			(exercise.content.pairs as Array<{ left: string; right: string }>) || []
+			(game.content.pairs as Array<{ left: string; right: string }>) || []
 		const [selectedLeft, setSelectedLeft] = useState<string | null>(null)
 		const [matches, setMatches] = useState<
 			Array<{ left: string; right: string | null }>
@@ -293,7 +286,7 @@ export function ExerciseRenderer({
 		return (
 			<Card>
 				<CardHeader>
-					<CardTitle>{exercise.title}</CardTitle>
+					<CardTitle>{game.title}</CardTitle>
 					{isSubmitted && (
 						<div
 							className={`mt-2 rounded-md p-2 ${
@@ -361,10 +354,10 @@ export function ExerciseRenderer({
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>{exercise.title}</CardTitle>
+				<CardTitle>{game.title}</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<p>Exercise type: {exercise.exerciseType} is not yet implemented</p>
+				<p>Game type: {game.gameType} is not yet implemented</p>
 			</CardContent>
 		</Card>
 	)

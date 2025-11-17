@@ -41,12 +41,6 @@ export default function EditKurioPage() {
 			id: kurioId,
 			title: formData.get("title") as string,
 			description: (formData.get("description") as string) || undefined,
-			difficultyLevel:
-				(formData.get("difficultyLevel") as
-					| "easy"
-					| "medium"
-					| "hard"
-					| "mixed") || undefined,
 		})
 	}
 

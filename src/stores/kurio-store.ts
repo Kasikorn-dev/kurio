@@ -4,35 +4,37 @@ type Resource = {
 	id?: string
 	resourceType: "text" | "file" | "image"
 	resourceContent?: string
-	resourceFileUrl?: string
+	resourceFileUrl?: string // URL จาก storage (หลัง upload) หรือ object URL (ก่อน upload)
 	resourceFileType?: string
+	resourceFile?: File // File object สำหรับไฟล์ที่ยังไม่ได้ upload
+	previewUrl?: string // Object URL สำหรับ preview (ต้อง revoke เมื่อไม่ใช้)
 	orderIndex: number
 }
 
 type KurioFormState = {
 	title: string
 	description: string
-	difficultyLevel: "easy" | "medium" | "hard" | "mixed"
 	autoGenEnabled: boolean
 	autoGenThreshold: number
+	unitCount: number | undefined
 	resources: Resource[]
 	addResource: (resource: Resource) => void
 	removeResource: (index: number) => void
 	updateResource: (index: number, resource: Partial<Resource>) => void
 	setTitle: (title: string) => void
 	setDescription: (description: string) => void
-	setDifficultyLevel: (level: "easy" | "medium" | "hard" | "mixed") => void
 	setAutoGenEnabled: (enabled: boolean) => void
 	setAutoGenThreshold: (threshold: number) => void
+	setUnitCount: (count: number | undefined) => void
 	reset: () => void
 }
 
 const initialState = {
 	title: "",
 	description: "",
-	difficultyLevel: "medium" as const,
 	autoGenEnabled: true,
 	autoGenThreshold: 75,
+	unitCount: undefined as number | undefined,
 	resources: [] as Resource[],
 }
 
@@ -54,8 +56,8 @@ export const useKurioStore = create<KurioFormState>((set) => ({
 		})),
 	setTitle: (title) => set({ title }),
 	setDescription: (description) => set({ description }),
-	setDifficultyLevel: (difficultyLevel) => set({ difficultyLevel }),
 	setAutoGenEnabled: (autoGenEnabled) => set({ autoGenEnabled }),
 	setAutoGenThreshold: (autoGenThreshold) => set({ autoGenThreshold }),
+	setUnitCount: (unitCount) => set({ unitCount }),
 	reset: () => set(initialState),
 }))

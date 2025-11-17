@@ -25,16 +25,6 @@ export default function ProfilePage() {
 					<p className="text-muted-foreground text-sm">Display Name</p>
 					<p className="text-lg">{profile?.displayName || "Not set"}</p>
 				</div>
-				{profile?.avatarUrl && (
-					<div>
-						<p className="text-muted-foreground text-sm">Avatar</p>
-						<img
-							alt="Avatar"
-							className="mt-2 h-24 w-24 rounded-full"
-							src={profile.avatarUrl}
-						/>
-					</div>
-				)}
 				<Button onClick={logout} variant="destructive">
 					Logout
 				</Button>

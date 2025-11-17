@@ -27,15 +27,8 @@ export const kurioRouter = createTRPCRouter({
 					units: {
 						orderBy: (units, { asc }) => [asc(units.orderIndex)],
 						with: {
-							lessons: {
-								orderBy: (lessons, { asc }) => [asc(lessons.orderIndex)],
-								with: {
-									exercises: {
-										orderBy: (exercises, { asc }) => [
-											asc(exercises.orderIndex),
-										],
-									},
-								},
+							games: {
+								orderBy: (games, { asc }) => [asc(games.orderIndex)],
 							},
 						},
 					},
@@ -58,10 +51,10 @@ export const kurioRouter = createTRPCRouter({
 			z.object({
 				title: z.string().min(1).max(255),
 				description: z.string().optional(),
-				difficultyLevel: z.enum(["easy", "medium", "hard", "mixed"]),
 				autoGenEnabled: z.boolean().default(true),
 				autoGenThreshold: z.number().int().min(0).max(100).default(75),
-				aiModel: z.string().default("gpt-4o-mini"),
+				unitCount: z.number().int().min(1).optional(),
+				aiModel: z.string().default("gpt-5-nano-2025-08-07"),
 				resources: z.array(
 					z.object({
 						resourceType: z.enum(["text", "file", "image"]),
@@ -80,9 +73,9 @@ export const kurioRouter = createTRPCRouter({
 					userId: ctx.user.id,
 					title: input.title,
 					description: input.description,
-					difficultyLevel: input.difficultyLevel,
 					autoGenEnabled: input.autoGenEnabled,
 					autoGenThreshold: input.autoGenThreshold,
+					unitCount: input.unitCount,
 					aiModel: input.aiModel,
 					status: "draft",
 				})
@@ -114,7 +107,6 @@ export const kurioRouter = createTRPCRouter({
 				id: z.string().uuid(),
 				title: z.string().min(1).max(255).optional(),
 				description: z.string().optional(),
-				difficultyLevel: z.enum(["easy", "medium", "hard", "mixed"]).optional(),
 				autoGenEnabled: z.boolean().optional(),
 				autoGenThreshold: z.number().int().min(0).max(100).optional(),
 			}),

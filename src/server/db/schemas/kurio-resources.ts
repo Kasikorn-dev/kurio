@@ -19,9 +19,9 @@ export const kurioResources = createTable("kurio_resource", (d) => ({
 		.varchar("resource_type", { length: 50 })
 		.$type<"text" | "file" | "image">()
 		.notNull(),
-	resourceContent: d.text("resource_content"),
-	resourceFileUrl: d.varchar("resource_file_url"),
-	resourceFileType: d.varchar("resource_file_type", { length: 50 }),
+	resourceContent: d.text("resource_content"), // สำหรับ text input
+	resourceFileUrl: d.text("resource_file_url"), // เปลี่ยนจาก varchar เป็น text เพื่อรองรับ URL ที่ยาว
+	resourceFileType: d.varchar("resource_file_type", { length: 100 }), // เพิ่มความยาวเพื่อรองรับ MIME types ที่ยาวขึ้น
 	orderIndex: d.integer("order_index").notNull(),
 	createdAt: d
 		.timestamp("created_at", { withTimezone: true })
@@ -35,3 +35,10 @@ export const kurioResourcesRelations = relations(kurioResources, ({ one }) => ({
 		references: [kurios.id],
 	}),
 }))
+
+// // Indexes for kurio_resources table
+// export const kurioResourcesKurioIdOrderIdx = index(
+// 	"kurio_resources_kurio_id_order_idx",
+// ).on(kurioResources.kurioId, kurioResources.orderIndex)
+// // ทำไม: Composite index สำหรับ query ที่หา resources ของ kurio และเรียงตาม orderIndex
+// // เช่น: SELECT * FROM kurio_resources WHERE kurioId = ? ORDER BY orderIndex ASC

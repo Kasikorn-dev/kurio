@@ -5,13 +5,6 @@ import { kurioResources } from "./kurio-resources"
 import { units } from "./units"
 import { userProfiles } from "./user-profiles"
 
-export const kurioDifficultyLevelEnum = pgEnum("kurio_difficulty_level", [
-	"easy",
-	"medium",
-	"hard",
-	"mixed",
-])
-
 export const kurioStatusEnum = pgEnum("kurio_status", [
 	"draft",
 	"generating",
@@ -27,15 +20,12 @@ export const kurios = createTable("kurio", (d) => ({
 		.references(() => userProfiles.userId),
 	title: d.varchar({ length: 255 }).notNull(),
 	description: d.text(),
-	difficultyLevel: d
-		.varchar("difficulty_level", { length: 50 })
-		.$type<"easy" | "medium" | "hard" | "mixed">()
-		.notNull(),
 	autoGenEnabled: d.boolean("auto_gen_enabled").default(true).notNull(),
 	autoGenThreshold: d.integer("auto_gen_threshold").default(75).notNull(),
+	unitCount: d.integer("unit_count"),
 	aiModel: d
 		.varchar("ai_model", { length: 50 })
-		.default("gpt-4o-mini")
+		.default("gpt-5-nano-2025-08-07")
 		.notNull(),
 	status: d
 		.varchar({ length: 50 })
@@ -60,3 +50,18 @@ export const kuriosRelations = relations(kurios, ({ one, many }) => ({
 	resources: many(kurioResources),
 	units: many(units),
 }))
+
+// // Indexes for kurios table
+// export const kuriosUserIdIdx = index("kurios_user_id_idx").on(kurios.userId)
+// // ทำไม: ใช้ใน WHERE clause บ่อย (หา kurios ของ user) - query: WHERE userId = ?
+
+// export const kuriosCreatedAtIdx = index("kurios_created_at_idx").on(
+// 	kurios.createdAt,
+// )
+// // ทำไม: ใช้ใน ORDER BY บ่อย (เรียงตามวันที่สร้าง) - query: ORDER BY createdAt DESC
+
+// export const kuriosUserIdCreatedAtIdx = index(
+// 	"kurios_user_id_created_at_idx",
+// ).on(kurios.userId, kurios.createdAt)
+// // ทำไม: Composite index สำหรับ query ที่ใช้ทั้ง userId และ ORDER BY createdAt
+// // เช่น: SELECT * FROM kurios WHERE userId = ? ORDER BY createdAt DESC

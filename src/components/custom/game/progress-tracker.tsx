@@ -1,17 +1,17 @@
 "use client"
 
 import { Progress } from "@/components/ui/progress"
-import { useLessonProgress } from "@/hooks/use-lesson-progress"
+import { useUnitProgress } from "@/hooks/use-unit-progress"
 
 type ProgressTrackerProps = {
 	kurioId: string
 }
 
 export function ProgressTracker({ kurioId }: ProgressTrackerProps) {
-	const { totalLessons, completedLessons, progressPercentage } =
-		useLessonProgress(kurioId)
+	const { totalUnits, completedUnits, progressPercentage } =
+		useUnitProgress(kurioId)
 
-	if (totalLessons === 0) {
+	if (totalUnits === 0) {
 		return null
 	}
 
@@ -20,7 +20,7 @@ export function ProgressTracker({ kurioId }: ProgressTrackerProps) {
 			<div className="flex items-center justify-between">
 				<span className="font-medium text-sm">Progress</span>
 				<span className="text-muted-foreground text-sm">
-					{completedLessons} / {totalLessons} lessons
+					{completedUnits} / {totalUnits} units
 				</span>
 			</div>
 			<Progress value={progressPercentage} />

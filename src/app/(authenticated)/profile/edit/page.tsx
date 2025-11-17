@@ -28,7 +28,6 @@ export default function EditProfilePage() {
 	})
 
 	const [displayName, setDisplayName] = useState(profile?.displayName ?? "")
-	const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl ?? "")
 
 	if (isLoading) {
 		return <ProfileSkeleton />
@@ -42,7 +41,6 @@ export default function EditProfilePage() {
 		e.preventDefault()
 		await updateProfile.mutateAsync({
 			displayName: displayName || undefined,
-			avatarUrl: avatarUrl || undefined,
 		})
 	}
 
@@ -63,17 +61,6 @@ export default function EditProfilePage() {
 								id="displayName"
 								onChange={(e) => setDisplayName(e.target.value)}
 								placeholder="Enter display name"
-							/>
-						</div>
-						<div className="flex flex-col gap-2">
-							<Label htmlFor="avatarUrl">Avatar URL</Label>
-							<Input
-								defaultValue={profile.avatarUrl ?? ""}
-								disabled={updateProfile.isPending}
-								id="avatarUrl"
-								onChange={(e) => setAvatarUrl(e.target.value)}
-								placeholder="Enter avatar URL"
-								type="url"
 							/>
 						</div>
 						<div className="flex gap-2">

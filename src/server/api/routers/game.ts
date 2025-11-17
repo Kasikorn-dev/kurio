@@ -3,11 +3,10 @@ import { z } from "zod"
 import { generateGameContent } from "@/lib/ai/game-generator"
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc"
 import {
-	exercises,
+	gameAttempts,
+	games,
 	kurios,
-	lessons,
-	playerExercisePlays,
-	playerLessonProgress,
+	unitProgress,
 	units,
 } from "@/server/db/schemas"
 
@@ -15,7 +14,7 @@ export const gameRouter = createTRPCRouter({
 	submitAnswer: protectedProcedure
 		.input(
 			z.object({
-				exerciseId: z.string().uuid(),
+				gameId: z.string().uuid(),
 				userAnswer: z.record(z.unknown()),
 				isCorrect: z.boolean(),
 				score: z.number().int(),
@@ -32,65 +31,64 @@ export const gameRouter = createTRPCRouter({
 				throw new Error("User profile not found")
 			}
 
-			// Record the play
-			await ctx.db.insert(playerExercisePlays).values({
+			// Record the attempt
+			await ctx.db.insert(gameAttempts).values({
 				playerId: userProfile.id,
-				exerciseId: input.exerciseId,
+				gameId: input.gameId,
 				userAnswer: input.userAnswer,
 				isCorrect: input.isCorrect,
 				score: input.score,
 				timeSpent: input.timeSpent,
 			})
 
-			// Update lesson progress
-			const exercise = await ctx.db.query.exercises.findFirst({
-				where: (exercises, { eq }) => eq(exercises.id, input.exerciseId),
+			// Update unit progress
+			const game = await ctx.db.query.games.findFirst({
+				where: (games, { eq }) => eq(games.id, input.gameId),
 				with: {
-					lesson: {
+					unit: {
 						with: {
-							exercises: true,
+							games: true,
 						},
 					},
 				},
 			})
 
-			if (exercise) {
-				const totalExercises = exercise.lesson.exercises.length
+			if (game) {
+				const totalGames = game.unit.games.length
 
-				const existingProgress =
-					await ctx.db.query.playerLessonProgress.findFirst({
-						where: (progress, { eq, and }) =>
-							and(
-								eq(progress.playerId, userProfile.id),
-								eq(progress.lessonId, exercise.lessonId),
-							),
-					})
+				const existingProgress = await ctx.db.query.unitProgress.findFirst({
+					where: (progress, { eq, and }) =>
+						and(
+							eq(progress.playerId, userProfile.id),
+							eq(progress.unitId, game.unitId),
+						),
+				})
 
 				if (existingProgress) {
 					await ctx.db
-						.update(playerLessonProgress)
+						.update(unitProgress)
 						.set({
-							completedExercises: existingProgress.completedExercises + 1,
+							completedGames: existingProgress.completedGames + 1,
 							isCompleted:
-								existingProgress.completedExercises + 1 >=
-								existingProgress.totalExercises,
+								existingProgress.completedGames + 1 >=
+								existingProgress.totalGames,
 							lastPlayedAt: new Date(),
 							updatedAt: new Date(),
 						})
 						.where(
 							and(
-								eq(playerLessonProgress.playerId, userProfile.id),
-								eq(playerLessonProgress.lessonId, exercise.lessonId),
+								eq(unitProgress.playerId, userProfile.id),
+								eq(unitProgress.unitId, game.unitId),
 							),
 						)
 				} else {
 					// Create new progress record if it doesn't exist
-					await ctx.db.insert(playerLessonProgress).values({
+					await ctx.db.insert(unitProgress).values({
 						playerId: userProfile.id,
-						lessonId: exercise.lessonId,
-						completedExercises: 1,
-						totalExercises,
-						isCompleted: 1 >= totalExercises,
+						unitId: game.unitId,
+						completedGames: 1,
+						totalGames,
+						isCompleted: 1 >= totalGames,
 						lastPlayedAt: new Date(),
 					})
 				}
@@ -99,8 +97,8 @@ export const gameRouter = createTRPCRouter({
 			return { success: true }
 		}),
 
-	getAllLessonProgress: protectedProcedure
-		.input(z.object({ lessonIds: z.array(z.string().uuid()) }))
+	getAllUnitProgress: protectedProcedure
+		.input(z.object({ unitIds: z.array(z.string().uuid()) }))
 		.query(async ({ ctx, input }) => {
 			const userProfile = await ctx.db.query.userProfiles.findFirst({
 				where: (profiles, { eq }) => eq(profiles.userId, ctx.user.id),
@@ -110,15 +108,15 @@ export const gameRouter = createTRPCRouter({
 				throw new Error("User profile not found")
 			}
 
-			if (input.lessonIds.length === 0) {
+			if (input.unitIds.length === 0) {
 				return []
 			}
 
-			const progress = await ctx.db.query.playerLessonProgress.findMany({
+			const progress = await ctx.db.query.unitProgress.findMany({
 				where: (progress, { eq, and, inArray }) =>
 					and(
 						eq(progress.playerId, userProfile.id),
-						inArray(progress.lessonId, input.lessonIds),
+						inArray(progress.unitId, input.unitIds),
 					),
 			})
 
@@ -155,12 +153,11 @@ export const gameRouter = createTRPCRouter({
 					resourceContent: r.resourceContent ?? undefined,
 					resourceFileUrl: r.resourceFileUrl ?? undefined,
 				})),
-				difficultyLevel: kurio.difficultyLevel,
 				aiModel: kurio.aiModel,
 			})
 
-			// Create units, lessons, and exercises
-			let totalExercises = 0
+			// Create units and games directly
+			let totalGames = 0
 
 			for (const unitData of gameContent.units) {
 				const [unit] = await ctx.db
@@ -177,46 +174,30 @@ export const gameRouter = createTRPCRouter({
 					throw new Error("Failed to create unit")
 				}
 
-				for (const lessonData of unitData.lessons) {
-					const [lesson] = await ctx.db
-						.insert(lessons)
-						.values({
-							unitId: unit.id,
-							title: lessonData.title,
-							orderIndex: unitData.lessons.indexOf(lessonData),
-							isAutoGenerated: true,
-						})
-						.returning()
-
-					if (!lesson) {
-						throw new Error("Failed to create lesson")
-					}
-
-					for (const exerciseData of lessonData.exercises) {
-						await ctx.db.insert(exercises).values({
-							lessonId: lesson.id,
-							title: exerciseData.title,
-							exerciseType: exerciseData.exerciseType,
-							content: exerciseData.content,
-							difficultyLevel: exerciseData.difficultyLevel,
-							orderIndex: lessonData.exercises.indexOf(exerciseData),
-							isAutoGenerated: true,
-						})
-						totalExercises++
-					}
+				for (const gameData of unitData.games) {
+					await ctx.db.insert(games).values({
+						unitId: unit.id,
+						title: gameData.title,
+						gameType: gameData.gameType,
+						content: gameData.content,
+						difficultyLevel: gameData.difficultyLevel,
+						orderIndex: unitData.games.indexOf(gameData),
+						isAutoGenerated: true,
+					})
+					totalGames++
 				}
 			}
 
-			// Update kurio status and total exercises
+			// Update kurio status and total games
 			await ctx.db
 				.update(kurios)
 				.set({
 					status: "ready",
-					totalExercises,
+					totalExercises: totalGames,
 					updatedAt: new Date(),
 				})
 				.where(eq(kurios.id, kurio.id))
 
-			return { success: true, totalExercises }
+			return { success: true, totalGames }
 		}),
 })

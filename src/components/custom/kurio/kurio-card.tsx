@@ -18,7 +18,6 @@ export function KurioCard({
 		id: string
 		title: string
 		description: string | null
-		difficultyLevel: string
 		status: string
 	}
 }) {
@@ -31,7 +30,6 @@ export function KurioCard({
 			<CardContent>
 				<div className="flex items-center justify-between">
 					<div className="flex gap-2">
-						<Badge>{kurio.difficultyLevel}</Badge>
 						<Badge variant="outline">{kurio.status}</Badge>
 					</div>
 					<div className="flex gap-2">

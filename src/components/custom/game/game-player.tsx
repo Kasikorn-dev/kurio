@@ -2,10 +2,10 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { useExerciseNavigation } from "@/hooks/use-exercise-navigation"
+import { useGameNavigation } from "@/hooks/use-game-navigation"
 import { api } from "@/trpc/react"
-import { ExerciseRenderer } from "./exercise-renderer"
 import { GamePlayerSkeleton } from "./game-player-skeleton"
+import { GameRenderer } from "./game-renderer"
 import { ProgressTracker } from "./progress-tracker"
 
 type GamePlayerProps = {
@@ -14,23 +14,21 @@ type GamePlayerProps = {
 
 export function GamePlayer({ kurioId }: GamePlayerProps) {
 	const { data: kurio, isLoading } = api.kurio.getById.useQuery({ id: kurioId })
-	const firstExercise = kurio?.units[0]?.lessons[0]?.exercises[0]
-	const [currentExerciseId, setCurrentExerciseId] = useState(
-		firstExercise?.id ?? "",
-	)
+	const firstGame = kurio?.units[0]?.games[0]
+	const [currentGameId, setCurrentGameId] = useState(firstGame?.id ?? "")
 
-	const { nextExercise, previousExercise, currentIndex, totalExercises } =
-		useExerciseNavigation(kurioId, currentExerciseId)
+	const { nextGame, previousGame, currentIndex, totalGames } =
+		useGameNavigation(kurioId, currentGameId)
 
 	if (isLoading || !kurio) {
 		return <GamePlayerSkeleton />
 	}
 
-	if (!firstExercise) {
+	if (!firstGame) {
 		return (
 			<div className="container mx-auto py-8">
 				<div className="text-center">
-					<p className="text-muted-foreground">No exercises available</p>
+					<p className="text-muted-foreground">No games available</p>
 					<p className="mt-2 text-muted-foreground text-sm">
 						Generate game content first
 					</p>
@@ -39,28 +37,27 @@ export function GamePlayer({ kurioId }: GamePlayerProps) {
 		)
 	}
 
-	const currentExercise =
+	const currentGame =
 		kurio.units
-			.flatMap((unit) => unit.lessons)
-			.flatMap((lesson) => lesson.exercises)
-			.find((ex) => ex.id === currentExerciseId) ?? firstExercise
+			.flatMap((unit) => unit.games)
+			.find((g) => g.id === currentGameId) ?? firstGame
 
 	const handleNext = () => {
-		if (nextExercise) {
-			setCurrentExerciseId(nextExercise.id)
+		if (nextGame) {
+			setCurrentGameId(nextGame.id)
 		}
 	}
 
 	const handlePrevious = () => {
-		if (previousExercise) {
-			setCurrentExerciseId(previousExercise.id)
+		if (previousGame) {
+			setCurrentGameId(previousGame.id)
 		}
 	}
 
 	const handleComplete = () => {
-		if (nextExercise) {
+		if (nextGame) {
 			setTimeout(() => {
-				setCurrentExerciseId(nextExercise.id)
+				setCurrentGameId(nextGame.id)
 			}, 2000)
 		}
 	}
@@ -71,30 +68,23 @@ export function GamePlayer({ kurioId }: GamePlayerProps) {
 			<ProgressTracker kurioId={kurioId} />
 			<div className="mb-4 flex items-center justify-between">
 				<span className="text-muted-foreground text-sm">
-					Exercise {currentIndex + 1} of {totalExercises}
+					Game {currentIndex + 1} of {totalGames}
 				</span>
 				<div className="flex gap-2">
 					<Button
-						disabled={!previousExercise}
+						disabled={!previousGame}
 						onClick={handlePrevious}
 						variant="outline"
 					>
 						Previous
 					</Button>
-					<Button
-						disabled={!nextExercise}
-						onClick={handleNext}
-						variant="outline"
-					>
+					<Button disabled={!nextGame} onClick={handleNext} variant="outline">
 						Next
 					</Button>
 				</div>
 			</div>
 			<div className="mt-8">
-				<ExerciseRenderer
-					exercise={currentExercise}
-					onComplete={handleComplete}
-				/>
+				<GameRenderer game={currentGame} onComplete={handleComplete} />
 			</div>
 		</div>
 	)

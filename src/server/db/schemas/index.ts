@@ -1,10 +1,9 @@
-// Re-export all schemas and relations
+// Re-export all schemas, relations, and indexes
 
-export * from "./exercises"
+export * from "./game-attempts"
+export * from "./games"
 export * from "./kurio-resources"
 export * from "./kurios"
-export * from "./lessons"
-export * from "./player-exercise-plays"
-export * from "./player-lesson-progress"
+export * from "./unit-progress"
 export * from "./units"
 export * from "./user-profiles"

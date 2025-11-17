@@ -90,7 +90,6 @@ export const authRouter = createTRPCRouter({
 		.input(
 			z.object({
 				displayName: z.string().min(1).max(255).optional(),
-				avatarUrl: z.string().url().optional(),
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
@@ -98,7 +97,6 @@ export const authRouter = createTRPCRouter({
 				.update(userProfiles)
 				.set({
 					displayName: input.displayName,
-					avatarUrl: input.avatarUrl,
 					updatedAt: new Date(),
 				})
 				.where(eq(userProfiles.userId, ctx.user.id))
