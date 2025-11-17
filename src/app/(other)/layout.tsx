@@ -1,9 +1,9 @@
-import { redirect } from "next/navigation"
 import { Footer } from "@/components/custom/footer"
+import { AuthenticatedNavbar } from "@/components/custom/navbar/authenticated-navbar"
 import { PublicNavbar } from "@/components/custom/navbar/public-navbar"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 
-export default async function PublicLayout({
+export default async function OtherLayout({
 	children,
 }: {
 	children: React.ReactNode
@@ -13,15 +13,10 @@ export default async function PublicLayout({
 		data: { user },
 	} = await supabase.auth.getUser()
 
-	// Redirect authenticated users away from public pages
-	if (user) {
-		redirect("/kurio")
-	}
-
 	return (
 		<div className="flex min-h-screen flex-col">
-			<PublicNavbar />
-			<main className="flex flex-1 items-center justify-center">
+			{user ? <AuthenticatedNavbar initialUser={user} /> : <PublicNavbar />}
+			<main className="flex flex-1 items-center justify-center py-12">
 				{children}
 			</main>
 			<Footer />

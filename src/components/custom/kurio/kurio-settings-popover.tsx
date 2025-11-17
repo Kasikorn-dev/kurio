@@ -27,7 +27,11 @@ export function KurioSettingsPopover() {
 					<Settings className="size-4" />
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent align="start" className="w-80" side="top">
+			<PopoverContent
+				align="start"
+				className="w-80 border-border shadow-lg"
+				side="bottom"
+			>
 				<div className="space-y-4">
 					<div className="flex items-center justify-between gap-4">
 						<div className="flex-1">

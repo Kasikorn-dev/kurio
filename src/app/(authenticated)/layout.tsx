@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { Navbar } from "@/components/custom/navbar"
+import { AuthenticatedNavbar } from "@/components/custom/navbar/authenticated-navbar"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 
 export default async function AuthenticatedLayout({
@@ -18,7 +18,7 @@ export default async function AuthenticatedLayout({
 
 	return (
 		<div className="flex h-screen flex-col overflow-hidden">
-			<Navbar initialUser={user} />
+			<AuthenticatedNavbar initialUser={user} />
 			<main className="flex-1 overflow-y-auto">{children}</main>
 		</div>
 	)

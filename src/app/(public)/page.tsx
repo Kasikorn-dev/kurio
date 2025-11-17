@@ -6,7 +6,7 @@ export default async function Home() {
 	return (
 		<HydrateClient>
 			<div className="flex flex-1 flex-col items-center justify-center bg-background">
-				<div className="container flex flex-col items-center justify-center gap-16 px-4 py-24">
+				<div className="container flex flex-col items-center justify-center gap-16 px-4">
 					{/* Hero Section */}
 					<div className="flex flex-col items-center gap-6 text-center">
 						<h1 className="font-extrabold text-5xl text-foreground tracking-tight sm:text-6xl md:text-7xl">

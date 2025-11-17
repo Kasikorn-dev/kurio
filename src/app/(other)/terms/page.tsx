@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 
 export default function TermsPage() {
 	return (
-		<div className="w-full max-w-4xl space-y-8 px-4 py-12">
+		<div className="container mx-auto max-w-4xl space-y-8 px-4">
 			{/* Header */}
 			<div className="flex flex-col gap-4">
 				<h1 className="font-bold text-4xl">Terms of Service</h1>

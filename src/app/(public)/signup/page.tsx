@@ -24,7 +24,7 @@ export default function SignupPage() {
 						/>
 					</svg>
 				</div>
-				<h1 className="font-bold text-xl">Kurio</h1>
+				{/* <h1 className="font-bold text-xl">Kurio</h1> */}
 			</div>
 
 			{/* Main Card */}
@@ -51,7 +51,7 @@ export default function SignupPage() {
 
 			{/* Terms and Privacy */}
 			<div className="text-center text-muted-foreground text-xs">
-				By clicking continue, you agree to our{" "}
+				By clicking sign up, you agree to our{" "}
 				<Link className="underline hover:text-foreground" href="/terms">
 					Terms of Service
 				</Link>{" "}
