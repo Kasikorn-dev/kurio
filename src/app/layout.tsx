@@ -1,6 +1,7 @@
 import "@/styles/globals.css"
 import type { Metadata } from "next"
 import { Geist } from "next/font/google"
+import { ThemeProvider } from "next-themes"
 import { ErrorBoundary } from "@/components/custom/error-boundary"
 import { Toaster } from "@/components/ui/sonner"
 import { TRPCReactProvider } from "@/trpc/react"
@@ -20,12 +21,14 @@ export default function RootLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
 	return (
-		<html className={`${geist.variable} dark`} lang="en">
+		<html className={geist.variable} lang="en" suppressHydrationWarning>
 			<body>
-				<ErrorBoundary>
-					<TRPCReactProvider>{children}</TRPCReactProvider>
-				</ErrorBoundary>
-				<Toaster />
+				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+					<ErrorBoundary>
+						<TRPCReactProvider>{children}</TRPCReactProvider>
+					</ErrorBoundary>
+					<Toaster />
+				</ThemeProvider>
 			</body>
 		</html>
 	)

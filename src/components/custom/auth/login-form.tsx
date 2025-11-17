@@ -16,7 +16,6 @@ import {
 	FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { PasswordInput } from "./password-input"
 import { Spinner } from "@/components/ui/spinner"
 import { getEmailCheckErrorMessage } from "@/lib/auth/email-check-utils"
 import { getAuthErrorMessage } from "@/lib/auth/error-messages"
@@ -24,6 +23,7 @@ import { type LoginInput, loginSchema } from "@/lib/auth/validation-schemas"
 import { createBrowserSupabaseClient } from "@/lib/supabase/client"
 import { api } from "@/trpc/react"
 import { GoogleSignInButton } from "./google-signin-button"
+import { PasswordInput } from "./password-input"
 
 export function LoginForm() {
 	const router = useRouter()

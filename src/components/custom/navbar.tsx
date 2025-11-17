@@ -4,6 +4,7 @@ import type { User } from "@supabase/supabase-js"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { ThemeToggle } from "@/components/custom/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { createBrowserSupabaseClient } from "@/lib/supabase/client"
 
@@ -47,6 +48,7 @@ export function Navbar({ initialUser = null }: NavbarProps) {
 					Kurio
 				</Link>
 				<div className="flex items-center gap-4">
+					<ThemeToggle />
 					{user ? (
 						<>
 							<Link href="/kurio">

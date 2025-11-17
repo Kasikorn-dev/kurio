@@ -14,7 +14,6 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form"
-import { PasswordInput } from "./password-input"
 import { Spinner } from "@/components/ui/spinner"
 import { usePasswordReset } from "@/hooks/use-password-reset"
 import { getAuthErrorMessage } from "@/lib/auth/error-messages"
@@ -23,6 +22,7 @@ import {
 	resetPasswordSchema,
 } from "@/lib/auth/validation-schemas"
 import { createBrowserSupabaseClient } from "@/lib/supabase/client"
+import { PasswordInput } from "./password-input"
 import { PasswordStrengthIndicator } from "./password-strength-indicator"
 
 export function ResetPasswordForm() {

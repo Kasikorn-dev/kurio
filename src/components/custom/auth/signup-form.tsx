@@ -15,7 +15,6 @@ import {
 	FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { PasswordInput } from "./password-input"
 import { Spinner } from "@/components/ui/spinner"
 import { getSignupEmailErrorMessage } from "@/lib/auth/email-check-utils"
 import { getAuthErrorMessage } from "@/lib/auth/error-messages"
@@ -23,6 +22,7 @@ import { type SignupInput, signupSchema } from "@/lib/auth/validation-schemas"
 import { createBrowserSupabaseClient } from "@/lib/supabase/client"
 import { api } from "@/trpc/react"
 import { GoogleSignInButton } from "./google-signin-button"
+import { PasswordInput } from "./password-input"
 import { PasswordStrengthIndicator } from "./password-strength-indicator"
 
 export function SignupForm() {

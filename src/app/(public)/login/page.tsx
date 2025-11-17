@@ -1,28 +1,25 @@
-"use client"
-
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
-import { useEffect } from "react"
-import { toast } from "sonner"
 import { LoginForm } from "@/components/custom/auth/login-form"
+import { LoginToastHandler } from "@/components/custom/auth/login-toast-handler"
 
-export default function LoginPage() {
-	const searchParams = useSearchParams()
+type LoginPageProps = {
+	searchParams: Promise<{
+		error?: string
+		info?: string
+		message?: string
+	}>
+}
 
-	useEffect(() => {
-		const error = searchParams.get("error")
-		const info = searchParams.get("info")
-		const message = searchParams.get("message")
-
-		if (error && message) {
-			toast.error(decodeURIComponent(message))
-		} else if (info && message) {
-			toast.info(decodeURIComponent(message))
-		}
-	}, [searchParams])
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+	const params = await searchParams
 
 	return (
 		<div className="w-full max-w-md space-y-8">
+			<LoginToastHandler
+				error={params.error}
+				info={params.info}
+				message={params.message}
+			/>
 			{/* Logo/Brand */}
 			<div className="flex flex-col items-center gap-2">
 				<div className="flex h-12 w-12 items-center justify-center rounded-lg border bg-card">

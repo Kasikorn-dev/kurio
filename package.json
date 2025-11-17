@@ -14,7 +14,7 @@
 		"db:setup": "node supabase/scripts/setup-db.mjs",
 		"db:studio": "drizzle-kit studio",
 		"dev:local": "copy .env.dev .env && next dev --turbo",
-		"dev:prod": "copy .env.prod .env && next dev --turbo",
+		"dev:sup": "copy .env.prod .env && next dev --turbo",
 		"preview": "next build && next start",
 		"start": "next start",
 		"typecheck": "tsc --noEmit"
