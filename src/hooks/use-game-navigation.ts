@@ -14,7 +14,19 @@ type Unit = {
 	orderIndex: number
 }
 
-export function useGameNavigation(kurioId: string, currentGameId: string) {
+type UseGameNavigationReturn = {
+	currentGame: Game | null
+	nextGame: Game | null
+	previousGame: Game | null
+	allGames: Game[]
+	totalGames: number
+	currentIndex: number
+}
+
+export function useGameNavigation(
+	kurioId: string,
+	currentGameId: string,
+): UseGameNavigationReturn {
 	const { data: kurio } = api.kurio.getById.useQuery({ id: kurioId })
 
 	const { currentGame, nextGame, previousGame, allGames } = useMemo(() => {

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 
 export function PublicNavbar() {
 	return (
-		<nav className="border-b mb-16">
+		<nav className="mb-16 border-b">
 			<div className="container mx-auto flex h-16 items-center justify-between px-4">
 				<Link className="font-bold text-xl" href="/">
 					Kurio

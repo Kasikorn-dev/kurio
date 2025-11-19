@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState } from "react"
+import { TIMING_CONSTANTS } from "@/lib/constants"
 
-export function useExerciseTimer() {
+type UseExerciseTimerReturn = {
+	timeSpent: number
+	start: () => void
+	stop: () => void
+	reset: () => void
+}
+
+export function useExerciseTimer(): UseExerciseTimerReturn {
 	const [timeSpent, setTimeSpent] = useState(0)
 	const startTimeRef = useRef<number | null>(null)
 	const intervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -10,9 +18,14 @@ export function useExerciseTimer() {
 			startTimeRef.current = Date.now()
 			intervalRef.current = setInterval(() => {
 				if (startTimeRef.current) {
-					setTimeSpent(Math.floor((Date.now() - startTimeRef.current) / 1000))
+					setTimeSpent(
+						Math.floor(
+							(Date.now() - startTimeRef.current) /
+								TIMING_CONSTANTS.MS_TO_SECONDS,
+						),
+					)
 				}
-			}, 1000)
+			}, TIMING_CONSTANTS.MS_TO_SECONDS)
 		}
 	}
 
@@ -22,7 +35,9 @@ export function useExerciseTimer() {
 			intervalRef.current = null
 		}
 		if (startTimeRef.current) {
-			const finalTime = Math.floor((Date.now() - startTimeRef.current) / 1000)
+			const finalTime = Math.floor(
+				(Date.now() - startTimeRef.current) / TIMING_CONSTANTS.MS_TO_SECONDS,
+			)
 			setTimeSpent(finalTime)
 			startTimeRef.current = null
 		}

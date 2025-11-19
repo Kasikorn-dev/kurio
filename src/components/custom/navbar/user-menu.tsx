@@ -11,7 +11,6 @@ import {
 	User as UserIcon,
 } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -27,7 +26,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { createBrowserSupabaseClient } from "@/lib/supabase/client"
+import { useAuth } from "@/hooks/use-auth"
 import { api } from "@/trpc/react"
 
 type UserMenuProps = {
@@ -35,26 +34,15 @@ type UserMenuProps = {
 }
 
 export function UserMenu({ user }: UserMenuProps) {
-	const router = useRouter()
 	const { theme, setTheme } = useTheme()
 	const [mounted, setMounted] = useState(false)
-	const supabase = createBrowserSupabaseClient()
+	const { logout } = useAuth()
 	const { data: profile } = api.auth.getProfile.useQuery()
 
 	// Prevent hydration mismatch
 	useEffect(() => {
 		setMounted(true)
 	}, [])
-
-	const handleLogout = async () => {
-		try {
-			await supabase.auth.signOut()
-			router.push("/")
-			router.refresh()
-		} catch (error) {
-			console.error("Error logging out:", error)
-		}
-	}
 
 	// Get user display name
 	const displayName =
@@ -137,7 +125,7 @@ export function UserMenu({ user }: UserMenuProps) {
 					</DropdownMenuItem>
 				</DropdownMenuGroup>
 				<DropdownMenuSeparator />
-				<DropdownMenuItem onClick={handleLogout} variant="destructive">
+				<DropdownMenuItem onClick={logout} variant="destructive">
 					<LogOut className="mr-2 size-4" />
 					<span>Log out</span>
 				</DropdownMenuItem>

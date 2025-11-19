@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
 		if (error) {
 			// Don't expose internal error details
-			console.error("Failed to list users:", error.message)
+			// In production, log to error tracking service
 			return NextResponse.json(
 				{ error: "Failed to check email" },
 				{ status: 500 },
@@ -70,12 +70,9 @@ export async function POST(request: Request) {
 		// Return generic response to prevent email enumeration
 		// Always return same structure whether user exists or not
 		return NextResponse.json({ exists: false })
-	} catch (error) {
+	} catch (_error) {
 		// Log error but don't expose details
-		console.error(
-			"Check email error:",
-			error instanceof Error ? error.message : "Unknown error",
-		)
+		// In production, log to error tracking service
 		return NextResponse.json({ error: "An error occurred" }, { status: 500 })
 	}
 }

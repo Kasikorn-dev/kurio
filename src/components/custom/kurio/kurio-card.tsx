@@ -11,16 +11,16 @@ import {
 	CardTitle,
 } from "@/components/ui/card"
 
-export function KurioCard({
-	kurio,
-}: {
+type KurioCardProps = {
 	kurio: {
 		id: string
 		title: string
 		description: string | null
 		status: string
 	}
-}) {
+}
+
+export function KurioCard({ kurio }: KurioCardProps) {
 	return (
 		<Card>
 			<CardHeader>

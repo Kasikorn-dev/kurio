@@ -1,7 +1,12 @@
 import { useState } from "react"
 import { toast } from "sonner"
 
-export function useFileUpload() {
+type UseFileUploadReturn = {
+	uploadFile: (file: File) => Promise<{ url: string; path: string } | null>
+	isUploading: boolean
+}
+
+export function useFileUpload(): UseFileUploadReturn {
 	const [isUploading, setIsUploading] = useState(false)
 
 	const uploadFile = async (

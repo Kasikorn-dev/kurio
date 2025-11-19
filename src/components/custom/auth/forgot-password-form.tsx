@@ -44,9 +44,7 @@ export function ForgotPasswordForm() {
 			if (error) {
 				// Supabase doesn't reveal if email exists for security reasons
 				// Always show success message to prevent email enumeration
-				// But log the error for debugging
-				console.error("Password reset error:", error.message)
-
+				// In production, log to error tracking service instead of console
 				// Show success message even if error (security best practice)
 				// This prevents attackers from checking if emails exist
 				setIsSuccess(true)

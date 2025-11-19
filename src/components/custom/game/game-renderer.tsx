@@ -2,9 +2,13 @@
 
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
+import { FillBlankGame } from "@/components/custom/game/fill-blank-game"
+import { MatchingGame } from "@/components/custom/game/matching-game"
+import { MultipleChoiceGame } from "@/components/custom/game/multiple-choice-game"
+import { QuizGame } from "@/components/custom/game/quiz-game"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useExerciseTimer } from "@/hooks/use-exercise-timer"
+import { TIMING_CONSTANTS } from "@/lib/constants"
 import { calculateScore, checkAnswer } from "@/lib/game/answer-checker"
 import { api } from "@/trpc/react"
 
@@ -29,17 +33,45 @@ export function GameRenderer({ game, onComplete }: GameRendererProps) {
 	const [isSubmitted, setIsSubmitted] = useState(false)
 	const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
 
+	// Game-specific state - initialize all hooks at top level
+	const [quizAnswer, setQuizAnswer] = useState("")
+	const [fillBlankAnswers, setFillBlankAnswers] = useState<string[]>([])
+	const [matchingSelectedLeft, setMatchingSelectedLeft] = useState<
+		string | null
+	>(null)
+	const [matchingMatches, setMatchingMatches] = useState<
+		Array<{ left: string; right: string | null }>
+	>([])
+
+	// Initialize game-specific state based on game type
 	useEffect(() => {
 		start()
 		setSelectedAnswer(null)
 		setIsSubmitted(false)
 		setIsCorrect(null)
+		setQuizAnswer("")
+		setFillBlankAnswers([])
+		setMatchingSelectedLeft(null)
+		setMatchingMatches([])
+
+		// Initialize matching game state
+		if (game.gameType === "matching") {
+			const leftItems = (game.content.leftItems as string[]) || []
+			setMatchingMatches(leftItems.map((left) => ({ left, right: null })))
+		}
+
+		// Initialize fill blank game state
+		if (game.gameType === "fill_blank") {
+			const blanks = (game.content.blanks as Array<{ answer: string }>) || []
+			setFillBlankAnswers(new Array(blanks.length).fill(""))
+		}
+
 		return () => {
 			stop()
 		}
-	}, [start, stop])
+	}, [start, stop, game.gameType, game.content])
 
-	const handleSubmit = async () => {
+	const handleSubmit = async (): Promise<void> => {
 		if (!selectedAnswer) return
 
 		stop()
@@ -71,11 +103,12 @@ export function GameRenderer({ game, onComplete }: GameRendererProps) {
 					setIsSubmitted(false)
 					setIsCorrect(null)
 					setSelectedAnswer(null)
-				}, 2000)
+				}, TIMING_CONSTANTS.GAME_COMPLETION_DELAY)
 			}
 		} catch (error) {
-			toast.error("Failed to submit answer")
-			console.error(error)
+			const errorMessage =
+				error instanceof Error ? error.message : "Failed to submit answer"
+			toast.error(errorMessage)
 		}
 	}
 
@@ -85,269 +118,104 @@ export function GameRenderer({ game, onComplete }: GameRendererProps) {
 		const correctAnswer = game.content.correctAnswer as number | undefined
 
 		return (
-			<Card>
-				<CardHeader>
-					<CardTitle>{game.title}</CardTitle>
-					{isSubmitted && (
-						<div
-							className={`mt-2 rounded-md p-2 ${
-								isCorrect
-									? "bg-green-500/20 text-green-600"
-									: "bg-red-500/20 text-red-600"
-							}`}
-						>
-							{isCorrect ? "✓ Correct!" : "✗ Incorrect"}
-							{!isCorrect && correctAnswer !== undefined && (
-								<p className="mt-1 text-sm">
-									Correct answer: {options[correctAnswer]}
-								</p>
-							)}
-						</div>
-					)}
-				</CardHeader>
-				<CardContent className="flex flex-col gap-4">
-					<p>{question}</p>
-					<div className="flex flex-col gap-2">
-						{options.map((option, index) => (
-							<Button
-								disabled={isSubmitted}
-								key={`option-${index}-${option}`}
-								onClick={() => setSelectedAnswer({ selected: index })}
-								variant={
-									selectedAnswer?.selected === index ? "default" : "outline"
-								}
-							>
-								{option}
-							</Button>
-						))}
-					</div>
-					<Button
-						disabled={!selectedAnswer || isSubmitted}
-						onClick={handleSubmit}
-					>
-						{isSubmitted ? "Submitted" : "Submit Answer"}
-					</Button>
-					{isSubmitted && (
-						<p className="text-muted-foreground text-sm">Time: {timeSpent}s</p>
-					)}
-				</CardContent>
-			</Card>
+			<MultipleChoiceGame
+				correctAnswer={correctAnswer}
+				isCorrect={isCorrect}
+				isSubmitted={isSubmitted}
+				onAnswerSelect={(index) => setSelectedAnswer({ selected: index })}
+				onSubmit={handleSubmit}
+				options={options}
+				question={question}
+				selectedAnswer={selectedAnswer}
+				timeSpent={timeSpent}
+				title={game.title}
+			/>
 		)
 	}
 
 	if (game.gameType === "quiz") {
 		const question = (game.content.question as string) || ""
 		const correctAnswer = (game.content.correctAnswer as string) || ""
-		const [answer, setAnswerText] = useState("")
 
 		return (
-			<Card>
-				<CardHeader>
-					<CardTitle>{game.title}</CardTitle>
-					{isSubmitted && (
-						<div
-							className={`mt-2 rounded-md p-2 ${
-								isCorrect
-									? "bg-green-500/20 text-green-600"
-									: "bg-red-500/20 text-red-600"
-							}`}
-						>
-							{isCorrect ? "✓ Correct!" : "✗ Incorrect"}
-							{!isCorrect && (
-								<p className="mt-1 text-sm">Correct answer: {correctAnswer}</p>
-							)}
-						</div>
-					)}
-				</CardHeader>
-				<CardContent className="flex flex-col gap-4">
-					<p>{question}</p>
-					<input
-						className="rounded-md border p-2"
-						disabled={isSubmitted}
-						onChange={(e) => {
-							setAnswerText(e.target.value)
-							setSelectedAnswer({ answer: e.target.value })
-						}}
-						placeholder="Type your answer..."
-						type="text"
-						value={answer}
-					/>
-					<Button disabled={!answer || isSubmitted} onClick={handleSubmit}>
-						{isSubmitted ? "Submitted" : "Submit Answer"}
-					</Button>
-					{isSubmitted && (
-						<p className="text-muted-foreground text-sm">Time: {timeSpent}s</p>
-					)}
-				</CardContent>
-			</Card>
+			<QuizGame
+				answer={quizAnswer}
+				correctAnswer={correctAnswer}
+				isCorrect={isCorrect}
+				isSubmitted={isSubmitted}
+				onAnswerChange={(value) => {
+					setQuizAnswer(value)
+					setSelectedAnswer({ answer: value })
+				}}
+				onSubmit={handleSubmit}
+				question={question}
+				timeSpent={timeSpent}
+				title={game.title}
+			/>
 		)
 	}
 
 	if (game.gameType === "fill_blank") {
 		const text = (game.content.text as string) || ""
 		const blanks = (game.content.blanks as Array<{ answer: string }>) || []
-		const [userBlanks, setUserBlanks] = useState<string[]>(
-			new Array(blanks.length).fill(""),
-		)
-
-		// Split text by blanks and create input fields
-		const parts = text.split(/_+/)
-		const blankIndices: number[] = []
-		const _currentIndex = 0
-		for (let i = 0; i < text.length; i++) {
-			if (text.slice(i).startsWith("_")) {
-				blankIndices.push(blankIndices.length)
-				while (text[i] === "_") i++
-				i--
-			}
-		}
 
 		return (
-			<Card>
-				<CardHeader>
-					<CardTitle>{game.title}</CardTitle>
-					{isSubmitted && (
-						<div
-							className={`mt-2 rounded-md p-2 ${
-								isCorrect
-									? "bg-green-500/20 text-green-600"
-									: "bg-red-500/20 text-red-600"
-							}`}
-						>
-							{isCorrect ? "✓ Correct!" : "✗ Incorrect"}
-						</div>
-					)}
-				</CardHeader>
-				<CardContent className="flex flex-col gap-4">
-					<div className="flex flex-wrap items-center gap-2">
-						{parts.map((part, index) => (
-							<span key={`part-${index}-${part.slice(0, 10)}`}>
-								{part}
-								{index < blanks.length && (
-									<input
-										className="mx-1 w-24 rounded-md border p-1"
-										disabled={isSubmitted}
-										onChange={(e) => {
-											const newBlanks = [...userBlanks]
-											newBlanks[index] = e.target.value
-											setUserBlanks(newBlanks)
-											setSelectedAnswer({ blanks: newBlanks })
-										}}
-										type="text"
-										value={userBlanks[index] || ""}
-									/>
-								)}
-							</span>
-						))}
-					</div>
-					<Button
-						disabled={userBlanks.some((b) => !b.trim()) || isSubmitted}
-						onClick={handleSubmit}
-					>
-						{isSubmitted ? "Submitted" : "Submit Answer"}
-					</Button>
-					{isSubmitted && (
-						<p className="text-muted-foreground text-sm">Time: {timeSpent}s</p>
-					)}
-				</CardContent>
-			</Card>
+			<FillBlankGame
+				blanks={blanks}
+				isCorrect={isCorrect}
+				isSubmitted={isSubmitted}
+				onBlankChange={(index, value) => {
+					const newBlanks = [...fillBlankAnswers]
+					newBlanks[index] = value
+					setFillBlankAnswers(newBlanks)
+					setSelectedAnswer({ blanks: newBlanks })
+				}}
+				onSubmit={handleSubmit}
+				text={text}
+				timeSpent={timeSpent}
+				title={game.title}
+				userBlanks={fillBlankAnswers}
+			/>
 		)
 	}
 
 	if (game.gameType === "matching") {
 		const leftItems = (game.content.leftItems as string[]) || []
 		const rightItems = (game.content.rightItems as string[]) || []
-		const _pairs =
-			(game.content.pairs as Array<{ left: string; right: string }>) || []
-		const [selectedLeft, setSelectedLeft] = useState<string | null>(null)
-		const [matches, setMatches] = useState<
-			Array<{ left: string; right: string | null }>
-		>(leftItems.map((left) => ({ left, right: null })))
 
-		const handleLeftClick = (left: string) => {
-			if (selectedLeft === left) {
-				setSelectedLeft(null)
+		const handleLeftClick = (left: string): void => {
+			if (matchingSelectedLeft === left) {
+				setMatchingSelectedLeft(null)
 			} else {
-				setSelectedLeft(left)
+				setMatchingSelectedLeft(left)
 			}
 		}
 
-		const handleRightClick = (right: string) => {
-			if (!selectedLeft) return
+		const handleRightClick = (right: string): void => {
+			if (!matchingSelectedLeft) return
 
-			const newMatches = matches.map((match) =>
-				match.left === selectedLeft ? { ...match, right } : match,
+			const newMatches = matchingMatches.map((match) =>
+				match.left === matchingSelectedLeft ? { ...match, right } : match,
 			)
-			setMatches(newMatches)
+			setMatchingMatches(newMatches)
 			setSelectedAnswer({ pairs: newMatches.filter((m) => m.right !== null) })
-			setSelectedLeft(null)
+			setMatchingSelectedLeft(null)
 		}
 
 		return (
-			<Card>
-				<CardHeader>
-					<CardTitle>{game.title}</CardTitle>
-					{isSubmitted && (
-						<div
-							className={`mt-2 rounded-md p-2 ${
-								isCorrect
-									? "bg-green-500/20 text-green-600"
-									: "bg-red-500/20 text-red-600"
-							}`}
-						>
-							{isCorrect ? "✓ Correct!" : "✗ Incorrect"}
-						</div>
-					)}
-				</CardHeader>
-				<CardContent className="flex flex-col gap-4">
-					<div className="grid grid-cols-2 gap-4">
-						<div className="flex flex-col gap-2">
-							<h3 className="font-semibold">Left</h3>
-							{leftItems.map((left) => (
-								<Button
-									disabled={isSubmitted}
-									key={`left-${left}`}
-									onClick={() => handleLeftClick(left)}
-									variant={
-										selectedLeft === left
-											? "default"
-											: matches.find((m) => m.left === left)?.right
-												? "secondary"
-												: "outline"
-									}
-								>
-									{left}
-								</Button>
-							))}
-						</div>
-						<div className="flex flex-col gap-2">
-							<h3 className="font-semibold">Right</h3>
-							{rightItems.map((right) => {
-								const matchedLeft = matches.find((m) => m.right === right)?.left
-								return (
-									<Button
-										disabled={isSubmitted || !!matchedLeft}
-										key={`right-${right}`}
-										onClick={() => handleRightClick(right)}
-										variant={matchedLeft ? "secondary" : "outline"}
-									>
-										{right} {matchedLeft && `(${matchedLeft})`}
-									</Button>
-								)
-							})}
-						</div>
-					</div>
-					<Button
-						disabled={matches.some((m) => !m.right) || isSubmitted}
-						onClick={handleSubmit}
-					>
-						{isSubmitted ? "Submitted" : "Submit Answer"}
-					</Button>
-					{isSubmitted && (
-						<p className="text-muted-foreground text-sm">Time: {timeSpent}s</p>
-					)}
-				</CardContent>
-			</Card>
+			<MatchingGame
+				isCorrect={isCorrect}
+				isSubmitted={isSubmitted}
+				leftItems={leftItems}
+				matches={matchingMatches}
+				onLeftClick={handleLeftClick}
+				onRightClick={handleRightClick}
+				onSubmit={handleSubmit}
+				rightItems={rightItems}
+				selectedLeft={matchingSelectedLeft}
+				timeSpent={timeSpent}
+				title={game.title}
+			/>
 		)
 	}
 

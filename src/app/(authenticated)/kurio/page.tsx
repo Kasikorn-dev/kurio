@@ -1,12 +1,10 @@
-"use client"
-
 import Link from "next/link"
-import { KurioList } from "@/components/custom/kurio/kurio-list"
+import { KurioListClient } from "@/components/custom/kurio/kurio-list-client"
 import { Button } from "@/components/ui/button"
-import { useKurio } from "@/hooks/use-kurio"
+import { api } from "@/trpc/server"
 
-export default function KuriosPage() {
-	const { kurios } = useKurio()
+export default async function KuriosPage() {
+	const kurios = await api.kurio.getAll()
 	const hasKurios = kurios && kurios.length > 0
 
 	return (
@@ -19,7 +17,7 @@ export default function KuriosPage() {
 					</Link>
 				)}
 			</div>
-			<KurioList />
+			<KurioListClient kurios={kurios} />
 		</div>
 	)
 }

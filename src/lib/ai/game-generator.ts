@@ -1,3 +1,4 @@
+import { AI_CONSTANTS } from "@/lib/constants"
 import { openai } from "./openai-client"
 
 type Resource = {
@@ -11,8 +12,22 @@ type GenerateGameParams = {
 	aiModel?: string
 }
 
-export async function generateGameContent(params: GenerateGameParams) {
-	const { resources, aiModel = "gpt-5-nano-2025-08-07" } = params
+type GenerateGameResponse = {
+	units: Array<{
+		title: string
+		games: Array<{
+			title: string
+			gameType: "quiz" | "matching" | "fill_blank" | "multiple_choice"
+			difficultyLevel: "easy" | "medium" | "hard"
+			content: Record<string, unknown>
+		}>
+	}>
+}
+
+export async function generateGameContent(
+	params: GenerateGameParams,
+): Promise<GenerateGameResponse> {
+	const { resources, aiModel = AI_CONSTANTS.DEFAULT_MODEL } = params
 
 	// Prepare content from resources
 	const contentText = resources
@@ -74,24 +89,18 @@ Return the response as JSON with this structure:
 			response_format: { type: "json_object" },
 		})
 
-		const responseContent = completion.choices[0]?.message?.content
+		const responseContent =
+			completion.choices[AI_CONSTANTS.RESPONSE_INDEX.FIRST_CHOICE]?.message
+				?.content
 		if (!responseContent) {
 			throw new Error("No response from AI")
 		}
 
-		return JSON.parse(responseContent) as {
-			units: Array<{
-				title: string
-				games: Array<{
-					title: string
-					gameType: "quiz" | "matching" | "fill_blank" | "multiple_choice"
-					difficultyLevel: "easy" | "medium" | "hard"
-					content: Record<string, unknown>
-				}>
-			}>
-		}
+		return JSON.parse(responseContent) as GenerateGameResponse
 	} catch (error) {
-		console.error("Error generating game content:", error)
-		throw error
+		if (error instanceof Error) {
+			throw new Error(`Failed to generate game content: ${error.message}`)
+		}
+		throw new Error("Failed to generate game content: Unknown error")
 	}
 }

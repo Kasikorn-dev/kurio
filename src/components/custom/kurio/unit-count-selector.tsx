@@ -1,6 +1,5 @@
 "use client"
 
-import { Label } from "@/components/ui/label"
 import {
 	Select,
 	SelectContent,
@@ -8,6 +7,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"
+import { GAME_CONSTANTS } from "@/lib/constants"
+import { cn } from "@/lib/utils"
 
 type UnitCountSelectorProps = {
 	value: number | undefined
@@ -21,23 +22,23 @@ export function UnitCountSelector({
 	className,
 }: UnitCountSelectorProps) {
 	return (
-		<div className={className}>
-			<Label className="sr-only" htmlFor="unit-count">
-				Number of units
-			</Label>
+		<div className={cn("flex items-center", className)}>
 			<Select
 				onValueChange={(val) =>
 					onChange(val ? Number.parseInt(val, 10) : undefined)
 				}
 				value={value?.toString() ?? ""}
 			>
-				<SelectTrigger className="w-32" id="unit-count">
-					<SelectValue placeholder="Units" />
+				<SelectTrigger
+					className={cn("w-full min-w-20 border-none")}
+					id="lesson-count"
+				>
+					<SelectValue placeholder="Lessons" />
 				</SelectTrigger>
 				<SelectContent>
-					{[1, 3, 5, 10].map((count) => (
+					{GAME_CONSTANTS.UNIT_COUNT_OPTIONS.map((count) => (
 						<SelectItem key={count} value={count.toString()}>
-							{count} {count === 1 ? "unit" : "units"}
+							{count} lessons
 						</SelectItem>
 					))}
 				</SelectContent>

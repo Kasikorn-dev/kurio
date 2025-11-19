@@ -1,4 +1,42 @@
+import { GAME_CONSTANTS } from "@/lib/constants"
+
 type ExerciseContent = Record<string, unknown>
+
+// Type guards for safer type checking
+function isNumber(value: unknown): value is number {
+	return typeof value === "number"
+}
+
+function isString(value: unknown): value is string {
+	return typeof value === "string"
+}
+
+function isArrayOf<T>(
+	value: unknown,
+	itemGuard: (item: unknown) => item is T,
+): value is T[] {
+	return Array.isArray(value) && value.every(itemGuard)
+}
+
+function isBlankItem(value: unknown): value is { answer: string } {
+	return (
+		typeof value === "object" &&
+		value !== null &&
+		"answer" in value &&
+		isString(value.answer)
+	)
+}
+
+function isPairItem(value: unknown): value is { left: string; right: string } {
+	return (
+		typeof value === "object" &&
+		value !== null &&
+		"left" in value &&
+		"right" in value &&
+		isString(value.left) &&
+		isString(value.right)
+	)
+}
 
 export function checkAnswer(
 	exerciseType: string,
@@ -7,14 +45,22 @@ export function checkAnswer(
 ): boolean {
 	switch (exerciseType) {
 		case "multiple_choice": {
-			const correctAnswer = content.correctAnswer as number | undefined
-			const selected = userAnswer.selected as number | undefined
+			const correctAnswer = isNumber(content.correctAnswer)
+				? content.correctAnswer
+				: undefined
+			const selected = isNumber(userAnswer.selected)
+				? userAnswer.selected
+				: undefined
 			return correctAnswer !== undefined && selected === correctAnswer
 		}
 
 		case "quiz": {
-			const correctAnswer = content.correctAnswer as string | undefined
-			const userAnswerText = userAnswer.answer as string | undefined
+			const correctAnswer = isString(content.correctAnswer)
+				? content.correctAnswer
+				: undefined
+			const userAnswerText = isString(userAnswer.answer)
+				? userAnswer.answer
+				: undefined
 			return (
 				correctAnswer !== undefined &&
 				userAnswerText !== undefined &&
@@ -24,8 +70,12 @@ export function checkAnswer(
 		}
 
 		case "fill_blank": {
-			const blanks = content.blanks as Array<{ answer: string }> | undefined
-			const userBlanks = userAnswer.blanks as string[] | undefined
+			const blanks = isArrayOf(content.blanks, isBlankItem)
+				? content.blanks
+				: undefined
+			const userBlanks = isArrayOf(userAnswer.blanks, isString)
+				? userAnswer.blanks
+				: undefined
 
 			if (!blanks || !userBlanks || blanks.length !== userBlanks.length) {
 				return false
@@ -39,18 +89,12 @@ export function checkAnswer(
 		}
 
 		case "matching": {
-			const pairs = content.pairs as
-				| Array<{
-						left: string
-						right: string
-				  }>
-				| undefined
-			const userPairs = userAnswer.pairs as
-				| Array<{
-						left: string
-						right: string
-				  }>
-				| undefined
+			const pairs = isArrayOf(content.pairs, isPairItem)
+				? content.pairs
+				: undefined
+			const userPairs = isArrayOf(userAnswer.pairs, isPairItem)
+				? userAnswer.pairs
+				: undefined
 
 			if (!pairs || !userPairs || pairs.length !== userPairs.length) {
 				return false
@@ -77,13 +121,16 @@ export function calculateScore(
 	if (!isCorrect) return 0
 
 	const baseScore = {
-		easy: 5,
-		medium: 10,
-		hard: 15,
+		easy: GAME_CONSTANTS.BASE_SCORES.EASY,
+		medium: GAME_CONSTANTS.BASE_SCORES.MEDIUM,
+		hard: GAME_CONSTANTS.BASE_SCORES.HARD,
 	}[difficultyLevel]
 
-	// Bonus for quick answers (under 30 seconds)
-	const timeBonus = timeSpent < 30 ? 5 : 0
+	// Bonus for quick answers
+	const timeBonus =
+		timeSpent < GAME_CONSTANTS.TIME_BONUS.THRESHOLD
+			? GAME_CONSTANTS.TIME_BONUS.AMOUNT
+			: 0
 
 	return baseScore + timeBonus
 }

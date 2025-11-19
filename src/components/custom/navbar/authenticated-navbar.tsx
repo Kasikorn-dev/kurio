@@ -2,9 +2,9 @@
 
 import type { User } from "@supabase/supabase-js"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { useNavigation } from "@/hooks/use-navigation"
 import { createBrowserSupabaseClient } from "@/lib/supabase/client"
 import { UserMenu } from "./user-menu"
 
@@ -13,7 +13,7 @@ type AuthenticatedNavbarProps = {
 }
 
 export function AuthenticatedNavbar({ initialUser }: AuthenticatedNavbarProps) {
-	const router = useRouter()
+	const { navigate } = useNavigation()
 	const [user, setUser] = useState<User>(initialUser)
 	const supabase = createBrowserSupabaseClient()
 
@@ -28,13 +28,12 @@ export function AuthenticatedNavbar({ initialUser }: AuthenticatedNavbarProps) {
 				setUser(session.user)
 			} else {
 				// User logged out, redirect to home
-				router.push("/")
-				router.refresh()
+				navigate("/", true)
 			}
 		})
 
 		return () => subscription.unsubscribe()
-	}, [initialUser, supabase, router])
+	}, [initialUser, supabase, navigate])
 
 	return (
 		<nav className="border-b">

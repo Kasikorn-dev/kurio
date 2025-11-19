@@ -72,11 +72,11 @@ export async function handleDuplicateAccount(
 			return `${origin}/login?info=account_linking&message=${message}`
 		}
 	} catch (error) {
-		// Log error but don't expose details
-		console.error(
-			"Account check error:",
-			error instanceof Error ? error.message : "Unknown error",
-		)
+		// Log error but don't expose details to user
+		// In production, log to error tracking service
+		if (error instanceof Error) {
+			// Silent fail - return null to allow normal OAuth flow
+		}
 	}
 
 	return null

@@ -1,5 +1,6 @@
 import "server-only"
 
+import type { SupabaseClient } from "@supabase/supabase-js"
 import { createClient } from "@supabase/supabase-js"
 import { env } from "@/env"
 
@@ -15,7 +16,7 @@ import { env } from "@/env"
  * Use this ONLY on the server-side for admin operations
  * NEVER expose Service Role Key to the client
  */
-export function createSupabaseAdminClient() {
+export function createSupabaseAdminClient(): SupabaseClient {
 	if (typeof window !== "undefined") {
 		throw new Error(
 			"createSupabaseAdminClient() cannot be used in client-side code. This is a security violation.",

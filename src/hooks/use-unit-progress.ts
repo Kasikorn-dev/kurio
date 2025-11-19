@@ -1,6 +1,12 @@
 import { api } from "@/trpc/react"
 
-export function useUnitProgress(kurioId: string) {
+type UseUnitProgressReturn = {
+	totalUnits: number
+	completedUnits: number
+	progressPercentage: number
+}
+
+export function useUnitProgress(kurioId: string): UseUnitProgressReturn {
 	const { data: kurio } = api.kurio.getById.useQuery({ id: kurioId })
 
 	const allUnitIds = kurio?.units.map((unit) => unit.id) ?? []

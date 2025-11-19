@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { useKurioStore } from "@/stores/kurio-store"
 import { FileCard } from "./file-card"
-import { KurioSettingsPopover } from "./kurio-settings-popover"
+import { KurioAutoGenControls } from "./kurio-auto-gen-controls"
 
 type KurioInputProps = {
 	onSubmit: () => void
@@ -207,30 +207,31 @@ export function KurioInput({
 				{/* Bottom Buttons Row */}
 				<div className="flex items-center justify-between px-4 py-2">
 					{/* Left side buttons */}
-					<div className="flex items-center gap-1">
-						{/* File Upload Button */}
-						<Button
-							className="size-8 shrink-0"
-							disabled={isSubmitting}
-							onClick={() => fileInputRef.current?.click()}
-							size="icon"
-							type="button"
-							variant="ghost"
-						>
-							<Plus className="size-4" />
-						</Button>
-						<input
-							accept="image/*,.pdf,.doc,.docx,.txt"
-							className="hidden"
-							disabled={isSubmitting}
-							multiple
-							onChange={handleFileInputChange}
-							ref={fileInputRef}
-							type="file"
-						/>
+					<div className="flex items-center gap-2">
+						<div className="flex items-center gap-1">
+							{/* File Upload Button */}
+							<Button
+								className="size-8 shrink-0"
+								disabled={isSubmitting}
+								onClick={() => fileInputRef.current?.click()}
+								size="icon"
+								type="button"
+								variant="ghost"
+							>
+								<Plus className="size-4" />
+							</Button>
+							<input
+								accept="image/*,.pdf,.doc,.docx,.txt"
+								className="hidden"
+								disabled={isSubmitting}
+								multiple
+								onChange={handleFileInputChange}
+								ref={fileInputRef}
+								type="file"
+							/>
+						</div>
 
-						{/* Settings Button */}
-						<KurioSettingsPopover />
+						<KurioAutoGenControls />
 					</div>
 
 					{/* Right side - Send Button */}

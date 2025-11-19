@@ -1,6 +1,5 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 import {
@@ -16,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
+import { useNavigation } from "@/hooks/use-navigation"
 import { api } from "@/trpc/react"
 
 type DeleteKurioButtonProps = {
@@ -27,13 +27,12 @@ export function DeleteKurioButton({
 	kurioId,
 	kurioTitle,
 }: DeleteKurioButtonProps) {
-	const router = useRouter()
+	const { navigate } = useNavigation()
 	const [isOpen, setIsOpen] = useState(false)
 	const deleteKurio = api.kurio.delete.useMutation({
 		onSuccess: () => {
 			toast.success("Kurio deleted successfully")
-			router.push("/kurio")
-			router.refresh()
+			navigate("/kurio", true)
 		},
 		onError: (error) => {
 			toast.error(error.message || "Failed to delete kurio")

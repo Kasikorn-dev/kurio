@@ -28,7 +28,7 @@ export const authRouter = createTRPCRouter({
 
 			if (error) {
 				// Don't expose internal error details
-				console.error("Failed to list users:", error.message)
+				// In production, log to error tracking service
 				throw new Error("Failed to check email")
 			}
 
@@ -62,7 +62,7 @@ export const authRouter = createTRPCRouter({
 			where: (profiles, { eq }) => eq(profiles.userId, ctx.user.id),
 		})
 
-		return profile
+		return profile ?? null
 	}),
 
 	getUserIdentities: protectedProcedure.query(async ({ ctx }) => {
