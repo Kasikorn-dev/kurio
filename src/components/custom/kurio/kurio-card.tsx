@@ -1,5 +1,3 @@
-"use client"
-
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -33,16 +31,9 @@ export function KurioCard({ kurio }: KurioCardProps) {
 						<Badge variant="outline">{kurio.status}</Badge>
 					</div>
 					<div className="flex gap-2">
-						{kurio.status === "ready" && (
-							<Link href={`/kurio/${kurio.id}/play`}>
-								<Button size="sm" variant="default">
-									Play
-								</Button>
-							</Link>
-						)}
 						<Link href={`/kurio/${kurio.id}`}>
-							<Button size="sm" variant="outline">
-								View
+							<Button size="sm" variant="default">
+								{kurio.status === "ready" ? "Play" : "View"}
 							</Button>
 						</Link>
 					</div>

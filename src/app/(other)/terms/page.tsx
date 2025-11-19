@@ -49,8 +49,7 @@ export default function TermsPage() {
 							Kurio is a platform that allows users to create educational games
 							and interactive learning experiences using AI-powered content
 							generation. You can upload text, files, or images, and our AI will
-							generate educational content including exercises, lessons, and
-							units.
+							generate educational content including exercises and units.
 						</p>
 					</section>
 

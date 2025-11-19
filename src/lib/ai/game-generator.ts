@@ -13,6 +13,8 @@ type GenerateGameParams = {
 }
 
 type GenerateGameResponse = {
+	title: string
+	description?: string
 	units: Array<{
 		title: string
 		games: Array<{
@@ -46,12 +48,16 @@ Content:
 ${contentText}
 
 Please generate:
-1. A list of units directly
-2. Games for each unit (quiz, matching, fill_blank, or multiple_choice)
-3. Each game should have appropriate difficulty (easy, medium, or hard)
+1. A title for this educational course (max 255 characters, engaging and descriptive)
+2. A description for this course (optional, max 500 characters, summarize what learners will learn)
+3. A list of units directly
+4. Games for each unit (quiz, matching, fill_blank, or multiple_choice)
+5. Each game should have appropriate difficulty (easy, medium, or hard)
 
 Return the response as JSON with this structure:
 {
+  "title": "Course title",
+  "description": "Course description (optional)",
   "units": [
     {
       "title": "Unit title",

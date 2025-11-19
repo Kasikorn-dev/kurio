@@ -8,7 +8,7 @@ export const unitProgress = createTable("unit_progress", (d) => ({
 	unitId: d
 		.uuid("unit_id")
 		.notNull()
-		.references(() => units.id),
+		.references(() => units.id, { onDelete: "cascade" }),
 	playerId: d
 		.uuid("player_id")
 		.notNull()

@@ -9,7 +9,7 @@ export const units = createTable("unit", (d) => ({
 	kurioId: d
 		.uuid("kurio_id")
 		.notNull()
-		.references(() => kurios.id),
+		.references(() => kurios.id, { onDelete: "cascade" }),
 	title: d.varchar({ length: 255 }).notNull(),
 	orderIndex: d.integer("order_index").notNull(),
 	createdAt: d

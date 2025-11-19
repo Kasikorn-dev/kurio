@@ -1,13 +1,7 @@
-import { eq } from "drizzle-orm"
 import { z } from "zod"
-import { generateGameContent } from "@/lib/ai/game-generator"
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc"
-import { gameAttempts, kurios } from "@/server/db/schemas"
-import {
-	batchInsertUnitsAndGames,
-	getUserProfileId,
-	upsertUnitProgress,
-} from "./game-helpers"
+import { gameAttempts } from "@/server/db/schemas"
+import { getUserProfileId, upsertUnitProgress } from "./game-helpers"
 
 export const gameRouter = createTRPCRouter({
 	submitAnswer: protectedProcedure
@@ -79,58 +73,5 @@ export const gameRouter = createTRPCRouter({
 			})
 
 			return progress
-		}),
-
-	generateGame: protectedProcedure
-		.input(
-			z.object({
-				kurioId: z.string().uuid(),
-			}),
-		)
-		.mutation(async ({ ctx, input }) => {
-			// Get kurio with resources
-			const kurio = await ctx.db.query.kurios.findFirst({
-				where: (kurios, { eq }) => eq(kurios.id, input.kurioId),
-				with: {
-					resources: true,
-				},
-			})
-
-			if (!kurio) {
-				throw new Error("Kurio not found")
-			}
-
-			if (kurio.userId !== ctx.user.id) {
-				throw new Error("Unauthorized")
-			}
-
-			// Generate game content using AI
-			const gameContent = await generateGameContent({
-				resources: kurio.resources.map((r) => ({
-					resourceType: r.resourceType,
-					resourceContent: r.resourceContent ?? undefined,
-					resourceFileUrl: r.resourceFileUrl ?? undefined,
-				})),
-				aiModel: kurio.aiModel,
-			})
-
-			// Batch insert units and games for better performance
-			const totalGames = await batchInsertUnitsAndGames(
-				ctx.db,
-				kurio.id,
-				gameContent.units,
-			)
-
-			// Update kurio status and total games
-			await ctx.db
-				.update(kurios)
-				.set({
-					status: "ready",
-					totalExercises: totalGames,
-					updatedAt: new Date(),
-				})
-				.where(eq(kurios.id, kurio.id))
-
-			return { success: true, totalGames }
 		}),
 })

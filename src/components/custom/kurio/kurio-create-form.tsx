@@ -4,7 +4,6 @@ import { useState } from "react"
 import { toast } from "sonner"
 import { useFileUpload } from "@/hooks/use-file-upload"
 import { useNavigation } from "@/hooks/use-navigation"
-import { extractKurioData } from "@/lib/kurio/resource-utils"
 import { useKurioStore } from "@/stores/kurio-store"
 import { api } from "@/trpc/react"
 import { KurioInput } from "./kurio-input"
@@ -22,11 +21,11 @@ export function KurioCreateForm() {
 			toast.error(error.message)
 			setIsSubmitting(false)
 		},
-		onSuccess: () => {
+		onSuccess: (kurio) => {
 			reset()
 			setTextContent("")
-			toast.success("Kurio created successfully")
-			navigate("/kurio")
+			toast.success("Kurio created and games generated successfully")
+			navigate(`/kurio/${kurio.id}`)
 		},
 	})
 
@@ -49,7 +48,7 @@ export function KurioCreateForm() {
 		}
 
 		if (!autoGenEnabled && !unitCount) {
-			toast.error("Please select number of lessons")
+			toast.error("Please select number of units")
 			return
 		}
 
@@ -88,12 +87,7 @@ export function KurioCreateForm() {
 				}),
 			)
 
-			// Extract title and description from resources
-			const { title, description } = extractKurioData(uploadedResources)
-
 			const payload = {
-				title,
-				description,
 				autoGenEnabled,
 				autoGenThreshold,
 				unitCount: autoGenEnabled ? undefined : unitCount,
@@ -119,9 +113,11 @@ export function KurioCreateForm() {
 				onTextChange={setTextContent}
 				textValue={textContent}
 			/>
-			{isUploading && (
+			{(isUploading || isSubmitting) && (
 				<div className="text-center text-muted-foreground text-sm">
-					Uploading files...
+					{isUploading
+						? "Uploading files..."
+						: "Generating games and content..."}
 				</div>
 			)}
 		</div>

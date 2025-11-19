@@ -8,7 +8,7 @@ export const gameAttempts = createTable("game_attempt", (d) => ({
 	gameId: d
 		.uuid("game_id")
 		.notNull()
-		.references(() => games.id),
+		.references(() => games.id, { onDelete: "cascade" }),
 	playerId: d
 		.uuid("player_id")
 		.notNull()

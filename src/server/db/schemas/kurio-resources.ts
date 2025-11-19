@@ -14,7 +14,7 @@ export const kurioResources = createTable("kurio_resource", (d) => ({
 	kurioId: d
 		.uuid("kurio_id")
 		.notNull()
-		.references(() => kurios.id),
+		.references(() => kurios.id, { onDelete: "cascade" }),
 	resourceType: d
 		.varchar("resource_type", { length: 50 })
 		.$type<"text" | "file" | "image">()

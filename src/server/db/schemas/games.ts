@@ -22,7 +22,7 @@ export const games = createTable("game", (d) => ({
 	unitId: d
 		.uuid("unit_id")
 		.notNull()
-		.references(() => units.id),
+		.references(() => units.id, { onDelete: "cascade" }),
 	title: d.varchar({ length: 255 }).notNull(),
 	gameType: d
 		.varchar("game_type", { length: 50 })

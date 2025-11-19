@@ -33,7 +33,7 @@ const initialState = {
 	title: "",
 	description: "",
 	autoGenEnabled: true,
-	autoGenThreshold: 75,
+	autoGenThreshold: 80,
 	unitCount: undefined as number | undefined,
 	resources: [] as Resource[],
 }

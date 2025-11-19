@@ -24,7 +24,7 @@ export function KurioAutoGenControls() {
 					/>
 				</TooltipTrigger>
 				<TooltipContent side="bottom">
-					AI will auto generate lesson when the content reaches 80% of the total
+					AI will auto generate units when the content reaches 80% of the total
 					content
 				</TooltipContent>
 			</Tooltip>

@@ -31,14 +31,14 @@ export function UnitCountSelector({
 			>
 				<SelectTrigger
 					className={cn("w-full min-w-20 border-none")}
-					id="lesson-count"
+					id="unit-count"
 				>
-					<SelectValue placeholder="Lessons" />
+					<SelectValue placeholder="Units" />
 				</SelectTrigger>
 				<SelectContent>
 					{GAME_CONSTANTS.UNIT_COUNT_OPTIONS.map((count) => (
 						<SelectItem key={count} value={count.toString()}>
-							{count} lessons
+							{count} units
 						</SelectItem>
 					))}
 				</SelectContent>
