@@ -1,4 +1,5 @@
 import { relations } from "drizzle-orm"
+import { index } from "drizzle-orm/pg-core"
 import { createTable } from "../lib/utils"
 import { games } from "./games"
 import { kurios } from "./kurios"
@@ -16,7 +17,9 @@ export const units = createTable("unit", (d) => ({
 		.timestamp("created_at", { withTimezone: true })
 		.$defaultFn(() => new Date())
 		.notNull(),
-}))
+}), (table) => [
+	index("units_kurio_id_order_idx").on(table.kurioId, table.orderIndex),
+])
 
 export const unitsRelations = relations(units, ({ one, many }) => ({
 	kurio: one(kurios, {
@@ -27,10 +30,3 @@ export const unitsRelations = relations(units, ({ one, many }) => ({
 	progress: many(unitProgress),
 }))
 
-// // Indexes for units table
-// export const unitsKurioIdOrderIdx = index("units_kurio_id_order_idx").on(
-// 	units.kurioId,
-// 	units.orderIndex,
-// )
-// // ทำไม: Composite index สำหรับ query ที่หา units ของ kurio และเรียงตาม orderIndex
-// // เช่น: SELECT * FROM units WHERE kurioId = ? ORDER BY orderIndex ASC

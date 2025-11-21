@@ -1,4 +1,5 @@
 import { relations } from "drizzle-orm"
+import { index } from "drizzle-orm/pg-core"
 import { createTable } from "../lib/utils"
 import { games } from "./games"
 import { userProfiles } from "./user-profiles"
@@ -21,7 +22,11 @@ export const gameAttempts = createTable("game_attempt", (d) => ({
 		.timestamp("played_at", { withTimezone: true })
 		.$defaultFn(() => new Date())
 		.notNull(),
-}))
+}), (table) => [
+	index("game_attempts_player_id_idx").on(table.playerId),
+	index("game_attempts_game_id_idx").on(table.gameId),
+	index("game_attempts_player_id_played_at_idx").on(table.playerId, table.playedAt),
+])
 
 export const gameAttemptsRelations = relations(gameAttempts, ({ one }) => ({
 	player: one(userProfiles, {
@@ -34,19 +39,3 @@ export const gameAttemptsRelations = relations(gameAttempts, ({ one }) => ({
 	}),
 }))
 
-// // Indexes for game_attempts table
-// export const gameAttemptsPlayerIdIdx = index("game_attempts_player_id_idx").on(
-// 	gameAttempts.playerId,
-// )
-// // ทำไม: ใช้ใน WHERE clause เพื่อหา attempts ของ player - query: WHERE playerId = ?
-
-// export const gameAttemptsGameIdIdx = index("game_attempts_game_id_idx").on(
-// 	gameAttempts.gameId,
-// )
-// // ทำไม: ใช้ใน WHERE clause เพื่อหา attempts ของ game - query: WHERE gameId = ?
-
-// export const gameAttemptsPlayerIdPlayedAtIdx = index(
-// 	"game_attempts_player_id_played_at_idx",
-// ).on(gameAttempts.playerId, gameAttempts.playedAt)
-// // ทำไม: Composite index สำหรับ query ที่ดูประวัติการเล่นของ player เรียงตามเวลา
-// // เช่น: SELECT * FROM game_attempts WHERE playerId = ? ORDER BY playedAt DESC

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { TIMING_CONSTANTS } from "@/lib/constants"
 
 type UseExerciseTimerReturn = {
@@ -13,40 +13,38 @@ export function useExerciseTimer(): UseExerciseTimerReturn {
 	const startTimeRef = useRef<number | null>(null)
 	const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
-	const start = () => {
-		if (startTimeRef.current === null) {
+	const start = useCallback(() => {
+		if (!startTimeRef.current) {
 			startTimeRef.current = Date.now()
 			intervalRef.current = setInterval(() => {
 				if (startTimeRef.current) {
 					setTimeSpent(
-						Math.floor(
-							(Date.now() - startTimeRef.current) /
-								TIMING_CONSTANTS.MS_TO_SECONDS,
-						),
+						Math.floor((Date.now() - startTimeRef.current) / 1000),
 					)
 				}
-			}, TIMING_CONSTANTS.MS_TO_SECONDS)
+			}, 1000)
 		}
-	}
+	}, [])
 
-	const stop = () => {
+	const stop = useCallback(() => {
 		if (intervalRef.current) {
 			clearInterval(intervalRef.current)
 			intervalRef.current = null
 		}
 		if (startTimeRef.current) {
-			const finalTime = Math.floor(
-				(Date.now() - startTimeRef.current) / TIMING_CONSTANTS.MS_TO_SECONDS,
-			)
+			const finalTime = Math.floor((Date.now() - startTimeRef.current) / 1000)
 			setTimeSpent(finalTime)
-			startTimeRef.current = null
 		}
-	}
+	}, [])
 
-	const reset = () => {
-		stop()
+	const reset = useCallback(() => {
+		if (intervalRef.current) {
+			clearInterval(intervalRef.current)
+			intervalRef.current = null
+		}
+		startTimeRef.current = null
 		setTimeSpent(0)
-	}
+	}, [])
 
 	useEffect(() => {
 		return () => {

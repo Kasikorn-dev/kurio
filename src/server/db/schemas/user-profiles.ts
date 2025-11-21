@@ -1,4 +1,5 @@
 import { relations } from "drizzle-orm"
+import { index } from "drizzle-orm/pg-core"
 import { createTable } from "../lib/utils"
 import { gameAttempts } from "./game-attempts"
 import { kurios } from "./kurios"
@@ -17,7 +18,9 @@ export const userProfiles = createTable("user_profile", (d) => ({
 	updatedAt: d
 		.timestamp("updated_at", { withTimezone: true })
 		.$onUpdate(() => new Date()),
-}))
+}), (table) => [
+	index("user_profiles_user_id_idx").on(table.userId),
+])
 
 export const userProfilesRelations = relations(userProfiles, ({ many }) => ({
 	kurios: many(kurios),

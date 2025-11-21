@@ -4,6 +4,20 @@ import { gameAttempts } from "@/server/db/schemas"
 import { getUserProfileId, upsertUnitProgress } from "./game-helpers"
 
 export const gameRouter = createTRPCRouter({
+	getById: protectedProcedure
+		.input(z.object({ id: z.string().uuid() }))
+		.query(async ({ ctx, input }) => {
+			const game = await ctx.db.query.games.findFirst({
+				where: (games, { eq }) => eq(games.id, input.id),
+			})
+
+			if (!game) {
+				throw new Error("Game not found")
+			}
+
+			return game
+		}),
+
 	submitAnswer: protectedProcedure
 		.input(
 			z.object({
@@ -52,6 +66,25 @@ export const gameRouter = createTRPCRouter({
 				await upsertUnitProgress(tx, playerId, game.unitId, totalGames)
 			})
 
+			// Check if we should trigger auto-gen (after transaction completes)
+			const unit = await ctx.db.query.units.findFirst({
+				where: (units, { eq }) => eq(units.id, game.unitId),
+			})
+
+			if (unit?.kurioId) {
+				// Call auto-gen helper directly (fire-and-forget)
+				// In production, consider using a background job queue
+				try {
+					const { checkAndGenerateUnits } = await import(
+						"./auto-gen-helpers"
+					)
+					await checkAndGenerateUnits(ctx.db, unit.kurioId, ctx.user.id)
+				} catch (error) {
+					// Log error but don't fail the game submission
+					console.error("Auto-gen check failed:", error)
+				}
+			}
+
 			return { success: true }
 		}),
 
@@ -73,5 +106,36 @@ export const gameRouter = createTRPCRouter({
 			})
 
 			return progress
+		}),
+
+	getUnitProgress: protectedProcedure
+		.input(z.object({ unitId: z.string().uuid() }))
+		.query(async ({ ctx, input }) => {
+			const playerId = await getUserProfileId(ctx.db, ctx.user.id)
+
+			const progress = await ctx.db.query.unitProgress.findFirst({
+				where: (progress, { eq, and }) =>
+					and(
+						eq(progress.playerId, playerId),
+						eq(progress.unitId, input.unitId),
+					),
+			})
+
+			return progress
+		}),
+
+	getUnitWithGames: protectedProcedure
+		.input(z.object({ unitId: z.string().uuid() }))
+		.query(async ({ ctx, input }) => {
+			const unit = await ctx.db.query.units.findFirst({
+				where: (units, { eq }) => eq(units.id, input.unitId),
+				with: {
+					games: {
+						orderBy: (games, { asc }) => [asc(games.orderIndex)],
+					},
+				},
+			})
+
+			return unit
 		}),
 })

@@ -1,4 +1,5 @@
 import { relations } from "drizzle-orm"
+import { index, uniqueIndex } from "drizzle-orm/pg-core"
 import { createTable } from "../lib/utils"
 import { units } from "./units"
 import { userProfiles } from "./user-profiles"
@@ -24,7 +25,12 @@ export const unitProgress = createTable("unit_progress", (d) => ({
 	updatedAt: d
 		.timestamp("updated_at", { withTimezone: true })
 		.$onUpdate(() => new Date()),
-}))
+}), (table) => [
+	uniqueIndex("unit_progress_player_id_unit_id_idx").on(table.playerId, table.unitId),
+	index("unit_progress_player_id_idx").on(table.playerId),
+	index("unit_progress_unit_id_idx").on(table.unitId),
+	index("unit_progress_player_id_completed_idx").on(table.playerId, table.isCompleted),
+])
 
 export const unitProgressRelations = relations(unitProgress, ({ one }) => ({
 	player: one(userProfiles, {
@@ -37,26 +43,5 @@ export const unitProgressRelations = relations(unitProgress, ({ one }) => ({
 	}),
 }))
 
-// // Indexes for unit_progress table
-// export const unitProgressPlayerIdUnitIdIdx = uniqueIndex(
-// 	"unit_progress_player_id_unit_id_idx",
-// ).on(unitProgress.playerId, unitProgress.unitId)
-// // ทำไม: UNIQUE composite index เพื่อป้องกัน duplicate progress records
-// // และใช้ใน WHERE clause ที่ query ทั้ง playerId และ unitId พร้อมกัน
-// // เช่น: WHERE playerId = ? AND unitId = ?
 
-// export const unitProgressPlayerIdIdx = index("unit_progress_player_id_idx").on(
-// 	unitProgress.playerId,
-// )
-// // ทำไม: ใช้ใน WHERE clause เพื่อหา progress ของ player - query: WHERE playerId = ?
 
-// export const unitProgressUnitIdIdx = index("unit_progress_unit_id_idx").on(
-// 	unitProgress.unitId,
-// )
-// // ทำไม: ใช้ใน WHERE clause เพื่อหา progress ของ unit - query: WHERE unitId = ? หรือ IN (unitIds)
-
-// export const unitProgressPlayerIdCompletedIdx = index(
-// 	"unit_progress_player_id_completed_idx",
-// ).on(unitProgress.playerId, unitProgress.isCompleted)
-// // ทำไม: Composite index สำหรับ query ที่หาความคืบหน้าของ player ที่เสร็จแล้วหรือยังไม่เสร็จ
-// // เช่น: WHERE playerId = ? AND isCompleted = true

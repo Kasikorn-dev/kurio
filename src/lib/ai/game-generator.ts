@@ -1,4 +1,5 @@
 import { AI_CONSTANTS } from "@/lib/constants"
+import { SAFETY_SYSTEM_PROMPT, validateContentSafety } from "./content-safety"
 import { openai } from "./openai-client"
 
 type Resource = {
@@ -10,6 +11,8 @@ type Resource = {
 type GenerateGameParams = {
 	resources: Resource[]
 	aiModel?: string
+	unitCount: number
+	gamesPerUnit: number
 }
 
 type GenerateGameResponse = {
@@ -29,10 +32,15 @@ type GenerateGameResponse = {
 export async function generateGameContent(
 	params: GenerateGameParams,
 ): Promise<GenerateGameResponse> {
-	const { resources, aiModel = AI_CONSTANTS.DEFAULT_MODEL } = params
+	const {
+		resources,
+		aiModel = AI_CONSTANTS.DEFAULT_MODEL,
+		unitCount,
+		gamesPerUnit,
+	} = params
 
-	// Prepare content from resources
-	const contentText = resources
+	// Prepare text content
+	const textContent = resources
 		.map((r) => {
 			if (r.resourceType === "text" && r.resourceContent) {
 				return r.resourceContent
@@ -42,67 +50,176 @@ export async function generateGameContent(
 		.filter(Boolean)
 		.join("\n\n")
 
-	const prompt = `Create an educational game based on the following content.
+	// Validate content safety
+	const safetyCheck = validateContentSafety(textContent)
+	if (!safetyCheck.safe) {
+		throw new Error(
+			`Content safety check failed: ${safetyCheck.reason}. Please provide appropriate educational content.`,
+		)
+	}
 
-Content:
-${contentText}
+	// Prepare image URLs for vision
+	const imageUrls = resources
+		.filter((r) => r.resourceType === "image" && r.resourceFileUrl)
+		.map((r) => r.resourceFileUrl!)
 
-Please generate:
-1. A title for this educational course (max 255 characters, engaging and descriptive)
-2. A description for this course (optional, max 500 characters, summarize what learners will learn)
-3. A list of units directly
-4. Games for each unit (quiz, matching, fill_blank, or multiple_choice)
-5. Each game should have appropriate difficulty (easy, medium, or hard)
+	const prompt = `Create ${unitCount} educational units with ${gamesPerUnit} games each from this content:
 
-Return the response as JSON with this structure:
+${textContent}
+${imageUrls.length > 0 ? "\nAnalyze provided images for additional context.\n" : ""}
+
+Requirements:
+- Course title (max 255 chars)
+- Optional description (max 500 chars)
+- ${unitCount} units, each with ${gamesPerUnit} games
+- Mix of game types: quiz, matching, fill_blank, multiple_choice
+- Difficulty levels: easy, medium, hard
+- Educational and age-appropriate content
+
+IMPORTANT: Each game type MUST follow its exact schema below:
+
+1. MULTIPLE_CHOICE:
 {
-  "title": "Course title",
-  "description": "Course description (optional)",
+  "title": "Question title",
+  "gameType": "multiple_choice",
+  "difficultyLevel": "easy|medium|hard",
+  "content": {
+    "question": "The question text",
+    "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+    "correctAnswer": 0  // Index of correct option (0-3)
+  }
+}
+
+2. QUIZ (short answer):
+{
+  "title": "Question title",
+  "gameType": "quiz",
+  "difficultyLevel": "easy|medium|hard",
+  "content": {
+    "question": "The question text",
+    "correctAnswer": "The exact answer"  // String, case-insensitive match
+  }
+}
+
+3. FILL_BLANK:
+{
+  "title": "Exercise title",
+  "gameType": "fill_blank",
+  "difficultyLevel": "easy|medium|hard",
+  "content": {
+    "text": "The quick ___ jumps over the lazy ___.",  // Use ___ for blanks
+    "blanks": [
+      {"answer": "brown fox"},  // First blank answer
+      {"answer": "dog"}         // Second blank answer
+    ]
+  }
+}
+
+4. MATCHING:
+{
+  "title": "Match pairs",
+  "gameType": "matching",
+  "difficultyLevel": "easy|medium|hard",
+  "content": {
+    "leftItems": ["Item 1", "Item 2", "Item 3"],
+    "rightItems": ["Match 1", "Match 2", "Match 3"],
+    "correctPairs": [
+      {"left": "Item 1", "right": "Match 1"},
+      {"left": "Item 2", "right": "Match 2"},
+      {"left": "Item 3", "right": "Match 3"}
+    ]
+  }
+}
+
+Return JSON in this exact format:
+{
+  "title": "Course Title",
+  "description": "Brief description (optional)",
   "units": [
     {
-      "title": "Unit title",
+      "title": "Unit 1 Title",
       "games": [
-        {
-          "title": "Game title",
-          "gameType": "quiz" | "matching" | "fill_blank" | "multiple_choice",
-          "difficultyLevel": "easy" | "medium" | "hard",
-          "content": {
-            "question": "...",
-            "options": [...],
-            "correctAnswer": "...",
-            ...
-          }
-        }
+        // Games following schemas above
       ]
     }
   ]
 }`
 
 	try {
-		const completion = await openai.chat.completions.create({
-			model: aiModel,
-			messages: [
-				{
-					role: "system",
-					content:
-						"You are an educational game creator. Generate engaging and educational games based on provided content.",
-				},
-				{
-					role: "user",
-					content: prompt,
-				},
-			],
-			response_format: { type: "json_object" },
-		})
+		// Build messages with vision support
+		if (imageUrls.length > 0) {
+			// Use vision with images
+			const completion = await openai.chat.completions.create({
+				model: aiModel,
+				messages: [
+					{
+						role: "system",
+						content: SAFETY_SYSTEM_PROMPT,
+					},
+					{
+						role: "user",
+						content: [
+							{ type: "text", text: prompt },
+							...imageUrls.map((url) => ({
+								type: "image_url" as const,
+								image_url: { url },
+							})),
+						],
+					},
+				],
+				response_format: { type: "json_object" },
+			})
 
-		const responseContent =
-			completion.choices[AI_CONSTANTS.RESPONSE_INDEX.FIRST_CHOICE]?.message
-				?.content
-		if (!responseContent) {
-			throw new Error("No response from AI")
+			const responseContent =
+				completion.choices[AI_CONSTANTS.RESPONSE_INDEX.FIRST_CHOICE]?.message
+					?.content
+			if (!responseContent) {
+				throw new Error("No response from AI")
+			}
+
+			const parsed = JSON.parse(responseContent) as
+				| GenerateGameResponse
+				| { error: string; message: string }
+
+			if ("error" in parsed && parsed.error === "inappropriate_content") {
+				throw new Error(parsed.message)
+			}
+
+			return parsed as GenerateGameResponse
+		} else {
+			// Text only
+			const completion = await openai.chat.completions.create({
+				model: aiModel,
+				messages: [
+					{
+						role: "system",
+						content: SAFETY_SYSTEM_PROMPT,
+					},
+					{
+						role: "user",
+						content: prompt,
+					},
+				],
+				response_format: { type: "json_object" },
+			})
+
+			const responseContent =
+				completion.choices[AI_CONSTANTS.RESPONSE_INDEX.FIRST_CHOICE]?.message
+					?.content
+			if (!responseContent) {
+				throw new Error("No response from AI")
+			}
+
+			const parsed = JSON.parse(responseContent) as
+				| GenerateGameResponse
+				| { error: string; message: string }
+
+			if ("error" in parsed && parsed.error === "inappropriate_content") {
+				throw new Error(parsed.message)
+			}
+
+			return parsed as GenerateGameResponse
 		}
-
-		return JSON.parse(responseContent) as GenerateGameResponse
 	} catch (error) {
 		if (error instanceof Error) {
 			throw new Error(`Failed to generate game content: ${error.message}`)

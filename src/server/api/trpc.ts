@@ -1,14 +1,7 @@
-/**
- * YOU PROBABLY DON'T NEED TO EDIT THIS FILE, UNLESS:
- * 1. You want to modify request context (see Part 1).
- * 2. You want to create a new middleware or type of procedure (see Part 3).
- *
- * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
- * need to use are documented accordingly near the end.
- */
 import { initTRPC, TRPCError } from "@trpc/server"
 import superjson from "superjson"
 import { ZodError } from "zod"
+import { logger } from "@/lib/monitoring/logger"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { db } from "@/server/db"
 
@@ -96,8 +89,16 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
 
 	const result = await next()
 
-	const end = Date.now()
-	console.log(`[TRPC] ${path} took ${end - start}ms to execute`)
+	const duration = Date.now() - start
+	
+	// Log all queries with duration
+	logger.debug(`[TRPC] ${path}`, { duration })
+	
+	// Log slow queries (>1000ms)
+	logger.logSlowOperation(path, duration, 1000, { 
+		type: "trpc_query",
+		path 
+	})
 
 	return result
 })

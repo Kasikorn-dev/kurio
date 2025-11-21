@@ -43,9 +43,9 @@ export function MatchingGame({
 				)}
 			</CardHeader>
 			<CardContent className="flex flex-col gap-4">
-				<div className="grid grid-cols-2 gap-4">
+				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 					<div className="flex flex-col gap-2">
-						<h3 className="font-semibold">Left</h3>
+						<h3 className="font-semibold text-sm sm:text-base">Left</h3>
 						{leftItems.map((left) => (
 							<Button
 								disabled={isSubmitted}
@@ -58,13 +58,14 @@ export function MatchingGame({
 											? "secondary"
 											: "outline"
 								}
+								className="text-sm sm:text-base"
 							>
 								{left}
 							</Button>
 						))}
 					</div>
 					<div className="flex flex-col gap-2">
-						<h3 className="font-semibold">Right</h3>
+						<h3 className="font-semibold text-sm sm:text-base">Right</h3>
 						{rightItems.map((right) => {
 							const matchedLeft = matches.find((m) => m.right === right)?.left
 							return (
@@ -73,6 +74,7 @@ export function MatchingGame({
 									key={`right-${right}`}
 									onClick={() => onRightClick(right)}
 									variant={matchedLeft ? "secondary" : "outline"}
+									className="text-sm sm:text-base"
 								>
 									{right} {matchedLeft && `(${matchedLeft})`}
 								</Button>

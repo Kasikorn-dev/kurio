@@ -42,13 +42,13 @@ export function FillBlankGame({
 				)}
 			</CardHeader>
 			<CardContent className="flex flex-col gap-4">
-				<div className="flex flex-wrap items-center gap-2">
+				<div className="flex flex-wrap items-center gap-2 text-sm sm:text-base">
 					{parts.map((part, index) => (
 						<span key={`part-${index}-${part.slice(0, 10)}`}>
 							{part}
 							{index < blanks.length && (
 								<input
-									className="mx-1 w-24 rounded-md border p-1"
+									className="mx-1 w-24 rounded-md border p-1 text-sm sm:text-base"
 									disabled={isSubmitted}
 									onChange={(e) => onBlankChange(index, e.target.value)}
 									type="text"

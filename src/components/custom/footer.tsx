@@ -4,12 +4,12 @@ export function Footer() {
 	const currentYear = new Date().getFullYear()
 
 	return (
-		<footer className="mt-16 border-t bg-background">
-			<div className="container mx-auto px-4 py-8">
-				<div className="grid grid-cols-1 gap-8 md:grid-cols-4">
+		<footer className="mt-12 border-t bg-background sm:mt-16">
+			<div className="container mx-auto px-4 py-6 sm:py-8">
+				<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 md:grid-cols-4">
 					{/* Brand */}
 					<div className="flex flex-col gap-4">
-						<Link className="font-bold text-xl" href="/">
+						<Link className="font-bold text-lg sm:text-xl" href="/">
 							Kurio
 						</Link>
 						<p className="text-muted-foreground text-sm">
@@ -88,7 +88,7 @@ export function Footer() {
 				</div>
 
 				{/* Copyright */}
-				<div className="mt-8 pt-8">
+				<div className="mt-6 border-t pt-6 sm:mt-8 sm:pt-8">
 					<p className="text-center text-muted-foreground text-sm">
 						© {currentYear} Kurio. All rights reserved.
 					</p>

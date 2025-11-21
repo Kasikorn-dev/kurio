@@ -14,7 +14,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 	const params = await searchParams
 
 	return (
-		<div className="w-full max-w-md space-y-8">
+		<div className="w-full max-w-md space-y-6 px-4 sm:space-y-8 sm:px-0">
 			<LoginToastHandler
 				error={params.error}
 				info={params.info}
@@ -44,9 +44,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 			</div>
 
 			{/* Main Card */}
-			<div className="rounded-lg border bg-card p-8 shadow-sm">
+			<div className="rounded-lg border bg-card p-6 shadow-sm sm:p-8">
 				<div className="mb-6">
-					<h2 className="font-bold text-2xl">Welcome back</h2>
+					<h2 className="font-bold text-xl sm:text-2xl">Welcome back</h2>
 					<p className="mt-2 text-muted-foreground text-sm">
 						Login with your Google account
 					</p>

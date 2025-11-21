@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm"
-import { pgEnum } from "drizzle-orm/pg-core"
+import { index, pgEnum } from "drizzle-orm/pg-core"
 import { createTable } from "../lib/utils"
 import { gameAttempts } from "./game-attempts"
 import { units } from "./units"
@@ -38,7 +38,9 @@ export const games = createTable("game", (d) => ({
 		.timestamp("created_at", { withTimezone: true })
 		.$defaultFn(() => new Date())
 		.notNull(),
-}))
+}), (table) => [
+	index("games_unit_id_order_idx").on(table.unitId, table.orderIndex),
+])
 
 export const gamesRelations = relations(games, ({ one, many }) => ({
 	unit: one(units, {
@@ -48,10 +50,3 @@ export const gamesRelations = relations(games, ({ one, many }) => ({
 	attempts: many(gameAttempts),
 }))
 
-// // Indexes for games table
-// export const gamesUnitIdOrderIdx = index("games_unit_id_order_idx").on(
-// 	games.unitId,
-// 	games.orderIndex,
-// )
-// // ทำไม: Composite index สำหรับ query ที่หา games ของ unit และเรียงตาม orderIndex
-// // เช่น: SELECT * FROM games WHERE unitId = ? ORDER BY orderIndex ASC

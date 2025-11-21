@@ -45,13 +45,13 @@ export default function EditProfilePage() {
 	}
 
 	return (
-		<div className="container mx-auto py-8">
-			<h1 className="mb-6 font-bold text-3xl">Edit Profile</h1>
+		<div className="container mx-auto px-4 py-4 sm:py-6 md:py-8">
+			<h1 className="mb-4 font-bold text-2xl sm:mb-6 sm:text-3xl">Edit Profile</h1>
 
-			<div className="flex max-w-2xl flex-col gap-8">
+			<div className="flex max-w-2xl flex-col gap-6 sm:gap-8">
 				{/* Profile Information */}
 				<div>
-					<h2 className="mb-4 font-semibold text-xl">Profile Information</h2>
+					<h2 className="mb-4 font-semibold text-lg sm:text-xl">Profile Information</h2>
 					<form className="flex flex-col gap-4" onSubmit={handleSubmit}>
 						<div className="flex flex-col gap-2">
 							<Label htmlFor="displayName">Display Name</Label>
@@ -63,8 +63,8 @@ export default function EditProfilePage() {
 								placeholder="Enter display name"
 							/>
 						</div>
-						<div className="flex gap-2">
-							<Button disabled={updateProfile.isPending} type="submit">
+						<div className="flex flex-col gap-2 sm:flex-row">
+							<Button disabled={updateProfile.isPending} type="submit" size="sm" className="w-full sm:w-auto sm:size-default">
 								{updateProfile.isPending && <Spinner className="mr-2 size-4" />}
 								{updateProfile.isPending ? "Saving..." : "Save Changes"}
 							</Button>
@@ -73,6 +73,8 @@ export default function EditProfilePage() {
 								onClick={() => router.back()}
 								type="button"
 								variant="outline"
+								size="sm"
+								className="w-full sm:w-auto sm:size-default"
 							>
 								Cancel
 							</Button>

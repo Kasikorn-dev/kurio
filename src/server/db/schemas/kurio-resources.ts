@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm"
-import { pgEnum } from "drizzle-orm/pg-core"
+import { index, pgEnum } from "drizzle-orm/pg-core"
 import { createTable } from "../lib/utils"
 import { kurios } from "./kurios"
 
@@ -27,7 +27,9 @@ export const kurioResources = createTable("kurio_resource", (d) => ({
 		.timestamp("created_at", { withTimezone: true })
 		.$defaultFn(() => new Date())
 		.notNull(),
-}))
+}), (table) => [
+	index("kurio_resources_kurio_id_order_idx").on(table.kurioId, table.orderIndex),
+])
 
 export const kurioResourcesRelations = relations(kurioResources, ({ one }) => ({
 	kurio: one(kurios, {
@@ -36,9 +38,3 @@ export const kurioResourcesRelations = relations(kurioResources, ({ one }) => ({
 	}),
 }))
 
-// // Indexes for kurio_resources table
-// export const kurioResourcesKurioIdOrderIdx = index(
-// 	"kurio_resources_kurio_id_order_idx",
-// ).on(kurioResources.kurioId, kurioResources.orderIndex)
-// // ทำไม: Composite index สำหรับ query ที่หา resources ของ kurio และเรียงตาม orderIndex
-// // เช่น: SELECT * FROM kurio_resources WHERE kurioId = ? ORDER BY orderIndex ASC

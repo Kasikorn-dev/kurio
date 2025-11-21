@@ -21,12 +21,6 @@ export function KurioCreateForm() {
 			toast.error(error.message)
 			setIsSubmitting(false)
 		},
-		onSuccess: (kurio) => {
-			reset()
-			setTextContent("")
-			toast.success("Kurio created and games generated successfully")
-			navigate(`/kurio/${kurio.id}`)
-		},
 	})
 
 	const handleSubmit = async (): Promise<void> => {
@@ -94,7 +88,17 @@ export function KurioCreateForm() {
 				resources: uploadedResources,
 			}
 
-			await createKurio.mutateAsync(payload)
+			// Start generation and redirect immediately
+			const kurio = await createKurio.mutateAsync(payload)
+
+			// Reset form and redirect
+			reset()
+			setTextContent("")
+			setIsSubmitting(false)
+			
+			// Show success message and redirect
+			toast.success("Creating your Kurio...")
+			navigate(`/kurio/${kurio.id}`)
 		} catch (error) {
 			toast.error(
 				error instanceof Error

@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button"
 
 export default function TermsPage() {
 	return (
-		<div className="container mx-auto max-w-4xl space-y-8 px-4">
+		<div className="container mx-auto max-w-4xl space-y-6 px-4 py-4 sm:space-y-8 sm:py-6 md:py-8">
 			{/* Header */}
 			<div className="flex flex-col gap-4">
-				<h1 className="font-bold text-4xl">Terms of Service</h1>
+				<h1 className="font-bold text-2xl sm:text-3xl md:text-4xl">Terms of Service</h1>
 				<p className="text-muted-foreground text-sm">
 					Last updated:{" "}
 					{new Date().toLocaleDateString("en-US", {
@@ -19,11 +19,11 @@ export default function TermsPage() {
 
 			{/* Content */}
 			<div className="prose prose-sm dark:prose-invert max-w-none">
-				<div className="space-y-8 rounded-lg border bg-card p-8">
+				<div className="space-y-6 rounded-lg border bg-card p-6 sm:space-y-8 sm:p-8">
 					{/* Introduction */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">1. Introduction</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<h2 className="font-bold text-xl sm:text-2xl">1. Introduction</h2>
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							Welcome to Kurio. These Terms of Service ("Terms") govern your
 							access to and use of our platform for creating educational games
 							powered by AI. By accessing or using Kurio, you agree to be bound
@@ -33,8 +33,8 @@ export default function TermsPage() {
 
 					{/* Acceptance */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">2. Acceptance of Terms</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<h2 className="font-bold text-xl sm:text-2xl">2. Acceptance of Terms</h2>
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							By creating an account, accessing, or using Kurio, you acknowledge
 							that you have read, understood, and agree to be bound by these
 							Terms and our Privacy Policy. If you do not agree to these Terms,
@@ -44,23 +44,23 @@ export default function TermsPage() {
 
 					{/* Description of Service */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">3. Description of Service</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<h2 className="font-bold text-xl sm:text-2xl">3. Description of Service</h2>
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							Kurio is a platform that allows users to create educational games
 							and interactive learning experiences using AI-powered content
 							generation. You can upload text, files, or images, and our AI will
-							generate educational content including exercises and units.
+							generate educational content including games and units.
 						</p>
 					</section>
 
 					{/* User Accounts */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">4. User Accounts</h2>
+						<h2 className="font-bold text-xl sm:text-2xl">4. User Accounts</h2>
 						<div className="space-y-2 text-muted-foreground">
-							<p className="leading-relaxed">
+							<p className="text-sm leading-relaxed sm:text-base">
 								To use Kurio, you must create an account. You agree to:
 							</p>
-							<ul className="ml-6 list-disc space-y-2">
+							<ul className="ml-6 list-disc space-y-2 text-sm sm:text-base">
 								<li>
 									Provide accurate, current, and complete information during
 									registration
@@ -85,14 +85,14 @@ export default function TermsPage() {
 
 					{/* User Content */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">5. User Content</h2>
+						<h2 className="font-bold text-xl sm:text-2xl">5. User Content</h2>
 						<div className="space-y-2 text-muted-foreground">
-							<p className="leading-relaxed">
+							<p className="text-sm leading-relaxed sm:text-base">
 								You retain ownership of any content you upload or create on
 								Kurio ("User Content"). By using our service, you grant us a
 								license to:
 							</p>
-							<ul className="ml-6 list-disc space-y-2">
+							<ul className="ml-6 list-disc space-y-2 text-sm sm:text-base">
 								<li>
 									Use, store, and process your content to provide and improve
 									our services
@@ -106,7 +106,7 @@ export default function TermsPage() {
 									authorized users
 								</li>
 							</ul>
-							<p className="mt-4 leading-relaxed">
+							<p className="mt-4 text-sm leading-relaxed sm:text-base">
 								You are solely responsible for ensuring that your User Content
 								does not violate any laws, infringe on any rights, or contain
 								harmful or inappropriate material.
@@ -116,8 +116,8 @@ export default function TermsPage() {
 
 					{/* AI-Generated Content */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">6. AI-Generated Content</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<h2 className="font-bold text-xl sm:text-2xl">6. AI-Generated Content</h2>
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							Kurio uses artificial intelligence to generate educational
 							content. While we strive for accuracy and quality, AI-generated
 							content may contain errors or inaccuracies. You are responsible
@@ -129,11 +129,11 @@ export default function TermsPage() {
 
 					{/* Prohibited Uses */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">7. Prohibited Uses</h2>
-						<p className="mb-2 text-muted-foreground leading-relaxed">
+						<h2 className="font-bold text-xl sm:text-2xl">7. Prohibited Uses</h2>
+						<p className="mb-2 text-muted-foreground text-sm leading-relaxed sm:text-base">
 							You agree not to use Kurio to:
 						</p>
-						<ul className="ml-6 list-disc space-y-2 text-muted-foreground">
+						<ul className="ml-6 list-disc space-y-2 text-muted-foreground text-sm sm:text-base">
 							<li>
 								Violate any applicable laws, regulations, or third-party rights
 							</li>
@@ -162,8 +162,8 @@ export default function TermsPage() {
 
 					{/* Intellectual Property */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">8. Intellectual Property</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<h2 className="font-bold text-xl sm:text-2xl">8. Intellectual Property</h2>
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							The Kurio platform, including its design, features, and
 							functionality, is owned by us and protected by copyright,
 							trademark, and other intellectual property laws. You may not copy,
@@ -174,8 +174,8 @@ export default function TermsPage() {
 
 					{/* Termination */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">9. Termination</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<h2 className="font-bold text-xl sm:text-2xl">9. Termination</h2>
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							We reserve the right to suspend or terminate your account and
 							access to Kurio at any time, with or without notice, for any
 							reason, including if you violate these Terms. Upon termination,
@@ -185,8 +185,8 @@ export default function TermsPage() {
 
 					{/* Disclaimer of Warranties */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">10. Disclaimer of Warranties</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<h2 className="font-bold text-xl sm:text-2xl">10. Disclaimer of Warranties</h2>
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							Kurio is provided "as is" and "as available" without warranties of
 							any kind, either express or implied. We do not warrant that the
 							service will be uninterrupted, secure, or error-free, or that any
@@ -196,8 +196,8 @@ export default function TermsPage() {
 
 					{/* Limitation of Liability */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">11. Limitation of Liability</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<h2 className="font-bold text-xl sm:text-2xl">11. Limitation of Liability</h2>
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							To the maximum extent permitted by law, we shall not be liable for
 							any indirect, incidental, special, consequential, or punitive
 							damages, or any loss of profits or revenues, whether incurred
@@ -208,8 +208,8 @@ export default function TermsPage() {
 
 					{/* Changes to Terms */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">12. Changes to Terms</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<h2 className="font-bold text-xl sm:text-2xl">12. Changes to Terms</h2>
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							We reserve the right to modify these Terms at any time. We will
 							notify users of any material changes by updating the "Last
 							updated" date at the top of this page. Your continued use of Kurio
@@ -219,8 +219,8 @@ export default function TermsPage() {
 
 					{/* Contact */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">13. Contact Us</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<h2 className="font-bold text-xl sm:text-2xl">13. Contact Us</h2>
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							If you have any questions about these Terms, please contact us
 							through our support channels.
 						</p>
@@ -229,11 +229,11 @@ export default function TermsPage() {
 			</div>
 
 			{/* Footer Actions */}
-			<div className="flex flex-col gap-4 sm:flex-row sm:justify-between">
-				<Button asChild variant="outline">
+			<div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:gap-4">
+				<Button asChild variant="outline" size="sm" className="w-full sm:w-auto sm:size-default">
 					<Link href="/">Back to Home</Link>
 				</Button>
-				<Button asChild variant="outline">
+				<Button asChild variant="outline" size="sm" className="w-full sm:w-auto sm:size-default">
 					<Link href="/privacy">Privacy Policy</Link>
 				</Button>
 			</div>

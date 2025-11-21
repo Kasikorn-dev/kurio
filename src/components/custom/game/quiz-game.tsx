@@ -40,9 +40,9 @@ export function QuizGame({
 				)}
 			</CardHeader>
 			<CardContent className="flex flex-col gap-4">
-				<p>{question}</p>
+				<p className="text-sm sm:text-base">{question}</p>
 				<input
-					className="rounded-md border p-2"
+					className="rounded-md border p-2 text-sm sm:text-base"
 					disabled={isSubmitted}
 					onChange={(e) => onAnswerChange(e.target.value)}
 					placeholder="Type your answer..."

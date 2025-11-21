@@ -24,7 +24,7 @@ export function KurioListClient({ kurios, isLoading }: KurioListClientProps) {
 		)
 
 		return (
-			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				{skeletonKeys.map((key) => (
 					<KurioCardSkeleton key={key} />
 				))}
@@ -35,16 +35,20 @@ export function KurioListClient({ kurios, isLoading }: KurioListClientProps) {
 	if (!kurios || kurios.length === 0) {
 		return (
 			<div className="flex flex-col items-center justify-center gap-4 py-12">
-				<p className="text-muted-foreground">No kurios yet</p>
+				<p className="text-center text-muted-foreground text-sm sm:text-base">
+					No kurios yet
+				</p>
 				<Link href="/create-kurio">
-					<Button>Create your first Kurio</Button>
+					<Button size="sm" className="sm:size-default">
+						Create your first Kurio
+					</Button>
 				</Link>
 			</div>
 		)
 	}
 
 	return (
-		<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+		<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 			{kurios.map((kurio) => (
 				<KurioCard key={kurio.id} kurio={kurio} />
 			))}

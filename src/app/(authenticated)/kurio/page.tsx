@@ -8,12 +8,14 @@ export default async function KuriosPage() {
 	const hasKurios = kurios && kurios.length > 0
 
 	return (
-		<div className="container mx-auto py-8">
-			<div className="mb-6 flex items-center justify-between">
-				<h1 className="font-bold text-3xl">My Kurios</h1>
+		<div className="container mx-auto px-4 py-4 sm:py-6 md:py-8">
+			<div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+				<h1 className="font-bold text-2xl sm:text-3xl">My Kurios</h1>
 				{hasKurios && (
 					<Link href="/create-kurio">
-						<Button>Create New Kurio</Button>
+						<Button size="sm" className="w-full sm:w-auto sm:size-default">
+							Create New Kurio
+						</Button>
 					</Link>
 				)}
 			</div>

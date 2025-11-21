@@ -58,6 +58,16 @@ export const AI_CONSTANTS = {
 	// Default AI model
 	DEFAULT_MODEL: "gpt-5-nano-2025-08-07",
 
+	// Auto-generation settings
+	AUTO_GEN: {
+		INITIAL_UNITS: 30, // Units to generate when auto-gen is enabled
+		ADDITIONAL_UNITS: 10, // Units to add when progress reaches threshold
+		TRIGGER_THRESHOLD: 80, // Percentage of completion to trigger additional generation
+	},
+
+	// Games per unit (fixed)
+	GAMES_PER_UNIT: 10,
+
 	// AI response indices
 	RESPONSE_INDEX: {
 		FIRST_CHOICE: 0,

@@ -3,7 +3,7 @@ import { SignupForm } from "@/components/custom/auth/signup-form"
 
 export default function SignupPage() {
 	return (
-		<div className="w-full max-w-md space-y-8">
+		<div className="w-full max-w-md space-y-6 px-4 sm:space-y-8 sm:px-0">
 			{/* Logo/Brand */}
 			<div className="flex flex-col items-center gap-2">
 				<div className="flex h-12 w-12 items-center justify-center rounded-lg border bg-card">
@@ -28,9 +28,9 @@ export default function SignupPage() {
 			</div>
 
 			{/* Main Card */}
-			<div className="rounded-lg border bg-card p-8 shadow-sm">
+			<div className="rounded-lg border bg-card p-6 shadow-sm sm:p-8">
 				<div className="mb-6">
-					<h2 className="font-bold text-2xl">Create an account</h2>
+					<h2 className="font-bold text-xl sm:text-2xl">Create an account</h2>
 					<p className="mt-2 text-muted-foreground text-sm">
 						Sign up with your Google account
 					</p>

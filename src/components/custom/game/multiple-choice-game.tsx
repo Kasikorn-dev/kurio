@@ -44,7 +44,7 @@ export function MultipleChoiceGame({
 				)}
 			</CardHeader>
 			<CardContent className="flex flex-col gap-4">
-				<p>{question}</p>
+				<p className="text-sm sm:text-base">{question}</p>
 				<div className="flex flex-col gap-2">
 					{options.map((option, index) => (
 						<Button

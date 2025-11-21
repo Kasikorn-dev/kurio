@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button"
 
 export default function PrivacyPage() {
 	return (
-		<div className="container mx-auto max-w-4xl space-y-8 px-4">
+		<div className="container mx-auto max-w-4xl space-y-6 px-4 py-4 sm:space-y-8 sm:py-6 md:py-8">
 			{/* Header */}
 			<div className="flex flex-col gap-4">
-				<h1 className="font-bold text-4xl">Privacy Policy</h1>
+				<h1 className="font-bold text-2xl sm:text-3xl md:text-4xl">Privacy Policy</h1>
 				<p className="text-muted-foreground text-sm">
 					Last updated:{" "}
 					{new Date().toLocaleDateString("en-US", {
@@ -19,11 +19,11 @@ export default function PrivacyPage() {
 
 			{/* Content */}
 			<div className="prose prose-sm dark:prose-invert max-w-none">
-				<div className="space-y-8 rounded-lg border bg-card p-8">
+				<div className="space-y-6 rounded-lg border bg-card p-6 sm:space-y-8 sm:p-8">
 					{/* Introduction */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">1. Introduction</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<h2 className="font-bold text-xl sm:text-2xl">1. Introduction</h2>
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							At Kurio, we respect your privacy and are committed to protecting
 							your personal information. This Privacy Policy explains how we
 							collect, use, disclose, and safeguard your information when you
@@ -33,13 +33,13 @@ export default function PrivacyPage() {
 
 					{/* Information We Collect */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">2. Information We Collect</h2>
+						<h2 className="font-bold text-xl sm:text-2xl">2. Information We Collect</h2>
 						<div className="space-y-4 text-muted-foreground">
 							<div>
-								<h3 className="mb-2 font-semibold text-foreground">
+								<h3 className="mb-2 font-semibold text-sm text-foreground sm:text-base">
 									2.1 Account Information
 								</h3>
-								<p className="leading-relaxed">
+								<p className="text-sm leading-relaxed sm:text-base">
 									When you create an account, we collect information such as
 									your email address, display name, and authentication
 									credentials. If you sign up using a third-party provider
@@ -48,10 +48,10 @@ export default function PrivacyPage() {
 								</p>
 							</div>
 							<div>
-								<h3 className="mb-2 font-semibold text-foreground">
+								<h3 className="mb-2 font-semibold text-sm text-foreground sm:text-base">
 									2.2 Content You Upload
 								</h3>
-								<p className="leading-relaxed">
+								<p className="text-sm leading-relaxed sm:text-base">
 									We collect and store the content you upload to Kurio,
 									including text, files, images, and any educational games or
 									materials you create. This content is stored securely and is
@@ -59,20 +59,20 @@ export default function PrivacyPage() {
 								</p>
 							</div>
 							<div>
-								<h3 className="mb-2 font-semibold text-foreground">
+								<h3 className="mb-2 font-semibold text-sm text-foreground sm:text-base">
 									2.3 Usage Information
 								</h3>
-								<p className="leading-relaxed">
+								<p className="text-sm leading-relaxed sm:text-base">
 									We automatically collect information about how you use Kurio,
 									including pages visited, features used, time spent on the
 									platform, and interactions with AI-generated content.
 								</p>
 							</div>
 							<div>
-								<h3 className="mb-2 font-semibold text-foreground">
+								<h3 className="mb-2 font-semibold text-sm text-foreground sm:text-base">
 									2.4 Technical Information
 								</h3>
-								<p className="leading-relaxed">
+								<p className="text-sm leading-relaxed sm:text-base">
 									We collect technical information such as your IP address,
 									browser type, device information, and operating system to
 									ensure the security and functionality of our service.
@@ -83,13 +83,13 @@ export default function PrivacyPage() {
 
 					{/* How We Use Your Information */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">
+						<h2 className="font-bold text-xl sm:text-2xl">
 							3. How We Use Your Information
 						</h2>
-						<p className="mb-2 text-muted-foreground leading-relaxed">
+						<p className="mb-2 text-muted-foreground text-sm leading-relaxed sm:text-base">
 							We use the information we collect to:
 						</p>
-						<ul className="ml-6 list-disc space-y-2 text-muted-foreground">
+						<ul className="ml-6 list-disc space-y-2 text-muted-foreground text-sm sm:text-base">
 							<li>Provide, maintain, and improve our services</li>
 							<li>
 								Process your content and generate AI-powered educational
@@ -112,14 +112,14 @@ export default function PrivacyPage() {
 
 					{/* AI Processing */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">
+						<h2 className="font-bold text-xl sm:text-2xl">
 							4. AI Processing of Your Content
 						</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							When you upload content to Kurio, we use artificial intelligence
 							models to analyze and generate educational content. Your content
 							may be processed by third-party AI service providers (such as
-							OpenAI) to generate games, exercises, and learning materials. We
+							OpenAI) to generate games, and learning materials. We
 							ensure that any third-party AI providers comply with appropriate
 							data protection standards.
 						</p>
@@ -127,15 +127,15 @@ export default function PrivacyPage() {
 
 					{/* Information Sharing */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">
+						<h2 className="font-bold text-xl sm:text-2xl">
 							5. Information Sharing and Disclosure
 						</h2>
 						<div className="space-y-2 text-muted-foreground">
-							<p className="leading-relaxed">
+							<p className="text-sm leading-relaxed sm:text-base">
 								We do not sell your personal information. We may share your
 								information only in the following circumstances:
 							</p>
-							<ul className="ml-6 list-disc space-y-2">
+							<ul className="ml-6 list-disc space-y-2 text-sm sm:text-base">
 								<li>
 									<strong>Service Providers:</strong> We may share information
 									with third-party service providers who assist us in operating
@@ -163,8 +163,8 @@ export default function PrivacyPage() {
 
 					{/* Data Security */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">6. Data Security</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<h2 className="font-bold text-xl sm:text-2xl">6. Data Security</h2>
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							We implement appropriate technical and organizational measures to
 							protect your personal information against unauthorized access,
 							alteration, disclosure, or destruction. However, no method of
@@ -175,8 +175,8 @@ export default function PrivacyPage() {
 
 					{/* Data Retention */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">7. Data Retention</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<h2 className="font-bold text-xl sm:text-2xl">7. Data Retention</h2>
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							We retain your personal information for as long as necessary to
 							provide our services and fulfill the purposes outlined in this
 							Privacy Policy. When you delete your account, we will delete or
@@ -187,12 +187,12 @@ export default function PrivacyPage() {
 
 					{/* Your Rights */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">8. Your Rights</h2>
-						<p className="mb-2 text-muted-foreground leading-relaxed">
+						<h2 className="font-bold text-xl sm:text-2xl">8. Your Rights</h2>
+						<p className="mb-2 text-muted-foreground text-sm leading-relaxed sm:text-base">
 							Depending on your location, you may have certain rights regarding
 							your personal information, including:
 						</p>
-						<ul className="ml-6 list-disc space-y-2 text-muted-foreground">
+						<ul className="ml-6 list-disc space-y-2 text-muted-foreground text-sm sm:text-base">
 							<li>
 								<strong>Access:</strong> Request access to your personal
 								information
@@ -214,7 +214,7 @@ export default function PrivacyPage() {
 								information
 							</li>
 						</ul>
-						<p className="mt-4 leading-relaxed">
+						<p className="mt-4 text-sm leading-relaxed sm:text-base">
 							To exercise these rights, please contact us through our support
 							channels.
 						</p>
@@ -222,10 +222,10 @@ export default function PrivacyPage() {
 
 					{/* Cookies and Tracking */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">
+						<h2 className="font-bold text-xl sm:text-2xl">
 							9. Cookies and Tracking Technologies
 						</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							We use cookies and similar tracking technologies to enhance your
 							experience, analyze usage patterns, and improve our services. You
 							can control cookie preferences through your browser settings.
@@ -236,8 +236,8 @@ export default function PrivacyPage() {
 
 					{/* Children's Privacy */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">10. Children's Privacy</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<h2 className="font-bold text-xl sm:text-2xl">10. Children's Privacy</h2>
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							Kurio is not intended for children under the age of 13. We do not
 							knowingly collect personal information from children under 13. If
 							you believe we have collected information from a child under 13,
@@ -248,10 +248,10 @@ export default function PrivacyPage() {
 
 					{/* International Transfers */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">
+						<h2 className="font-bold text-xl sm:text-2xl">
 							11. International Data Transfers
 						</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							Your information may be transferred to and processed in countries
 							other than your country of residence. These countries may have
 							different data protection laws. By using Kurio, you consent to the
@@ -261,10 +261,10 @@ export default function PrivacyPage() {
 
 					{/* Changes to Privacy Policy */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">
+						<h2 className="font-bold text-xl sm:text-2xl">
 							12. Changes to This Privacy Policy
 						</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							We may update this Privacy Policy from time to time. We will
 							notify you of any material changes by updating the "Last updated"
 							date at the top of this page and, where appropriate, providing
@@ -275,8 +275,8 @@ export default function PrivacyPage() {
 
 					{/* Contact */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-2xl">13. Contact Us</h2>
-						<p className="text-muted-foreground leading-relaxed">
+						<h2 className="font-bold text-xl sm:text-2xl">13. Contact Us</h2>
+						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							If you have any questions, concerns, or requests regarding this
 							Privacy Policy or our data practices, please contact us through
 							our support channels.
@@ -286,11 +286,11 @@ export default function PrivacyPage() {
 			</div>
 
 			{/* Footer Actions */}
-			<div className="flex flex-col gap-4 sm:flex-row sm:justify-between">
-				<Button asChild variant="outline">
+			<div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:gap-4">
+				<Button asChild variant="outline" size="sm" className="w-full sm:w-auto sm:size-default">
 					<Link href="/">Back to Home</Link>
 				</Button>
-				<Button asChild variant="outline">
+				<Button asChild variant="outline" size="sm" className="w-full sm:w-auto sm:size-default">
 					<Link href="/terms">Terms of Service</Link>
 				</Button>
 			</div>
