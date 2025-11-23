@@ -90,14 +90,14 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
 	const result = await next()
 
 	const duration = Date.now() - start
-	
+
 	// Log all queries with duration
 	logger.debug(`[TRPC] ${path}`, { duration })
-	
+
 	// Log slow queries (>1000ms)
-	logger.logSlowOperation(path, duration, 1000, { 
+	logger.logSlowOperation(path, duration, 1000, {
 		type: "trpc_query",
-		path 
+		path,
 	})
 
 	return result

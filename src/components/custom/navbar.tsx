@@ -1,10 +1,10 @@
 "use client"
 
 import type { User } from "@supabase/supabase-js"
+import { Menu, X } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { Menu, X } from "lucide-react"
 import { ThemeToggle } from "@/components/custom/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { createBrowserSupabaseClient } from "@/lib/supabase/client"
@@ -61,28 +61,33 @@ export function Navbar({ initialUser = null }: NavbarProps) {
 					{user ? (
 						<>
 							<Link href="/kurio">
-								<Button variant="ghost" size="sm" className="md:size-default">
+								<Button className="md:size-default" size="sm" variant="ghost">
 									My Kurios
 								</Button>
 							</Link>
 							<Link href="/profile">
-								<Button variant="ghost" size="sm" className="md:size-default">
+								<Button className="md:size-default" size="sm" variant="ghost">
 									Profile
 								</Button>
 							</Link>
-							<Button onClick={handleLogout} variant="outline" size="sm" className="md:size-default">
+							<Button
+								className="md:size-default"
+								onClick={handleLogout}
+								size="sm"
+								variant="outline"
+							>
 								Sign Out
 							</Button>
 						</>
 					) : (
 						<>
 							<Link href="/login">
-								<Button variant="ghost" size="sm" className="md:size-default">
+								<Button className="md:size-default" size="sm" variant="ghost">
 									Sign In
 								</Button>
 							</Link>
 							<Link href="/signup">
-								<Button size="sm" className="md:size-default">
+								<Button className="md:size-default" size="sm">
 									Sign Up
 								</Button>
 							</Link>
@@ -94,12 +99,16 @@ export function Navbar({ initialUser = null }: NavbarProps) {
 				<div className="flex items-center gap-2 md:hidden">
 					<ThemeToggle />
 					<Button
-						variant="ghost"
-						size="icon"
-						onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
 						aria-label="Toggle menu"
+						onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+						size="icon"
+						variant="ghost"
 					>
-						{mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+						{mobileMenuOpen ? (
+							<X className="size-5" />
+						) : (
+							<Menu className="size-5" />
+						)}
 					</Button>
 				</div>
 			</div>
@@ -111,22 +120,22 @@ export function Navbar({ initialUser = null }: NavbarProps) {
 						{user ? (
 							<>
 								<Link href="/kurio" onClick={() => setMobileMenuOpen(false)}>
-									<Button variant="ghost" className="w-full justify-start">
+									<Button className="w-full justify-start" variant="ghost">
 										My Kurios
 									</Button>
 								</Link>
 								<Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
-									<Button variant="ghost" className="w-full justify-start">
+									<Button className="w-full justify-start" variant="ghost">
 										Profile
 									</Button>
 								</Link>
 								<Button
+									className="w-full justify-start"
 									onClick={() => {
 										setMobileMenuOpen(false)
 										handleLogout()
 									}}
 									variant="outline"
-									className="w-full justify-start"
 								>
 									Sign Out
 								</Button>
@@ -134,14 +143,12 @@ export function Navbar({ initialUser = null }: NavbarProps) {
 						) : (
 							<>
 								<Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-									<Button variant="ghost" className="w-full justify-start">
+									<Button className="w-full justify-start" variant="ghost">
 										Sign In
 									</Button>
 								</Link>
 								<Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-									<Button className="w-full justify-start">
-										Sign Up
-									</Button>
+									<Button className="w-full justify-start">Sign Up</Button>
 								</Link>
 							</>
 						)}

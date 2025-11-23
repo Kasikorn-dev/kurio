@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { KurioListClient } from "@/components/custom/kurio/kurio-list-client"
+import { KurioList } from "@/components/custom/kurio/kurio-list"
 import { Button } from "@/components/ui/button"
 import { api } from "@/trpc/server"
 
@@ -13,13 +13,13 @@ export default async function KuriosPage() {
 				<h1 className="font-bold text-2xl sm:text-3xl">My Kurios</h1>
 				{hasKurios && (
 					<Link href="/create-kurio">
-						<Button size="sm" className="w-full sm:w-auto sm:size-default">
+						<Button className="w-full sm:size-default sm:w-auto" size="sm">
 							Create New Kurio
 						</Button>
 					</Link>
 				)}
 			</div>
-			<KurioListClient kurios={kurios} />
+			<KurioList kurios={kurios} />
 		</div>
 	)
 }

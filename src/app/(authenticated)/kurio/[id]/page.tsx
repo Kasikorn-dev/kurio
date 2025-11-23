@@ -2,6 +2,8 @@ import { notFound } from "next/navigation"
 import { KurioDetailClient } from "@/components/custom/kurio/kurio-detail-client"
 import { api } from "@/trpc/server"
 
+export const dynamic = "force-dynamic"
+
 type KurioDetailPageProps = {
 	params: Promise<{ id: string }>
 }

@@ -6,7 +6,9 @@ export default function PrivacyPage() {
 		<div className="container mx-auto max-w-4xl space-y-6 px-4 py-4 sm:space-y-8 sm:py-6 md:py-8">
 			{/* Header */}
 			<div className="flex flex-col gap-4">
-				<h1 className="font-bold text-2xl sm:text-3xl md:text-4xl">Privacy Policy</h1>
+				<h1 className="font-bold text-2xl sm:text-3xl md:text-4xl">
+					Privacy Policy
+				</h1>
 				<p className="text-muted-foreground text-sm">
 					Last updated:{" "}
 					{new Date().toLocaleDateString("en-US", {
@@ -33,10 +35,12 @@ export default function PrivacyPage() {
 
 					{/* Information We Collect */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-xl sm:text-2xl">2. Information We Collect</h2>
+						<h2 className="font-bold text-xl sm:text-2xl">
+							2. Information We Collect
+						</h2>
 						<div className="space-y-4 text-muted-foreground">
 							<div>
-								<h3 className="mb-2 font-semibold text-sm text-foreground sm:text-base">
+								<h3 className="mb-2 font-semibold text-foreground text-sm sm:text-base">
 									2.1 Account Information
 								</h3>
 								<p className="text-sm leading-relaxed sm:text-base">
@@ -48,7 +52,7 @@ export default function PrivacyPage() {
 								</p>
 							</div>
 							<div>
-								<h3 className="mb-2 font-semibold text-sm text-foreground sm:text-base">
+								<h3 className="mb-2 font-semibold text-foreground text-sm sm:text-base">
 									2.2 Content You Upload
 								</h3>
 								<p className="text-sm leading-relaxed sm:text-base">
@@ -59,7 +63,7 @@ export default function PrivacyPage() {
 								</p>
 							</div>
 							<div>
-								<h3 className="mb-2 font-semibold text-sm text-foreground sm:text-base">
+								<h3 className="mb-2 font-semibold text-foreground text-sm sm:text-base">
 									2.3 Usage Information
 								</h3>
 								<p className="text-sm leading-relaxed sm:text-base">
@@ -69,7 +73,7 @@ export default function PrivacyPage() {
 								</p>
 							</div>
 							<div>
-								<h3 className="mb-2 font-semibold text-sm text-foreground sm:text-base">
+								<h3 className="mb-2 font-semibold text-foreground text-sm sm:text-base">
 									2.4 Technical Information
 								</h3>
 								<p className="text-sm leading-relaxed sm:text-base">
@@ -119,9 +123,9 @@ export default function PrivacyPage() {
 							When you upload content to Kurio, we use artificial intelligence
 							models to analyze and generate educational content. Your content
 							may be processed by third-party AI service providers (such as
-							OpenAI) to generate games, and learning materials. We
-							ensure that any third-party AI providers comply with appropriate
-							data protection standards.
+							OpenAI) to generate games, and learning materials. We ensure that
+							any third-party AI providers comply with appropriate data
+							protection standards.
 						</p>
 					</section>
 
@@ -236,7 +240,9 @@ export default function PrivacyPage() {
 
 					{/* Children's Privacy */}
 					<section className="space-y-4">
-						<h2 className="font-bold text-xl sm:text-2xl">10. Children's Privacy</h2>
+						<h2 className="font-bold text-xl sm:text-2xl">
+							10. Children's Privacy
+						</h2>
 						<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 							Kurio is not intended for children under the age of 13. We do not
 							knowingly collect personal information from children under 13. If
@@ -287,10 +293,20 @@ export default function PrivacyPage() {
 
 			{/* Footer Actions */}
 			<div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:gap-4">
-				<Button asChild variant="outline" size="sm" className="w-full sm:w-auto sm:size-default">
+				<Button
+					asChild
+					className="w-full sm:size-default sm:w-auto"
+					size="sm"
+					variant="outline"
+				>
 					<Link href="/">Back to Home</Link>
 				</Button>
-				<Button asChild variant="outline" size="sm" className="w-full sm:w-auto sm:size-default">
+				<Button
+					asChild
+					className="w-full sm:size-default sm:w-auto"
+					size="sm"
+					variant="outline"
+				>
 					<Link href="/terms">Terms of Service</Link>
 				</Button>
 			</div>

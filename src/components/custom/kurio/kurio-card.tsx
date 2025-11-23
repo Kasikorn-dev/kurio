@@ -8,14 +8,10 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card"
+import type { KurioForCard } from "./types"
 
 type KurioCardProps = {
-	kurio: {
-		id: string
-		title: string
-		description: string | null
-		status: string
-	}
+	kurio: KurioForCard
 }
 
 export function KurioCard({ kurio }: KurioCardProps) {

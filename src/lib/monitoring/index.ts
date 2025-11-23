@@ -1,3 +1,14 @@
+export {
+	analytics,
+	trackGameCompleted,
+	trackKurioCreated,
+	trackUnitCompleted,
+} from "./analytics"
 export { logger } from "./logger"
-export { analytics, trackKurioCreated, trackGameCompleted, trackUnitCompleted } from "./analytics"
-export { measureExecutionTime, markPerformance, measureBetweenMarks, reportWebVitals, PerformanceTimer } from "./performance"
+export {
+	markPerformance,
+	measureBetweenMarks,
+	measureExecutionTime,
+	PerformanceTimer,
+	reportWebVitals,
+} from "./performance"

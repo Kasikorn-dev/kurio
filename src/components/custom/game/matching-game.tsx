@@ -48,6 +48,7 @@ export function MatchingGame({
 						<h3 className="font-semibold text-sm sm:text-base">Left</h3>
 						{leftItems.map((left) => (
 							<Button
+								className="text-sm sm:text-base"
 								disabled={isSubmitted}
 								key={`left-${left}`}
 								onClick={() => onLeftClick(left)}
@@ -58,7 +59,6 @@ export function MatchingGame({
 											? "secondary"
 											: "outline"
 								}
-								className="text-sm sm:text-base"
 							>
 								{left}
 							</Button>
@@ -70,11 +70,11 @@ export function MatchingGame({
 							const matchedLeft = matches.find((m) => m.right === right)?.left
 							return (
 								<Button
+									className="text-sm sm:text-base"
 									disabled={isSubmitted || !!matchedLeft}
 									key={`right-${right}`}
 									onClick={() => onRightClick(right)}
 									variant={matchedLeft ? "secondary" : "outline"}
-									className="text-sm sm:text-base"
 								>
 									{right} {matchedLeft && `(${matchedLeft})`}
 								</Button>

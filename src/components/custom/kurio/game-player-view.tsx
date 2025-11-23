@@ -1,10 +1,10 @@
 "use client"
 
-import { api } from "@/trpc/react"
+import { ArrowLeft, ArrowRight } from "lucide-react"
 import { GameRenderer } from "@/components/custom/game/game-renderer"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, ArrowRight } from "lucide-react"
 import { Spinner } from "@/components/ui/spinner"
+import { api } from "@/trpc/react"
 
 type GamePlayerViewProps = {
 	gameId: string
@@ -49,12 +49,19 @@ export function GamePlayerView({
 		<>
 			{/* Game Header */}
 			<div className="mb-4 flex flex-col items-start gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
-				<Button variant="ghost" size="sm" onClick={onBack} className="sm:size-default">
+				<Button
+					className="sm:size-default"
+					onClick={onBack}
+					size="sm"
+					variant="ghost"
+				>
 					<ArrowLeft className="mr-2 size-4" />
 					Back to Journey
 				</Button>
 				<div className="text-left sm:text-center">
-					<p className="text-muted-foreground text-xs sm:text-sm">{unitTitle}</p>
+					<p className="text-muted-foreground text-xs sm:text-sm">
+						{unitTitle}
+					</p>
 					<h2 className="font-semibold text-base sm:text-lg">{gameTitle}</h2>
 				</div>
 				<div className="hidden w-32 sm:block" /> {/* Spacer for desktop */}
@@ -66,20 +73,20 @@ export function GamePlayerView({
 			{/* Navigation */}
 			<div className="mt-4 flex items-center justify-between gap-2 sm:mt-6">
 				<Button
-					variant="outline"
-					size="sm"
-					onClick={onPrevious}
-					disabled={!onPrevious}
 					className="sm:size-default"
+					disabled={!onPrevious}
+					onClick={onPrevious}
+					size="sm"
+					variant="outline"
 				>
 					<ArrowLeft className="mr-2 size-4" />
 					Previous
 				</Button>
 				<Button
-					size="sm"
-					onClick={onNext}
-					disabled={!onNext}
 					className="sm:size-default"
+					disabled={!onNext}
+					onClick={onNext}
+					size="sm"
 				>
 					Next
 					<ArrowRight className="ml-2 size-4" />

@@ -146,3 +146,61 @@ export async function batchInsertUnitsAndGames(
 
 	return totalGames
 }
+
+/**
+ * Insert a single unit with its games
+ */
+export async function insertSingleUnitAndGames(
+	database: Database,
+	kurioId: string,
+	unitData: {
+		title: string
+		games: Array<{
+			title: string
+			gameType: "quiz" | "matching" | "fill_blank" | "multiple_choice"
+			difficultyLevel: "easy" | "medium" | "hard"
+			content: Record<string, unknown>
+		}>
+	},
+	orderIndex: number,
+): Promise<{ unitId: string; gameCount: number }> {
+	// Validate and sanitize title
+	const unitTitle = unitData.title?.trim() || `Unit ${orderIndex + 1}`
+
+	if (!unitTitle || unitTitle.length === 0) {
+		throw new Error(`Unit title cannot be empty. Order index: ${orderIndex}`)
+	}
+
+	// Insert unit
+	const [insertedUnit] = await database
+		.insert(units)
+		.values({
+			kurioId,
+			title: unitTitle,
+			orderIndex,
+		})
+		.returning()
+
+	if (!insertedUnit) {
+		throw new Error("Failed to create unit")
+	}
+
+	// Insert games for this unit
+	const gamesToInsert = unitData.games.map((gameData, gameIndex) => ({
+		unitId: insertedUnit.id,
+		title: gameData.title,
+		gameType: gameData.gameType,
+		content: gameData.content,
+		difficultyLevel: gameData.difficultyLevel,
+		orderIndex: gameIndex,
+	}))
+
+	if (gamesToInsert.length > 0) {
+		await database.insert(games).values(gamesToInsert)
+	}
+
+	return {
+		unitId: insertedUnit.id,
+		gameCount: gamesToInsert.length,
+	}
+}

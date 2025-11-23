@@ -3,11 +3,11 @@
 import { useRouter } from "next/navigation"
 import { useCallback } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabase/client"
-import { userProfiles } from "@/server/db/schemas/user-profiles"
+import type { userProfiles } from "@/server/db/schemas/user-profiles"
 import { api } from "@/trpc/react"
 
 type UseAuthReturn = {
-	profile: (typeof userProfiles.$inferSelect) | null | undefined
+	profile: typeof userProfiles.$inferSelect | null | undefined
 	isLoading: boolean
 	updateProfile: ReturnType<typeof api.auth.updateProfile.useMutation>
 	logout: () => Promise<void>

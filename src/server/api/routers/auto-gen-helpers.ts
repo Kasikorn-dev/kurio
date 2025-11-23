@@ -7,7 +7,7 @@ import {
 	calculateKurioProgress,
 	shouldTriggerAutoGen,
 } from "@/lib/kurio/progress-calculator"
-import { db } from "@/server/db"
+import type { db } from "@/server/db"
 import { kurios } from "@/server/db/schemas"
 import { batchInsertUnitsAndGames } from "./game-helpers"
 
@@ -109,10 +109,7 @@ export async function checkAndGenerateUnits(
 		})
 
 		// Get current max order index
-		const maxOrderIndex = Math.max(
-			...kurio.units.map((u) => u.orderIndex),
-			-1,
-		)
+		const maxOrderIndex = Math.max(...kurio.units.map((u) => u.orderIndex), -1)
 
 		// Adjust order indices for new units
 		const adjustedUnits = gameContent.units.map((unit, index) => ({

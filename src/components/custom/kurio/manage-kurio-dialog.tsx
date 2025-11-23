@@ -1,7 +1,7 @@
 "use client"
 
 import { Settings } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,12 +20,10 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/trpc/react"
 import { DeleteKurioButton } from "./delete-kurio-button"
+import type { KurioForCard } from "./types"
 
 type ManageKurioDialogProps = {
-	kurio: {
-		id: string
-		title: string
-		description: string | null
+	kurio: KurioForCard & {
 		autoGenEnabled: boolean
 	}
 }
@@ -35,6 +33,13 @@ export function ManageKurioDialog({ kurio }: ManageKurioDialogProps) {
 	const [title, setTitle] = useState(kurio.title)
 	const [description, setDescription] = useState(kurio.description || "")
 	const [autoGenEnabled, setAutoGenEnabled] = useState(kurio.autoGenEnabled)
+
+	// Sync title and description when kurio prop changes
+	useEffect(() => {
+		setTitle(kurio.title)
+		setDescription(kurio.description || "")
+		setAutoGenEnabled(kurio.autoGenEnabled)
+	}, [kurio.title, kurio.description, kurio.autoGenEnabled])
 
 	const utils = api.useUtils()
 	const updateKurio = api.kurio.update.useMutation({

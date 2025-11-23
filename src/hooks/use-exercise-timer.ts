@@ -18,9 +18,7 @@ export function useExerciseTimer(): UseExerciseTimerReturn {
 			startTimeRef.current = Date.now()
 			intervalRef.current = setInterval(() => {
 				if (startTimeRef.current) {
-					setTimeSpent(
-						Math.floor((Date.now() - startTimeRef.current) / 1000),
-					)
+					setTimeSpent(Math.floor((Date.now() - startTimeRef.current) / 1000))
 				}
 			}, 1000)
 		}

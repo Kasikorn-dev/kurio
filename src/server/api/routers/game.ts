@@ -75,9 +75,7 @@ export const gameRouter = createTRPCRouter({
 				// Call auto-gen helper directly (fire-and-forget)
 				// In production, consider using a background job queue
 				try {
-					const { checkAndGenerateUnits } = await import(
-						"./auto-gen-helpers"
-					)
+					const { checkAndGenerateUnits } = await import("./auto-gen-helpers")
 					await checkAndGenerateUnits(ctx.db, unit.kurioId, ctx.user.id)
 				} catch (error) {
 					// Log error but don't fail the game submission

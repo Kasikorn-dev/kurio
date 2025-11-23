@@ -114,7 +114,11 @@ export function trackKurioCreated(kurioId: string, userId: string): void {
 	analytics.trackUserAction("kurio_created", { kurioId, userId })
 }
 
-export function trackGameCompleted(gameId: string, score: number, timeSpent: number): void {
+export function trackGameCompleted(
+	gameId: string,
+	score: number,
+	timeSpent: number,
+): void {
 	analytics.trackUserAction("game_completed", { gameId, score, timeSpent })
 }
 

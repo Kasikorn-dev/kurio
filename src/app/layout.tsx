@@ -1,12 +1,12 @@
 import "@/styles/globals.css"
+import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import type { Metadata } from "next"
 import { Geist } from "next/font/google"
 import { ThemeProvider } from "next-themes"
 import { ErrorBoundary } from "@/components/custom/error-boundary"
 import { Toaster } from "@/components/ui/sonner"
 import { TRPCReactProvider } from "@/trpc/react"
-import { Analytics } from "@vercel/analytics/next"
-import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata: Metadata = {
 	title: "Kurio",

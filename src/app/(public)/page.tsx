@@ -19,10 +19,15 @@ export default async function Home() {
 							powered by AI
 						</p>
 						<div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:gap-4">
-							<Button asChild size="lg" className="w-full sm:w-auto">
+							<Button asChild className="w-full sm:w-auto" size="lg">
 								<Link href="/signup">Get Started Free</Link>
 							</Button>
-							<Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
+							<Button
+								asChild
+								className="w-full sm:w-auto"
+								size="lg"
+								variant="outline"
+							>
 								<Link href="/login">Sign In</Link>
 							</Button>
 						</div>
@@ -56,7 +61,9 @@ export default async function Home() {
 
 					{/* CTA Section */}
 					<div className="flex flex-col items-center gap-4 text-center">
-						<h2 className="font-bold text-2xl sm:text-3xl">Ready to create games?</h2>
+						<h2 className="font-bold text-2xl sm:text-3xl">
+							Ready to create games?
+						</h2>
 						<div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-8">
 							<Link
 								className="flex w-full flex-col gap-4 rounded-xl border bg-card p-6 text-card-foreground transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-md sm:max-w-xs"
@@ -71,7 +78,9 @@ export default async function Home() {
 								className="flex w-full flex-col gap-4 rounded-xl border bg-card p-6 text-card-foreground transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-md sm:max-w-xs"
 								href="/create-kurio"
 							>
-								<h3 className="font-bold text-xl sm:text-2xl">Create Kurio →</h3>
+								<h3 className="font-bold text-xl sm:text-2xl">
+									Create Kurio →
+								</h3>
 								<div className="text-base sm:text-lg">
 									Create a new game with AI-powered content generation
 								</div>

@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
-import { AI_CONSTANTS } from "@/lib/constants"
 import { useFileUpload } from "@/hooks/use-file-upload"
 import { useNavigation } from "@/hooks/use-navigation"
+import { AI_CONSTANTS } from "@/lib/constants"
 import { useKurioStore } from "@/stores/kurio-store"
 import { api } from "@/trpc/react"
 import { KurioInput } from "./kurio-input"

@@ -57,13 +57,15 @@ export const authRouter = createTRPCRouter({
 			return { exists: false }
 		}),
 
-	getProfile: protectedProcedure.query(async ({ ctx }): Promise<typeof userProfiles.$inferSelect | null> => {
-		const profile = await ctx.db.query.userProfiles.findFirst({
-			where: (profiles, { eq }) => eq(profiles.userId, ctx.user.id),
-		})
+	getProfile: protectedProcedure.query(
+		async ({ ctx }): Promise<typeof userProfiles.$inferSelect | null> => {
+			const profile = await ctx.db.query.userProfiles.findFirst({
+				where: (profiles, { eq }) => eq(profiles.userId, ctx.user.id),
+			})
 
-		return profile ?? null
-	}),
+			return profile ?? null
+		},
+	),
 
 	getUserIdentities: protectedProcedure.query(async ({ ctx }) => {
 		const adminClient = createSupabaseAdminClient()

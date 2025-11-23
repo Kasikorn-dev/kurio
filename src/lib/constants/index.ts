@@ -42,8 +42,8 @@ export const GAME_CONSTANTS = {
 		AMOUNT: 5,
 	},
 
-	// Unit count options
-	UNIT_COUNT_OPTIONS: [5, 10, 20, 30] as const,
+	// Unit count options (when auto-gen disabled)
+	UNIT_COUNT_OPTIONS: [5, 10, 20] as const,
 
 	// Password strength
 	PASSWORD_STRENGTH: {
@@ -67,9 +67,14 @@ export const AI_CONSTANTS = {
 
 	// Auto-generation settings
 	AUTO_GEN: {
-		INITIAL_UNITS: 30, // Units to generate when auto-gen is enabled
+		INITIAL_UNITS: 10, // Units to generate when auto-gen is enabled (default)
 		ADDITIONAL_UNITS: 10, // Units to add when progress reaches threshold
 		TRIGGER_THRESHOLD: 80, // Percentage of completion to trigger additional generation
+	},
+
+	// Progressive generation settings
+	PROGRESSIVE_GEN: {
+		INITIAL_GENERATION_UNITS: 3, // Units to generate initially (~10 seconds)
 	},
 
 	// Games per unit (fixed)

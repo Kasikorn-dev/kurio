@@ -53,35 +53,44 @@ export default function EditProfilePage() {
 
 	return (
 		<div className="container mx-auto px-4 py-4 sm:py-6 md:py-8">
-			<h1 className="mb-4 font-bold text-2xl sm:mb-6 sm:text-3xl">Edit Profile</h1>
+			<h1 className="mb-4 font-bold text-2xl sm:mb-6 sm:text-3xl">
+				Edit Profile
+			</h1>
 
 			<div className="flex max-w-2xl flex-col gap-6 sm:gap-8">
 				{/* Profile Information */}
 				<div>
-					<h2 className="mb-4 font-semibold text-lg sm:text-xl">Profile Information</h2>
+					<h2 className="mb-4 font-semibold text-lg sm:text-xl">
+						Profile Information
+					</h2>
 					<form className="flex flex-col gap-4" onSubmit={handleSubmit}>
 						<div className="flex flex-col gap-2">
 							<Label htmlFor="displayName">Display Name</Label>
 							<Input
-								value={displayName}
 								disabled={updateProfile.isPending}
 								id="displayName"
 								onChange={(e) => setDisplayName(e.target.value)}
 								placeholder="Enter display name"
+								value={displayName}
 							/>
 						</div>
 						<div className="flex flex-col gap-2 sm:flex-row">
-							<Button disabled={updateProfile.isPending} type="submit" size="sm" className="w-full sm:w-auto sm:size-default">
+							<Button
+								className="w-full sm:size-default sm:w-auto"
+								disabled={updateProfile.isPending}
+								size="sm"
+								type="submit"
+							>
 								{updateProfile.isPending && <Spinner className="mr-2 size-4" />}
 								{updateProfile.isPending ? "Saving..." : "Save Changes"}
 							</Button>
 							<Button
+								className="w-full sm:size-default sm:w-auto"
 								disabled={updateProfile.isPending}
 								onClick={() => router.back()}
+								size="sm"
 								type="button"
 								variant="outline"
-								size="sm"
-								className="w-full sm:w-auto sm:size-default"
 							>
 								Cancel
 							</Button>

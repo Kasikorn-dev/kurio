@@ -1,12 +1,13 @@
 import { AI_CONSTANTS } from "@/lib/constants"
-import { SAFETY_SYSTEM_PROMPT, validateContentSafety } from "./content-safety"
-import { openai } from "./openai-client"
-
-type Resource = {
-	resourceType: "text" | "file" | "image"
-	resourceContent?: string
-	resourceFileUrl?: string
-}
+import { validateContentSafety } from "./content-safety"
+import { createOpenAICall } from "./openai-helpers"
+import type { Resource } from "./resource-utils"
+import {
+	buildTextContent,
+	extractFileUrls,
+	extractImageUrls,
+	extractTextContent,
+} from "./resource-utils"
 
 type GenerateGameParams = {
 	resources: Resource[]
@@ -29,6 +30,201 @@ type GenerateGameResponse = {
 	}>
 }
 
+type GenerateSingleUnitResponse = {
+	title: string
+	games: Array<{
+		title: string
+		gameType: "quiz" | "matching" | "fill_blank" | "multiple_choice"
+		difficultyLevel: "easy" | "medium" | "hard"
+		content: Record<string, unknown>
+	}>
+}
+
+type PreviousUnitContext = {
+	title: string
+	sampleGames: Array<{
+		title: string
+		gameType: string
+		content: Record<string, unknown>
+	}>
+}
+
+export async function generateSingleUnit(params: {
+	resources: Resource[]
+	aiModel?: string
+	gamesPerUnit: number
+	courseTitle?: string
+	unitIndex?: number
+	totalUnits?: number
+	previousUnits?: PreviousUnitContext[]
+}): Promise<GenerateSingleUnitResponse> {
+	const {
+		resources,
+		aiModel = AI_CONSTANTS.DEFAULT_MODEL,
+		gamesPerUnit,
+		courseTitle,
+		unitIndex,
+		totalUnits,
+		previousUnits,
+	} = params
+
+	// Prepare resources
+	const textContentFromResources = extractTextContent(resources)
+	const fileUrls = extractFileUrls(resources)
+	const imageUrls = extractImageUrls(resources)
+	const textContent = buildTextContent(textContentFromResources, fileUrls)
+
+	// Validate content safety
+	const safetyCheck = validateContentSafety(textContent)
+	if (!safetyCheck.safe) {
+		throw new Error(
+			`Content safety check failed: ${safetyCheck.reason}. Please provide appropriate educational content.`,
+		)
+	}
+
+	const unitContext =
+		unitIndex !== undefined && totalUnits !== undefined
+			? `\nThis is unit ${unitIndex + 1} of ${totalUnits} total units.`
+			: ""
+
+	const courseContext = courseTitle ? `\nCourse: ${courseTitle}` : ""
+
+	// Build previous units context (optimized for speed)
+	let previousUnitsContext = ""
+	if (previousUnits && previousUnits.length > 0) {
+		const previousTitles = previousUnits.map((u) => u.title).join(", ")
+		previousUnitsContext = `\n\nPrevious units: ${previousTitles}\nIMPORTANT: Create unique title and progressive content. Title must differ from previous units.`
+	}
+
+	const prompt = `You MUST create 1 educational unit with exactly ${gamesPerUnit} games.${courseContext}${unitContext}${previousUnitsContext}
+
+${textContent}
+${fileUrls.length > 0 ? `\n\nIMPORTANT: Analyze the provided file(s) (PDF/document) and extract all relevant content. Use the actual content from the file(s) to create educational games. Do not generate generic content.` : ""}
+${imageUrls.length > 0 ? "\nAnalyze images for context.\n" : ""}
+
+MANDATORY OUTPUT REQUIREMENTS:
+1. **Unit Title (MANDATORY - MUST BE PRESENT)**: 
+   - You MUST provide a non-empty, descriptive title
+   - NO "Unit 1:", "Unit 2:", or numbering prefix
+   - Must be unique from previous units
+   - Example CORRECT: "Passage Basics"
+   - Example WRONG: "Unit 1: Passage Basics" or "" or null
+
+2. **Games Array (MANDATORY)**: Exactly ${gamesPerUnit} games
+   - Mix: quiz, matching, fill_blank, multiple_choice (distribute evenly)
+   - Difficulty: easy, medium, hard (distribute evenly)
+   - Progressive content building on previous units
+   - Beginner-friendly
+
+Game Schemas:
+MULTIPLE_CHOICE: {"title": "...", "gameType": "multiple_choice", "difficultyLevel": "easy|medium|hard", "content": {"question": "...", "options": ["A", "B", "C", "D"], "correctAnswer": 0}}
+QUIZ: {"title": "...", "gameType": "quiz", "difficultyLevel": "easy|medium|hard", "content": {"question": "...", "correctAnswer": "..."}}
+FILL_BLANK: {"title": "...", "gameType": "fill_blank", "difficultyLevel": "easy|medium|hard", "content": {"text": "... ___ ...", "blanks": [{"answer": "..."}]}}
+MATCHING: {"title": "...", "gameType": "matching", "difficultyLevel": "easy|medium|hard", "content": {"leftItems": ["..."], "rightItems": ["..."], "correctPairs": [{"left": "...", "right": "..."}]}}
+
+MANDATORY JSON RESPONSE FORMAT (MUST INCLUDE BOTH FIELDS):
+{
+  "title": "Your Unit Title Here - MUST be a non-empty string",
+  "games": [/* exactly ${gamesPerUnit} games following the schemas above */]
+}
+
+CRITICAL: The "title" field is REQUIRED and MUST NOT be empty, null, or undefined.`
+
+	try {
+		const unitResponse = await createOpenAICall<GenerateSingleUnitResponse>({
+			model: aiModel,
+			prompt,
+			imageUrls,
+			fileUrls,
+		})
+
+		// Validate response structure
+		if (
+			!unitResponse.title ||
+			typeof unitResponse.title !== "string" ||
+			unitResponse.title.trim() === ""
+		) {
+			throw new Error(
+				`AI failed to generate unit title. Response: ${JSON.stringify(unitResponse)}`,
+			)
+		}
+
+		if (!unitResponse.games || !Array.isArray(unitResponse.games)) {
+			throw new Error(
+				`AI failed to generate games. Response: ${JSON.stringify(unitResponse)}`,
+			)
+		}
+
+		// Ensure title is trimmed and not empty
+		unitResponse.title = unitResponse.title.trim()
+
+		return unitResponse
+	} catch (error) {
+		if (error instanceof Error) {
+			throw new Error(`Failed to generate unit: ${error.message}`)
+		}
+		throw new Error("Failed to generate unit: Unknown error")
+	}
+}
+
+type GenerateCourseMetadataResponse = {
+	title: string
+	description?: string
+}
+
+export async function generateCourseMetadata(params: {
+	resources: Resource[]
+	aiModel?: string
+	unitTitles?: string[]
+}): Promise<GenerateCourseMetadataResponse> {
+	const { resources, aiModel = AI_CONSTANTS.DEFAULT_MODEL, unitTitles } = params
+
+	// Prepare resources
+	const textContentFromResources = extractTextContent(resources)
+	const fileUrls = extractFileUrls(resources)
+	const imageUrls = extractImageUrls(resources)
+	const textContent = buildTextContent(textContentFromResources, fileUrls)
+
+	const unitContext =
+		unitTitles && unitTitles.length > 0
+			? `\n\nGenerated units: ${unitTitles.join(", ")}`
+			: ""
+
+	const prompt = `Based on this educational content, create a course title and description:${unitContext}
+
+${textContent}
+${fileUrls.length > 0 ? `\n\nIMPORTANT: Analyze the provided file(s) (PDF/document) and extract all relevant content. Use the actual content from the file(s) to create the course title and description.` : ""}
+${imageUrls.length > 0 ? "\nAnalyze provided images for additional context.\n" : ""}
+
+Requirements:
+- Title (max 255 chars): Descriptive name WITHOUT "Unit", "Educational Course", "Course", or unit count
+- Description (max 500 chars, optional): Brief overview of the course content
+
+Naming Rules:
+- Title: "Medical History and Penicillin" NOT "A 30-Unit Educational Course"
+- Title: "Reading Comprehension Basics" NOT "30-Unit Reading Course"
+
+Return JSON:
+{
+  "title": "Course Title",
+  "description": "Optional description"
+}`
+
+	try {
+		return await createOpenAICall<GenerateCourseMetadataResponse>({
+			model: aiModel,
+			prompt,
+			imageUrls,
+			fileUrls,
+		})
+	} catch (error) {
+		if (error instanceof Error) {
+			throw new Error(`Failed to generate course metadata: ${error.message}`)
+		}
+		throw new Error("Failed to generate course metadata: Unknown error")
+	}
+}
+
 export async function generateGameContent(
 	params: GenerateGameParams,
 ): Promise<GenerateGameResponse> {
@@ -39,16 +235,11 @@ export async function generateGameContent(
 		gamesPerUnit,
 	} = params
 
-	// Prepare text content
-	const textContent = resources
-		.map((r) => {
-			if (r.resourceType === "text" && r.resourceContent) {
-				return r.resourceContent
-			}
-			return null
-		})
-		.filter(Boolean)
-		.join("\n\n")
+	// Prepare resources
+	const textContentFromResources = extractTextContent(resources)
+	const fileUrls = extractFileUrls(resources)
+	const imageUrls = extractImageUrls(resources)
+	const textContent = buildTextContent(textContentFromResources, fileUrls)
 
 	// Validate content safety
 	const safetyCheck = validateContentSafety(textContent)
@@ -58,187 +249,49 @@ export async function generateGameContent(
 		)
 	}
 
-	// Prepare image URLs for vision
-	const imageUrls = resources
-		.filter(
-			(r): r is Resource & { resourceFileUrl: string } =>
-				r.resourceType === "image" && Boolean(r.resourceFileUrl),
-		)
-		.map((r) => r.resourceFileUrl)
-
 	const prompt = `Create ${unitCount} educational units with ${gamesPerUnit} games each from this content:
 
 ${textContent}
+${fileUrls.length > 0 ? `\n\nIMPORTANT: Analyze the provided file(s) (PDF/document) and extract all relevant content. Use the actual content from the file(s) to create educational games. Do not generate generic content.` : ""}
 ${imageUrls.length > 0 ? "\nAnalyze provided images for additional context.\n" : ""}
 
 Requirements:
-- Course title (max 255 chars) - Use a concise, descriptive title WITHOUT "Unit", "Educational Course", or unit count
-  Example: "Medical History and Penicillin" NOT "A 30-Unit Educational Course" or "Medical History - 30 Units"
-- Optional description (max 500 chars)
+- Title (max 255 chars): Descriptive name WITHOUT "Unit", "Educational Course", or unit count
+- Description (max 500 chars, optional)
 - ${unitCount} units, each with ${gamesPerUnit} games
-- Mix of game types: quiz, matching, fill_blank, multiple_choice
-- Difficulty levels: easy, medium, hard
-- Educational and age-appropriate content
+- Game types: quiz, matching, fill_blank, multiple_choice (mix evenly)
+- Difficulty: easy, medium, hard (distribute evenly)
+- Educational and age-appropriate
 
-CRITICAL NAMING RULES:
-- Course title: Use descriptive name WITHOUT "Unit", "Educational Course", "Course", unit count, or similar generic terms
-  Example: "Medical History and Penicillin" NOT "A 30-Unit Educational Course"
-  Example: "Reading Comprehension Basics" NOT "30-Unit Reading Course"
-- Unit titles: Use descriptive names WITHOUT "Unit 1:", "Unit 2:", or any numbering prefix
-  Example: "Passage Basics and Main Idea" NOT "Unit 1: Passage Basics and Main Idea"
-- Game titles: Use descriptive names WITHOUT game type prefix like "Matching:", "Quiz:", "Fill in:", "Multiple Choice:"
-  Example: "terms and ideas" NOT "Matching: terms and ideas"
-  Example: "hospital setting" NOT "Quiz: hospital setting"
-  Example: "contextual word" NOT "Fill in: contextual word"
+Naming Rules (NO prefixes):
+- Title: "Medical History" NOT "A 30-Unit Course"
+- Units: "Passage Basics" NOT "Unit 1: Passage Basics"
+- Games: "terms and ideas" NOT "Matching: terms and ideas"
 
-IMPORTANT: Each game type MUST follow its exact schema below:
+Game Schemas:
 
-1. MULTIPLE_CHOICE:
+MULTIPLE_CHOICE: {"title": "...", "gameType": "multiple_choice", "difficultyLevel": "easy|medium|hard", "content": {"question": "...", "options": ["A", "B", "C", "D"], "correctAnswer": 0}}
+
+QUIZ: {"title": "...", "gameType": "quiz", "difficultyLevel": "easy|medium|hard", "content": {"question": "...", "correctAnswer": "..."}}
+
+FILL_BLANK: {"title": "...", "gameType": "fill_blank", "difficultyLevel": "easy|medium|hard", "content": {"text": "... ___ ...", "blanks": [{"answer": "..."}]}}
+
+MATCHING: {"title": "...", "gameType": "matching", "difficultyLevel": "easy|medium|hard", "content": {"leftItems": ["..."], "rightItems": ["..."], "correctPairs": [{"left": "...", "right": "..."}]}}
+
+Return JSON:
 {
-  "title": "Descriptive question title (NO 'Multiple Choice:' prefix)",
-  "gameType": "multiple_choice",
-  "difficultyLevel": "easy|medium|hard",
-  "content": {
-    "question": "The question text",
-    "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
-    "correctAnswer": 0  // Index of correct option (0-3)
-  }
-}
-
-2. QUIZ (short answer):
-{
-  "title": "Descriptive question title (NO 'Quiz:' prefix)",
-  "gameType": "quiz",
-  "difficultyLevel": "easy|medium|hard",
-  "content": {
-    "question": "The question text",
-    "correctAnswer": "The exact answer"  // String, case-insensitive match
-  }
-}
-
-3. FILL_BLANK:
-{
-  "title": "Descriptive exercise title (NO 'Fill in:' or 'Fill Blank:' prefix)",
-  "gameType": "fill_blank",
-  "difficultyLevel": "easy|medium|hard",
-  "content": {
-    "text": "The quick ___ jumps over the lazy ___.",  // Use ___ for blanks
-    "blanks": [
-      {"answer": "brown fox"},  // First blank answer
-      {"answer": "dog"}         // Second blank answer
-    ]
-  }
-}
-
-4. MATCHING:
-{
-  "title": "Descriptive matching title (NO 'Matching:' prefix)",
-  "gameType": "matching",
-  "difficultyLevel": "easy|medium|hard",
-  "content": {
-    "leftItems": ["Item 1", "Item 2", "Item 3"],
-    "rightItems": ["Match 1", "Match 2", "Match 3"],
-    "correctPairs": [
-      {"left": "Item 1", "right": "Match 1"},
-      {"left": "Item 2", "right": "Match 2"},
-      {"left": "Item 3", "right": "Match 3"}
-    ]
-  }
-}
-
-Return JSON in this exact format:
-{
-  "title": "Course Title (NO 'Unit', 'Educational Course', or unit count)",
-  "description": "Brief description (optional)",
-  "units": [
-    {
-      "title": "Descriptive Unit Title (NO 'Unit 1:' prefix)",
-      "games": [
-        // Games following schemas above
-      ]
-    }
-  ]
+  "title": "Course Title",
+  "description": "Optional description",
+  "units": [{"title": "Unit Title", "games": [/* games */]}]
 }`
 
 	try {
-		// Build messages with vision support
-		if (imageUrls.length > 0) {
-			// Use vision with images
-			const completion = await openai.chat.completions.create({
-				model: aiModel,
-				messages: [
-					{
-						role: "system",
-						content: SAFETY_SYSTEM_PROMPT,
-					},
-					{
-						role: "user",
-						content: [
-							{ type: "text", text: prompt },
-							...imageUrls.map((url) => ({
-								type: "image_url" as const,
-								image_url: { url },
-							})),
-						],
-					},
-				],
-				response_format: { type: "json_object" },
-				// Note: Some models don't support temperature parameter
-				// Only include if model supports it
-			})
-
-			const responseContent =
-				completion.choices[AI_CONSTANTS.RESPONSE_INDEX.FIRST_CHOICE]?.message
-					?.content
-			if (!responseContent) {
-				throw new Error("No response from AI")
-			}
-
-			const parsed = JSON.parse(responseContent) as
-				| GenerateGameResponse
-				| { error: string; message: string }
-
-			if ("error" in parsed && parsed.error === "inappropriate_content") {
-				throw new Error(parsed.message)
-			}
-
-			return parsed as GenerateGameResponse
-		} else {
-			// Text only
-			const completion = await openai.chat.completions.create({
-				model: aiModel,
-				messages: [
-					{
-						role: "system",
-						content: SAFETY_SYSTEM_PROMPT,
-					},
-					{
-						role: "user",
-						content: prompt,
-					},
-				],
-				response_format: { type: "json_object" },
-				// Note: Some models don't support temperature parameter
-				// Only include if model supports it
-			})
-
-			const responseContent =
-				completion.choices[AI_CONSTANTS.RESPONSE_INDEX.FIRST_CHOICE]?.message
-					?.content
-			if (!responseContent) {
-				throw new Error("No response from AI")
-			}
-
-			const parsed = JSON.parse(responseContent) as
-				| GenerateGameResponse
-				| { error: string; message: string }
-
-			if ("error" in parsed && parsed.error === "inappropriate_content") {
-				throw new Error(parsed.message)
-			}
-
-			return parsed as GenerateGameResponse
-		}
+		return await createOpenAICall<GenerateGameResponse>({
+			model: aiModel,
+			prompt,
+			imageUrls,
+			fileUrls,
+		})
 	} catch (error) {
 		if (error instanceof Error) {
 			throw new Error(`Failed to generate game content: ${error.message}`)

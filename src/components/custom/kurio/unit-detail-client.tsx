@@ -1,11 +1,11 @@
 "use client"
 
-import { Check, Lock, Play, ArrowLeft } from "lucide-react"
+import { ArrowLeft, Check, Lock, Play } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { api } from "@/trpc/react"
-import { Button } from "@/components/ui/button"
 
 type UnitDetailClientProps = {
 	kurioId: string
@@ -44,9 +44,9 @@ export function UnitDetailClient({ kurioId, unit }: UnitDetailClientProps) {
 		<div className="container mx-auto py-8">
 			{/* Back button */}
 			<Button
-				variant="ghost"
 				className="mb-6"
 				onClick={() => router.push(`/kurio/${kurioId}`)}
+				variant="ghost"
 			>
 				<ArrowLeft className="mr-2 size-4" />
 				Back to Journey
@@ -86,18 +86,18 @@ export function UnitDetailClient({ kurioId, unit }: UnitDetailClientProps) {
 
 					return (
 						<Link
-							key={game.id}
-							href={isLocked ? "#" : `/game/${game.id}`}
 							className={cn(
 								"group relative overflow-hidden rounded-lg border bg-card p-6 transition-all",
 								!isLocked && "hover:scale-105 hover:shadow-lg",
 								isLocked && "cursor-not-allowed opacity-60",
 							)}
+							href={isLocked ? "#" : `/game/${game.id}`}
+							key={game.id}
 						>
 							{/* Game number badge */}
 							<div
 								className={cn(
-									"absolute right-3 top-3 flex size-8 items-center justify-center rounded-full border-2 text-xs font-bold",
+									"absolute top-3 right-3 flex size-8 items-center justify-center rounded-full border-2 font-bold text-xs",
 									isCompleted && "border-green-500 bg-green-500 text-white",
 									!isCompleted &&
 										!isLocked &&
@@ -118,7 +118,8 @@ export function UnitDetailClient({ kurioId, unit }: UnitDetailClientProps) {
 										!isCompleted &&
 											!isLocked &&
 											"border-primary bg-primary/20 text-primary",
-										isLocked && "border-muted bg-muted/20 text-muted-foreground",
+										isLocked &&
+											"border-muted bg-muted/20 text-muted-foreground",
 									)}
 								>
 									{isCompleted ? (

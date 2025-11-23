@@ -16,7 +16,11 @@ type LogContext = {
 class Logger {
 	private isDevelopment = process.env.NODE_ENV === "development"
 
-	private formatMessage(level: LogLevel, message: string, context?: LogContext): string {
+	private formatMessage(
+		level: LogLevel,
+		message: string,
+		context?: LogContext,
+	): string {
 		const timestamp = new Date().toISOString()
 		const contextStr = context ? ` | ${JSON.stringify(context)}` : ""
 		return `[${timestamp}] [${level.toUpperCase()}] ${message}${contextStr}`
@@ -33,14 +37,17 @@ class Logger {
 	error(message: string, error?: Error | unknown, context?: LogContext): void {
 		const errorContext = {
 			...context,
-			error: error instanceof Error ? {
-				message: error.message,
-				stack: this.isDevelopment ? error.stack : undefined,
-				name: error.name,
-			} : error,
+			error:
+				error instanceof Error
+					? {
+							message: error.message,
+							stack: this.isDevelopment ? error.stack : undefined,
+							name: error.name,
+						}
+					: error,
 		}
 		console.error(this.formatMessage("error", message, errorContext))
-		
+
 		// TODO: Send to error tracking service (Sentry, LogRocket, etc.)
 		// if (process.env.NODE_ENV === "production") {
 		//   Sentry.captureException(error, { extra: context })
@@ -56,7 +63,12 @@ class Logger {
 	/**
 	 * Log slow queries or operations
 	 */
-	logSlowOperation(operation: string, duration: number, threshold = 1000, context?: LogContext): void {
+	logSlowOperation(
+		operation: string,
+		duration: number,
+		threshold = 1000,
+		context?: LogContext,
+	): void {
 		if (duration > threshold) {
 			this.warn(`Slow operation: ${operation}`, {
 				...context,
