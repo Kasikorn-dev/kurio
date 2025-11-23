@@ -19,7 +19,7 @@ export function KurioList() {
 		)
 	}
 
-	if (!kurios || kurios.length === 0) {
+	if (!kurios || kurios?.length === 0) {
 		return (
 			<div className="flex flex-col items-center justify-center gap-4 py-12">
 				<p className="text-muted-foreground">No kurios yet</p>
@@ -32,7 +32,7 @@ export function KurioList() {
 
 	return (
 		<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-			{kurios.map((kurio) => (
+			{kurios?.map((kurio) => (
 				<KurioCard key={kurio.id} kurio={kurio} />
 			))}
 		</div>

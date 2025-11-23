@@ -1,7 +1,7 @@
-import { api } from "@/trpc/react"
+import { api, type RouterOutputs } from "@/trpc/react"
 
 type UseKurioReturn = {
-	kurios: Awaited<ReturnType<typeof api.kurio.getAll.useQuery>>["data"]
+	kurios: RouterOutputs["kurio"]["getAll"] | undefined
 	isLoading: boolean
 	refetch: ReturnType<typeof api.kurio.getAll.useQuery>["refetch"]
 }

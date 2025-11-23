@@ -157,7 +157,7 @@ export function KurioDetailClient({ kurio: initialKurio }: KurioDetailClientProp
 					>
 						<KurioPathViewer kurio={kurioWithTotal} onUnitClick={goToUnit} />
 					</motion.div>
-				) : currentView === 'game' && currentGame ? (
+				) : currentView === 'game' && currentGame && currentUnit ? (
 					<motion.div
 						key={`game-${gameId}`}
 						initial={{ x: direction === 'forward' ? 100 : -100, opacity: 0 }}
