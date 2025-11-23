@@ -1,5 +1,6 @@
-import { relations } from "drizzle-orm"
-import { index } from "drizzle-orm/pg-core"
+import { relations, sql } from "drizzle-orm"
+import { index, pgPolicy } from "drizzle-orm/pg-core"
+import { authenticatedRole, authUid } from "drizzle-orm/supabase"
 import { createTable } from "../lib/utils"
 import { games } from "./games"
 import { kurios } from "./kurios"
@@ -19,6 +20,44 @@ export const units = createTable("unit", (d) => ({
 		.notNull(),
 }), (table) => [
 	index("units_kurio_id_order_idx").on(table.kurioId, table.orderIndex),
+	
+	// RLS Policies - Inherit from parent kurio
+	pgPolicy("users-select-own-units", {
+		for: "select",
+		to: authenticatedRole,
+		using: sql`EXISTS (
+			SELECT 1 FROM kurios
+			WHERE kurios.id = ${table.kurioId}
+			AND kurios.user_id = ${authUid}
+		)`,
+	}),
+	pgPolicy("users-insert-own-units", {
+		for: "insert",
+		to: authenticatedRole,
+		withCheck: sql`EXISTS (
+			SELECT 1 FROM kurios
+			WHERE kurios.id = ${table.kurioId}
+			AND kurios.user_id = ${authUid}
+		)`,
+	}),
+	pgPolicy("users-update-own-units", {
+		for: "update",
+		to: authenticatedRole,
+		using: sql`EXISTS (
+			SELECT 1 FROM kurios
+			WHERE kurios.id = ${table.kurioId}
+			AND kurios.user_id = ${authUid}
+		)`,
+	}),
+	pgPolicy("users-delete-own-units", {
+		for: "delete",
+		to: authenticatedRole,
+		using: sql`EXISTS (
+			SELECT 1 FROM kurios
+			WHERE kurios.id = ${table.kurioId}
+			AND kurios.user_id = ${authUid}
+		)`,
+	}),
 ])
 
 export const unitsRelations = relations(units, ({ one, many }) => ({

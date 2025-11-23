@@ -1,5 +1,6 @@
-import { relations } from "drizzle-orm"
-import { index } from "drizzle-orm/pg-core"
+import { relations, sql } from "drizzle-orm"
+import { index, pgPolicy } from "drizzle-orm/pg-core"
+import { authenticatedRole, authUid } from "drizzle-orm/supabase"
 import { createTable } from "../lib/utils"
 import { gameAttempts } from "./game-attempts"
 import { kurios } from "./kurios"
@@ -20,6 +21,24 @@ export const userProfiles = createTable("user_profile", (d) => ({
 		.$onUpdate(() => new Date()),
 }), (table) => [
 	index("user_profiles_user_id_idx").on(table.userId),
+	
+	// RLS Policies
+	pgPolicy("users-select-own-profile", {
+		for: "select",
+		to: authenticatedRole,
+		using: sql`${authUid} = ${table.userId}`,
+	}),
+	pgPolicy("users-insert-own-profile", {
+		for: "insert",
+		to: authenticatedRole,
+		withCheck: sql`${authUid} = ${table.userId}`,
+	}),
+	pgPolicy("users-update-own-profile", {
+		for: "update",
+		to: authenticatedRole,
+		using: sql`${authUid} = ${table.userId}`,
+		withCheck: sql`${authUid} = ${table.userId}`,
+	}),
 ])
 
 export const userProfilesRelations = relations(userProfiles, ({ many }) => ({

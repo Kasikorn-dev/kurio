@@ -1,5 +1,6 @@
-import { relations } from "drizzle-orm"
-import { index } from "drizzle-orm/pg-core"
+import { relations, sql } from "drizzle-orm"
+import { index, pgPolicy } from "drizzle-orm/pg-core"
+import { authenticatedRole, authUid } from "drizzle-orm/supabase"
 import { createTable } from "../lib/utils"
 import { games } from "./games"
 import { userProfiles } from "./user-profiles"
@@ -26,6 +27,19 @@ export const gameAttempts = createTable("game_attempt", (d) => ({
 	index("game_attempts_player_id_idx").on(table.playerId),
 	index("game_attempts_game_id_idx").on(table.gameId),
 	index("game_attempts_player_id_played_at_idx").on(table.playerId, table.playedAt),
+	
+	// RLS Policies
+	pgPolicy("users-select-own-attempts", {
+		for: "select",
+		to: authenticatedRole,
+		using: sql`${authUid} = ${table.playerId}`,
+	}),
+	pgPolicy("users-insert-own-attempts", {
+		for: "insert",
+		to: authenticatedRole,
+		withCheck: sql`${authUid} = ${table.playerId}`,
+	}),
+	// Note: No UPDATE/DELETE policies for data integrity
 ])
 
 export const gameAttemptsRelations = relations(gameAttempts, ({ one }) => ({

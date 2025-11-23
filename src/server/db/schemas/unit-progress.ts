@@ -1,5 +1,6 @@
-import { relations } from "drizzle-orm"
-import { index, uniqueIndex } from "drizzle-orm/pg-core"
+import { relations, sql } from "drizzle-orm"
+import { index, pgPolicy, uniqueIndex } from "drizzle-orm/pg-core"
+import { authenticatedRole, authUid } from "drizzle-orm/supabase"
 import { createTable } from "../lib/utils"
 import { units } from "./units"
 import { userProfiles } from "./user-profiles"
@@ -30,6 +31,29 @@ export const unitProgress = createTable("unit_progress", (d) => ({
 	index("unit_progress_player_id_idx").on(table.playerId),
 	index("unit_progress_unit_id_idx").on(table.unitId),
 	index("unit_progress_player_id_completed_idx").on(table.playerId, table.isCompleted),
+	
+	// RLS Policies
+	pgPolicy("users-select-own-progress", {
+		for: "select",
+		to: authenticatedRole,
+		using: sql`${authUid} = ${table.playerId}`,
+	}),
+	pgPolicy("users-insert-own-progress", {
+		for: "insert",
+		to: authenticatedRole,
+		withCheck: sql`${authUid} = ${table.playerId}`,
+	}),
+	pgPolicy("users-update-own-progress", {
+		for: "update",
+		to: authenticatedRole,
+		using: sql`${authUid} = ${table.playerId}`,
+		withCheck: sql`${authUid} = ${table.playerId}`,
+	}),
+	pgPolicy("users-delete-own-progress", {
+		for: "delete",
+		to: authenticatedRole,
+		using: sql`${authUid} = ${table.playerId}`,
+	}),
 ])
 
 export const unitProgressRelations = relations(unitProgress, ({ one }) => ({

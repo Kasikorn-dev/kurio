@@ -1,5 +1,6 @@
-import { relations } from "drizzle-orm"
-import { index, pgEnum } from "drizzle-orm/pg-core"
+import { relations, sql } from "drizzle-orm"
+import { index, pgEnum, pgPolicy } from "drizzle-orm/pg-core"
+import { authenticatedRole, authUid } from "drizzle-orm/supabase"
 import { createTable } from "../lib/utils"
 import { kurioResources } from "./kurio-resources"
 import { units } from "./units"
@@ -45,6 +46,29 @@ export const kurios = createTable("kurio", (d) => ({
 	index("kurios_user_id_idx").on(table.userId),
 	index("kurios_created_at_idx").on(table.createdAt),
 	index("kurios_user_id_created_at_idx").on(table.userId, table.createdAt),
+	
+	// RLS Policies
+	pgPolicy("users-select-own-kurios", {
+		for: "select",
+		to: authenticatedRole,
+		using: sql`${authUid} = ${table.userId}`,
+	}),
+	pgPolicy("users-insert-own-kurios", {
+		for: "insert",
+		to: authenticatedRole,
+		withCheck: sql`${authUid} = ${table.userId}`,
+	}),
+	pgPolicy("users-update-own-kurios", {
+		for: "update",
+		to: authenticatedRole,
+		using: sql`${authUid} = ${table.userId}`,
+		withCheck: sql`${authUid} = ${table.userId}`,
+	}),
+	pgPolicy("users-delete-own-kurios", {
+		for: "delete",
+		to: authenticatedRole,
+		using: sql`${authUid} = ${table.userId}`,
+	}),
 ])
 
 export const kuriosRelations = relations(kurios, ({ one, many }) => ({

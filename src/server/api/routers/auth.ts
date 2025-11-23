@@ -57,7 +57,7 @@ export const authRouter = createTRPCRouter({
 			return { exists: false }
 		}),
 
-	getProfile: protectedProcedure.query(async ({ ctx }) => {
+	getProfile: protectedProcedure.query(async ({ ctx }): Promise<typeof userProfiles.$inferSelect | null> => {
 		const profile = await ctx.db.query.userProfiles.findFirst({
 			where: (profiles, { eq }) => eq(profiles.userId, ctx.user.id),
 		})

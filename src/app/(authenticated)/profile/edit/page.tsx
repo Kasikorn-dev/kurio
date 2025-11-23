@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { AccountLinking } from "@/components/custom/profile/account-linking"
 import { ProfileSkeleton } from "@/components/custom/profile/profile-skeleton"
@@ -27,7 +27,14 @@ export default function EditProfilePage() {
 		},
 	})
 
-	const [displayName, setDisplayName] = useState(profile?.displayName ?? "")
+	const [displayName, setDisplayName] = useState("")
+
+	// Sync displayName with profile data when it loads
+	useEffect(() => {
+		if (profile) {
+			setDisplayName(profile.displayName ?? "")
+		}
+	}, [profile])
 
 	if (isLoading) {
 		return <ProfileSkeleton />
@@ -56,7 +63,7 @@ export default function EditProfilePage() {
 						<div className="flex flex-col gap-2">
 							<Label htmlFor="displayName">Display Name</Label>
 							<Input
-								defaultValue={profile.displayName ?? ""}
+								value={displayName}
 								disabled={updateProfile.isPending}
 								id="displayName"
 								onChange={(e) => setDisplayName(e.target.value)}
