@@ -1,0 +1,10 @@
+{
+        "extends": "./tsconfig.json",
+        "compilerOptions": {
+                "noEmit": false,
+                "outDir": ".tmp-tests",
+                "module": "ESNext",
+                "moduleResolution": "Bundler"
+        },
+        "include": ["tests/**/*.ts", "src/lib/ai/game-generator.ts"]
+}

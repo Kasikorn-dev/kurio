@@ -97,16 +97,16 @@ export async function checkAndGenerateUnits(
 			)
 		}
 
-		const gameContent = await generateGameContent({
-			resources: kurio.resources.map((r) => ({
-				resourceType: r.resourceType,
-				resourceContent: r.resourceContent ?? undefined,
-				resourceFileUrl: r.resourceFileUrl ?? undefined,
-			})),
-			aiModel: kurio.aiModel,
-			unitCount: AI_CONSTANTS.AUTO_GEN.ADDITIONAL_UNITS,
-			gamesPerUnit: AI_CONSTANTS.GAMES_PER_UNIT,
-		})
+                const gameContent = await generateGameContent({
+                        resources: kurio.resources.map((r) => ({
+                                resourceType: r.resourceType,
+                                resourceContent: r.resourceContent ?? undefined,
+                                resourceFileUrl: r.resourceFileUrl ?? undefined,
+                        })),
+                        aiModel: kurio.aiModel,
+                        unitCount: AI_CONSTANTS.AUTO_GEN.ADDITIONAL_UNITS,
+                        gamesPerUnit: AI_CONSTANTS.GAMES_PER_UNIT,
+                })
 
 		// Get current max order index
 		const maxOrderIndex = Math.max(
@@ -115,10 +115,10 @@ export async function checkAndGenerateUnits(
 		)
 
 		// Adjust order indices for new units
-		const adjustedUnits = gameContent.units.map((unit, index) => ({
-			...unit,
-			orderIndex: maxOrderIndex + 1 + index,
-		}))
+                const adjustedUnits = gameContent.content.units.map((unit, index) => ({
+                        ...unit,
+                        orderIndex: maxOrderIndex + 1 + index,
+                }))
 
 		// Batch insert new units and games
 		const newGames = await batchInsertUnitsAndGames(

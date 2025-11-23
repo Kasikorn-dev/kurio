@@ -1,11 +1,12 @@
 import { desc, eq } from "drizzle-orm"
 import { z } from "zod"
 
-import { generateGameContent } from "@/lib/ai/game-generator"
+import { generateGameContent, type BatchCompletePayload } from "@/lib/ai/game-generator"
 import { AI_CONSTANTS } from "@/lib/constants"
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc"
 import { kurioResources, kurios } from "@/server/db/schemas"
 import { batchInsertUnitsAndGames } from "./game-helpers"
+import { logger } from "@/lib/monitoring/logger"
 
 export const kurioRouter = createTRPCRouter({
 	getAll: protectedProcedure.query(async ({ ctx }) => {
@@ -93,49 +94,88 @@ export const kurioRouter = createTRPCRouter({
 			}
 
 			// Insert resources
-			if (input.resources.length > 0) {
-				await ctx.db.insert(kurioResources).values(
-					input.resources.map((resource) => ({
-						kurioId: newKurio.id,
+                        if (input.resources.length > 0) {
+                                await ctx.db.insert(kurioResources).values(
+                                        input.resources.map((resource) => ({
+                                                kurioId: newKurio.id,
 						resourceType: resource.resourceType,
 						resourceContent: resource.resourceContent,
 						resourceFileUrl: resource.resourceFileUrl,
 						resourceFileType: resource.resourceFileType,
 						orderIndex: resource.orderIndex,
 					})),
-				)
-			}
+                                        )
+                        }
 
-			try {
-				// Generate game content using AI (includes title, description, and units)
-				const gameContent = await generateGameContent({
-					resources: input.resources.map((r) => ({
-						resourceType: r.resourceType,
-						resourceContent: r.resourceContent ?? undefined,
-						resourceFileUrl: r.resourceFileUrl ?? undefined,
-					})),
-					aiModel: input.aiModel,
-					unitCount: unitCount,
-					gamesPerUnit: AI_CONSTANTS.GAMES_PER_UNIT,
-				})
+                        try {
+                                let partialGames = 0
 
-				// Batch insert units and games
-				const totalGames = await batchInsertUnitsAndGames(
-					ctx.db,
-					newKurio.id,
-					gameContent.units,
-				)
+                                // Generate game content using AI (includes title, description, and units)
+                                const gameContent = await generateGameContent({
+                                        resources: input.resources.map((r) => ({
+                                                resourceType: r.resourceType,
+                                                resourceContent: r.resourceContent ?? undefined,
+                                                resourceFileUrl: r.resourceFileUrl ?? undefined,
+                                        })),
+                                        aiModel: input.aiModel,
+                                        unitCount: unitCount,
+                                        gamesPerUnit: AI_CONSTANTS.GAMES_PER_UNIT,
+                                        batchSize: AI_CONSTANTS.BATCH_GENERATION.DEFAULT_BATCH_SIZE,
+                                        parallelLimit: AI_CONSTANTS.BATCH_GENERATION.PARALLEL_LIMIT,
+                                        maxRetries: AI_CONSTANTS.BATCH_GENERATION.MAX_RETRIES,
+                                        timeoutMs: AI_CONSTANTS.BATCH_GENERATION.TIMEOUT_MS,
+                                        onOutlineReady: async (outline) => {
+                                                await ctx.db
+                                                        .update(kurios)
+                                                        .set({
+                                                                title: outline.courseTitle,
+                                                                description: outline.description ?? null,
+                                                                status: "generating",
+                                                                updatedAt: new Date(),
+                                                        })
+                                                        .where(eq(kurios.id, newKurio.id))
+                                        },
+                                        onBatchComplete: async (batch: BatchCompletePayload) => {
+                                                partialGames += batch.units.reduce(
+                                                        (total, unit) => total + unit.games.length,
+                                                        0,
+                                                )
 
-				// Update kurio with AI-generated title, description, and status
-				const [updatedKurio] = await ctx.db
-					.update(kurios)
-					.set({
-						title: gameContent.title,
-						description: gameContent.description ?? null,
-						status: "ready",
-						totalGames: totalGames,
-						updatedAt: new Date(),
-					})
+                                                await ctx.db
+                                                        .update(kurios)
+                                                        .set({
+                                                                status: "generating",
+                                                                totalGames: partialGames,
+                                                                updatedAt: new Date(),
+                                                        })
+                                                        .where(eq(kurios.id, newKurio.id))
+                                        },
+                                })
+
+                                logger.info("Kurio generation timings", {
+                                        kurioId: newKurio.id,
+                                        outlineMs: gameContent.metrics.outlineDurationMs,
+                                        batchDurations: gameContent.metrics.batchDurations,
+                                        totalMs: gameContent.metrics.totalDurationMs,
+                                })
+
+                                // Batch insert units and games
+                                const totalGames = await batchInsertUnitsAndGames(
+                                        ctx.db,
+                                        newKurio.id,
+                                        gameContent.content.units,
+                                )
+
+                                // Update kurio with AI-generated title, description, and status
+                                const [updatedKurio] = await ctx.db
+                                        .update(kurios)
+                                        .set({
+                                                title: gameContent.content.title,
+                                                description: gameContent.content.description ?? null,
+                                                status: "ready",
+                                                totalGames: totalGames,
+                                                updatedAt: new Date(),
+                                        })
 					.where(eq(kurios.id, newKurio.id))
 					.returning()
 

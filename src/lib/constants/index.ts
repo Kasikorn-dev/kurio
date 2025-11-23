@@ -55,9 +55,17 @@ export const GAME_CONSTANTS = {
 
 // AI Constants
 export const AI_CONSTANTS = {
-	// Default AI model
-	// DEFAULT_MODEL: "gpt-5-nano-2025-08-07",
-	DEFAULT_MODEL: "gpt-5-mini-2025-08-07",
+        // Default AI model
+        // DEFAULT_MODEL: "gpt-5-nano-2025-08-07",
+        DEFAULT_MODEL: "gpt-5-mini-2025-08-07",
+
+        // Batched generation tuning
+        BATCH_GENERATION: {
+                DEFAULT_BATCH_SIZE: 5,
+                PARALLEL_LIMIT: 1,
+                MAX_RETRIES: 1,
+                TIMEOUT_MS: 90_000,
+        },
 
 	// AI Generation Settings
 	GENERATION: {
@@ -75,10 +83,10 @@ export const AI_CONSTANTS = {
 	// Games per unit (fixed)
 	GAMES_PER_UNIT: 10,
 
-	// AI response indices
-	RESPONSE_INDEX: {
-		FIRST_CHOICE: 0,
-	},
+        // AI response indices
+        RESPONSE_INDEX: {
+                FIRST_CHOICE: 0,
+        },
 } as const
 
 // Timing Constants
