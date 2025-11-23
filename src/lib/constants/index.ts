@@ -55,13 +55,18 @@ export const GAME_CONSTANTS = {
 
 // AI Constants
 export const AI_CONSTANTS = {
-	// Default AI model
-	// DEFAULT_MODEL: "gpt-5-nano-2025-08-07",
-	DEFAULT_MODEL: "gpt-5-mini-2025-08-07",
+        // Default AI model
+        // DEFAULT_MODEL: "gpt-5-nano-2025-08-07",
+        DEFAULT_MODEL: "gpt-5-mini-2025-08-07",
 
-	// AI Generation Settings
-	GENERATION: {
-		TEMPERATURE: 0.3, // Lower = more deterministic (0 = deterministic, 1 = creative)
+        INPUT_BUDGET: {
+                CHARACTER_BUDGET:
+                        Number.parseInt(process.env.AI_PROMPT_CHARACTER_BUDGET ?? "12000", 10) || 12000,
+        },
+
+        // AI Generation Settings
+        GENERATION: {
+                TEMPERATURE: 0.3, // Lower = more deterministic (0 = deterministic, 1 = creative)
 		// Note: seed parameter not available in all OpenAI models
 	},
 

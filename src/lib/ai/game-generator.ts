@@ -1,18 +1,14 @@
 import { AI_CONSTANTS } from "@/lib/constants"
 import { SAFETY_SYSTEM_PROMPT, validateContentSafety } from "./content-safety"
 import { openai } from "./openai-client"
-
-type Resource = {
-	resourceType: "text" | "file" | "image"
-	resourceContent?: string
-	resourceFileUrl?: string
-}
+import { optimizeResourcesForBudget, type Resource } from "./resource-optimizer"
 
 type GenerateGameParams = {
-	resources: Resource[]
-	aiModel?: string
-	unitCount: number
-	gamesPerUnit: number
+        resources: Resource[]
+        aiModel?: string
+        unitCount: number
+        gamesPerUnit: number
+        characterBudget?: number
 }
 
 type GenerateGameResponse = {
@@ -30,25 +26,34 @@ type GenerateGameResponse = {
 }
 
 export async function generateGameContent(
-	params: GenerateGameParams,
+        params: GenerateGameParams,
 ): Promise<GenerateGameResponse> {
-	const {
-		resources,
-		aiModel = AI_CONSTANTS.DEFAULT_MODEL,
-		unitCount,
-		gamesPerUnit,
-	} = params
+        const {
+                resources,
+                aiModel = AI_CONSTANTS.DEFAULT_MODEL,
+                unitCount,
+                gamesPerUnit,
+                characterBudget = AI_CONSTANTS.INPUT_BUDGET.CHARACTER_BUDGET,
+        } = params
 
-	// Prepare text content
-	const textContent = resources
-		.map((r) => {
-			if (r.resourceType === "text" && r.resourceContent) {
-				return r.resourceContent
-			}
-			return null
-		})
-		.filter(Boolean)
-		.join("\n\n")
+        const optimizedResources = await optimizeResourcesForBudget(resources, {
+                characterBudget,
+                model: aiModel,
+        })
+
+        // Prepare text content
+        const textContent = optimizedResources
+                .map((r) => {
+                        if (r.resourceType === "text" && r.resourceContent) {
+                                return r.resourceContent
+                        }
+                        if (r.resourceType === "file" && r.resourceContent) {
+                                return r.resourceContent
+                        }
+                        return null
+                })
+                .filter(Boolean)
+                .join("\n\n")
 
 	// Validate content safety
 	const safetyCheck = validateContentSafety(textContent)
@@ -59,11 +64,11 @@ export async function generateGameContent(
 	}
 
 	// Prepare image URLs for vision
-	const imageUrls = resources
-		.filter(
-			(r): r is Resource & { resourceFileUrl: string } =>
-				r.resourceType === "image" && Boolean(r.resourceFileUrl),
-		)
+        const imageUrls = optimizedResources
+                .filter(
+                        (r): r is Resource & { resourceFileUrl: string } =>
+                                r.resourceType === "image" && Boolean(r.resourceFileUrl),
+                )
 		.map((r) => r.resourceFileUrl)
 
 	const prompt = `Create ${unitCount} educational units with ${gamesPerUnit} games each from this content:
