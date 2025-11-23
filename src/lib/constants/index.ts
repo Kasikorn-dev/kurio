@@ -56,7 +56,14 @@ export const GAME_CONSTANTS = {
 // AI Constants
 export const AI_CONSTANTS = {
 	// Default AI model
-	DEFAULT_MODEL: "gpt-5-nano-2025-08-07",
+	// DEFAULT_MODEL: "gpt-5-nano-2025-08-07",
+	DEFAULT_MODEL: "gpt-5-mini-2025-08-07",
+
+	// AI Generation Settings
+	GENERATION: {
+		TEMPERATURE: 0.3, // Lower = more deterministic (0 = deterministic, 1 = creative)
+		// Note: seed parameter not available in all OpenAI models
+	},
 
 	// Auto-generation settings
 	AUTO_GEN: {

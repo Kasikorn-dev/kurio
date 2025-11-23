@@ -47,7 +47,7 @@ export const authRouter = createTRPCRouter({
 
 				return {
 					exists: true,
-					provider: provider === "email" ? "email" : providers[0],
+					provider,
 					providers,
 				}
 			}

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
+import { AI_CONSTANTS } from "@/lib/constants"
 import { useFileUpload } from "@/hooks/use-file-upload"
 import { useNavigation } from "@/hooks/use-navigation"
 import { useKurioStore } from "@/stores/kurio-store"
@@ -85,6 +86,7 @@ export function KurioCreateForm() {
 				autoGenEnabled,
 				autoGenThreshold,
 				unitCount: autoGenEnabled ? undefined : unitCount,
+				aiModel: AI_CONSTANTS.DEFAULT_MODEL,
 				resources: uploadedResources,
 			}
 
@@ -95,7 +97,7 @@ export function KurioCreateForm() {
 			reset()
 			setTextContent("")
 			setIsSubmitting(false)
-			
+
 			// Show success message and redirect
 			toast.success("Creating your Kurio...")
 			navigate(`/kurio/${kurio.id}`)

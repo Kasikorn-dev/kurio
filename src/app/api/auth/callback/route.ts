@@ -52,10 +52,12 @@ export async function GET(request: Request) {
 			} = await supabase.auth.getUser()
 
 			// Check if already linked
-			if (
+
+			const isLinked =
 				currentUser?.id === sessionData.user.id &&
 				currentUser.email === sessionData.user.email
-			) {
+
+			if (isLinked) {
 				return NextResponse.redirect(`${requestUrl.origin}${next}`)
 			}
 
@@ -68,6 +70,7 @@ export async function GET(request: Request) {
 				requestUrl.origin,
 			)
 
+			console.log("duplicateRedirect", duplicateRedirect)
 			if (duplicateRedirect) {
 				return NextResponse.redirect(duplicateRedirect)
 			}

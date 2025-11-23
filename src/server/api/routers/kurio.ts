@@ -55,7 +55,7 @@ export const kurioRouter = createTRPCRouter({
 				autoGenEnabled: z.boolean().default(true),
 				autoGenThreshold: z.number().int().min(0).max(100).default(80),
 				unitCount: z.number().int().min(1).optional(),
-				aiModel: z.string().default("gpt-5-nano-2025-08-07"),
+				aiModel: z.string().default(AI_CONSTANTS.DEFAULT_MODEL),
 				resources: z.array(
 					z.object({
 						resourceType: z.enum(["text", "file", "image"]),
@@ -68,97 +68,97 @@ export const kurioRouter = createTRPCRouter({
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
-		// Calculate unit count based on auto-gen setting
-		const unitCount = input.autoGenEnabled
-			? AI_CONSTANTS.AUTO_GEN.INITIAL_UNITS
-			: input.unitCount ?? 1
+			// Calculate unit count based on auto-gen setting
+			const unitCount = input.autoGenEnabled
+				? AI_CONSTANTS.AUTO_GEN.INITIAL_UNITS
+				: (input.unitCount ?? 1)
 
-		// Create kurio with temporary title (will be updated by AI)
-		const [newKurio] = await ctx.db
-			.insert(kurios)
-			.values({
-				userId: ctx.user.id,
-				title: "Generating...",
-				description: null,
-				autoGenEnabled: input.autoGenEnabled,
-				autoGenThreshold: input.autoGenThreshold,
-				unitCount: unitCount,
-				aiModel: input.aiModel,
-				status: "generating",
-			})
-			.returning()
-
-		if (!newKurio) {
-			throw new Error("Failed to create kurio")
-		}
-
-		// Insert resources
-		if (input.resources.length > 0) {
-			await ctx.db.insert(kurioResources).values(
-				input.resources.map((resource) => ({
-					kurioId: newKurio.id,
-					resourceType: resource.resourceType,
-					resourceContent: resource.resourceContent,
-					resourceFileUrl: resource.resourceFileUrl,
-					resourceFileType: resource.resourceFileType,
-					orderIndex: resource.orderIndex,
-				})),
-			)
-		}
-
-		try {
-			// Generate game content using AI (includes title, description, and units)
-			const gameContent = await generateGameContent({
-				resources: input.resources.map((r) => ({
-					resourceType: r.resourceType,
-					resourceContent: r.resourceContent ?? undefined,
-					resourceFileUrl: r.resourceFileUrl ?? undefined,
-				})),
-				aiModel: input.aiModel,
-				unitCount: unitCount,
-				gamesPerUnit: AI_CONSTANTS.GAMES_PER_UNIT,
-			})
-
-			// Batch insert units and games
-			const totalGames = await batchInsertUnitsAndGames(
-				ctx.db,
-				newKurio.id,
-				gameContent.units,
-			)
-
-			// Update kurio with AI-generated title, description, and status
-			const [updatedKurio] = await ctx.db
-				.update(kurios)
-				.set({
-					title: gameContent.title,
-					description: gameContent.description ?? null,
-					status: "ready",
-					totalGames: totalGames,
-					updatedAt: new Date(),
+			// Create kurio with temporary title (will be updated by AI)
+			const [newKurio] = await ctx.db
+				.insert(kurios)
+				.values({
+					userId: ctx.user.id,
+					title: "Generating...",
+					description: null,
+					autoGenEnabled: input.autoGenEnabled,
+					autoGenThreshold: input.autoGenThreshold,
+					unitCount: unitCount,
+					aiModel: input.aiModel,
+					status: "generating",
 				})
-				.where(eq(kurios.id, newKurio.id))
 				.returning()
 
-			if (!updatedKurio) {
-				throw new Error("Failed to update kurio")
+			if (!newKurio) {
+				throw new Error("Failed to create kurio")
 			}
 
-			return updatedKurio
-		} catch (error) {
-			// Update status to error if generation fails
-			await ctx.db
-				.update(kurios)
-				.set({
-					status: "error",
-					updatedAt: new Date(),
-				})
-				.where(eq(kurios.id, newKurio.id))
+			// Insert resources
+			if (input.resources.length > 0) {
+				await ctx.db.insert(kurioResources).values(
+					input.resources.map((resource) => ({
+						kurioId: newKurio.id,
+						resourceType: resource.resourceType,
+						resourceContent: resource.resourceContent,
+						resourceFileUrl: resource.resourceFileUrl,
+						resourceFileType: resource.resourceFileType,
+						orderIndex: resource.orderIndex,
+					})),
+				)
+			}
 
-			throw error instanceof Error
-				? error
-				: new Error("Failed to generate game content")
-		}
-	}),
+			try {
+				// Generate game content using AI (includes title, description, and units)
+				const gameContent = await generateGameContent({
+					resources: input.resources.map((r) => ({
+						resourceType: r.resourceType,
+						resourceContent: r.resourceContent ?? undefined,
+						resourceFileUrl: r.resourceFileUrl ?? undefined,
+					})),
+					aiModel: input.aiModel,
+					unitCount: unitCount,
+					gamesPerUnit: AI_CONSTANTS.GAMES_PER_UNIT,
+				})
+
+				// Batch insert units and games
+				const totalGames = await batchInsertUnitsAndGames(
+					ctx.db,
+					newKurio.id,
+					gameContent.units,
+				)
+
+				// Update kurio with AI-generated title, description, and status
+				const [updatedKurio] = await ctx.db
+					.update(kurios)
+					.set({
+						title: gameContent.title,
+						description: gameContent.description ?? null,
+						status: "ready",
+						totalGames: totalGames,
+						updatedAt: new Date(),
+					})
+					.where(eq(kurios.id, newKurio.id))
+					.returning()
+
+				if (!updatedKurio) {
+					throw new Error("Failed to update kurio")
+				}
+
+				return updatedKurio
+			} catch (error) {
+				// Update status to error if generation fails
+				await ctx.db
+					.update(kurios)
+					.set({
+						status: "error",
+						updatedAt: new Date(),
+					})
+					.where(eq(kurios.id, newKurio.id))
+
+				throw error instanceof Error
+					? error
+					: new Error("Failed to generate game content")
+			}
+		}),
 
 	update: protectedProcedure
 		.input(

@@ -55,11 +55,10 @@ export function LoginForm() {
 						const checkResult = await utils.auth.checkEmail.fetch({
 							email: data.email,
 						})
-						toast.error(
-							getEmailCheckErrorMessage(
-								checkResult as Parameters<typeof getEmailCheckErrorMessage>[0],
-							),
+						const errorMessage = getEmailCheckErrorMessage(
+							checkResult as Parameters<typeof getEmailCheckErrorMessage>[0],
 						)
+						toast.error(errorMessage)
 					} catch {
 						toast.error(
 							"Invalid email or password. Please check your credentials and try again.",

@@ -60,8 +60,11 @@ export async function generateGameContent(
 
 	// Prepare image URLs for vision
 	const imageUrls = resources
-		.filter((r) => r.resourceType === "image" && r.resourceFileUrl)
-		.map((r) => r.resourceFileUrl!)
+		.filter(
+			(r): r is Resource & { resourceFileUrl: string } =>
+				r.resourceType === "image" && Boolean(r.resourceFileUrl),
+		)
+		.map((r) => r.resourceFileUrl)
 
 	const prompt = `Create ${unitCount} educational units with ${gamesPerUnit} games each from this content:
 
@@ -69,18 +72,30 @@ ${textContent}
 ${imageUrls.length > 0 ? "\nAnalyze provided images for additional context.\n" : ""}
 
 Requirements:
-- Course title (max 255 chars)
+- Course title (max 255 chars) - Use a concise, descriptive title WITHOUT "Unit", "Educational Course", or unit count
+  Example: "Medical History and Penicillin" NOT "A 30-Unit Educational Course" or "Medical History - 30 Units"
 - Optional description (max 500 chars)
 - ${unitCount} units, each with ${gamesPerUnit} games
 - Mix of game types: quiz, matching, fill_blank, multiple_choice
 - Difficulty levels: easy, medium, hard
 - Educational and age-appropriate content
 
+CRITICAL NAMING RULES:
+- Course title: Use descriptive name WITHOUT "Unit", "Educational Course", "Course", unit count, or similar generic terms
+  Example: "Medical History and Penicillin" NOT "A 30-Unit Educational Course"
+  Example: "Reading Comprehension Basics" NOT "30-Unit Reading Course"
+- Unit titles: Use descriptive names WITHOUT "Unit 1:", "Unit 2:", or any numbering prefix
+  Example: "Passage Basics and Main Idea" NOT "Unit 1: Passage Basics and Main Idea"
+- Game titles: Use descriptive names WITHOUT game type prefix like "Matching:", "Quiz:", "Fill in:", "Multiple Choice:"
+  Example: "terms and ideas" NOT "Matching: terms and ideas"
+  Example: "hospital setting" NOT "Quiz: hospital setting"
+  Example: "contextual word" NOT "Fill in: contextual word"
+
 IMPORTANT: Each game type MUST follow its exact schema below:
 
 1. MULTIPLE_CHOICE:
 {
-  "title": "Question title",
+  "title": "Descriptive question title (NO 'Multiple Choice:' prefix)",
   "gameType": "multiple_choice",
   "difficultyLevel": "easy|medium|hard",
   "content": {
@@ -92,7 +107,7 @@ IMPORTANT: Each game type MUST follow its exact schema below:
 
 2. QUIZ (short answer):
 {
-  "title": "Question title",
+  "title": "Descriptive question title (NO 'Quiz:' prefix)",
   "gameType": "quiz",
   "difficultyLevel": "easy|medium|hard",
   "content": {
@@ -103,7 +118,7 @@ IMPORTANT: Each game type MUST follow its exact schema below:
 
 3. FILL_BLANK:
 {
-  "title": "Exercise title",
+  "title": "Descriptive exercise title (NO 'Fill in:' or 'Fill Blank:' prefix)",
   "gameType": "fill_blank",
   "difficultyLevel": "easy|medium|hard",
   "content": {
@@ -117,7 +132,7 @@ IMPORTANT: Each game type MUST follow its exact schema below:
 
 4. MATCHING:
 {
-  "title": "Match pairs",
+  "title": "Descriptive matching title (NO 'Matching:' prefix)",
   "gameType": "matching",
   "difficultyLevel": "easy|medium|hard",
   "content": {
@@ -133,11 +148,11 @@ IMPORTANT: Each game type MUST follow its exact schema below:
 
 Return JSON in this exact format:
 {
-  "title": "Course Title",
+  "title": "Course Title (NO 'Unit', 'Educational Course', or unit count)",
   "description": "Brief description (optional)",
   "units": [
     {
-      "title": "Unit 1 Title",
+      "title": "Descriptive Unit Title (NO 'Unit 1:' prefix)",
       "games": [
         // Games following schemas above
       ]
@@ -168,6 +183,8 @@ Return JSON in this exact format:
 					},
 				],
 				response_format: { type: "json_object" },
+				// Note: Some models don't support temperature parameter
+				// Only include if model supports it
 			})
 
 			const responseContent =
@@ -201,6 +218,8 @@ Return JSON in this exact format:
 					},
 				],
 				response_format: { type: "json_object" },
+				// Note: Some models don't support temperature parameter
+				// Only include if model supports it
 			})
 
 			const responseContent =

@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
 export async function POST(request: NextRequest) {
 	try {
@@ -21,22 +22,39 @@ export async function POST(request: NextRequest) {
 
 		const fileExt = file.name.split(".").pop()
 		const fileName = `${user.id}/${Date.now()}.${fileExt}`
-		const filePath = `kurio-resources/${fileName}`
+		const filePath = fileName // ไม่ต้องใส่ bucket name เพราะ .from() จะจัดการให้
 
-		const { error } = await supabase.storage
+		const { error: uploadError } = await supabase.storage
 			.from("kurio-resources")
 			.upload(filePath, file)
 
-		if (error) {
-			return NextResponse.json({ error: error.message }, { status: 500 })
+		if (uploadError) {
+			return NextResponse.json({ error: uploadError.message }, { status: 500 })
 		}
 
-		const {
-			data: { publicUrl },
-		} = supabase.storage.from("kurio-resources").getPublicUrl(filePath)
+		// ใช้ Admin Client เพื่อสร้าง signed URL ที่มี expiration time นาน (2 ชั่วโมง)
+		// เพื่อให้ AI สามารถเข้าถึงได้แม้ bucket เป็น private
+		const adminClient = createSupabaseAdminClient()
+		const { data: signedUrlData, error: signedUrlError } =
+			await adminClient.storage
+				.from("kurio-resources")
+				.createSignedUrl(filePath, 7200) // 2 hours expiration
+
+		if (signedUrlError || !signedUrlData?.signedUrl) {
+			// Fallback to public URL if signed URL fails (for public buckets)
+			const {
+				data: { publicUrl },
+			} = supabase.storage.from("kurio-resources").getPublicUrl(filePath)
+
+			return NextResponse.json({
+				url: publicUrl,
+				path: filePath,
+				type: file.type,
+			})
+		}
 
 		return NextResponse.json({
-			url: publicUrl,
+			url: signedUrlData.signedUrl,
 			path: filePath,
 			type: file.type,
 		})
