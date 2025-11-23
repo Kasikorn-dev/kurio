@@ -5,6 +5,8 @@ import { ThemeProvider } from "next-themes"
 import { ErrorBoundary } from "@/components/custom/error-boundary"
 import { Toaster } from "@/components/ui/sonner"
 import { TRPCReactProvider } from "@/trpc/react"
+import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata: Metadata = {
 	title: "Kurio",
@@ -28,6 +30,8 @@ export default function RootLayout({
 						<TRPCReactProvider>{children}</TRPCReactProvider>
 					</ErrorBoundary>
 					<Toaster />
+					<Analytics />
+					<SpeedInsights />
 				</ThemeProvider>
 			</body>
 		</html>
