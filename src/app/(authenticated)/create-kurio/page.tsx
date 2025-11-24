@@ -1,4 +1,10 @@
+import type { Metadata } from "next"
 import { KurioCreateForm } from "@/components/custom/kurio/kurio-create-form"
+
+export const metadata: Metadata = {
+	title: "Create New Kurio",
+	description: "Create a new interactive learning journey with AI",
+}
 
 export default function CreateKurioPage() {
 	return (

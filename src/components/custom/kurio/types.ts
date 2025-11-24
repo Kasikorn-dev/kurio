@@ -13,6 +13,9 @@ export type KurioGame = {
 	id: string
 	title: string
 	orderIndex: number
+	gameType: string
+	difficultyLevel: "easy" | "medium" | "hard"
+	content: Record<string, unknown>
 }
 
 export type KurioUnit = {

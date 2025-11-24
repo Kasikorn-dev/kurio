@@ -5,16 +5,9 @@
 
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import type { KurioGame, KurioUnit } from "@/components/custom/kurio/types"
 
-type Unit = {
-	id: string
-	title: string
-	games: Array<{
-		id: string
-		title: string
-		orderIndex: number
-	}>
-}
+type Unit = KurioUnit
 
 type UseKurioNavigationParams = {
 	kurioId: string
@@ -32,8 +25,8 @@ type UseKurioNavigationReturn = {
 	goToPreviousGame: () => void
 	hasNextGame: boolean
 	hasPreviousGame: boolean
-	currentUnit: (Unit & { title: string }) | undefined
-	currentGame: { id: string; title: string } | undefined
+	currentUnit: Unit | undefined
+	currentGame: KurioGame | undefined
 	currentGameIndex: number
 }
 

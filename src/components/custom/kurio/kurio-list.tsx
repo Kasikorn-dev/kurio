@@ -1,13 +1,12 @@
 /**
  * Server component for displaying list of Kurios
- * No client-side features needed - can be server component
+ * Empty state uses client component wrapper for animations
  */
 
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { UI_CONSTANTS } from "@/lib/constants"
 import { KurioCard } from "./kurio-card"
 import { KurioCardSkeleton } from "./kurio-card-skeleton"
+import { KurioListEmptyState } from "./kurio-list-empty-state"
 import type { KurioForList } from "./types"
 
 type KurioListProps = {
@@ -32,18 +31,7 @@ export function KurioList({ kurios, isLoading }: KurioListProps) {
 	}
 
 	if (!kurios || kurios.length === 0) {
-		return (
-			<div className="flex flex-col items-center justify-center gap-4 py-12">
-				<p className="text-center text-muted-foreground text-sm sm:text-base">
-					No kurios yet
-				</p>
-				<Link href="/create-kurio">
-					<Button className="sm:size-default" size="sm">
-						Create your first Kurio
-					</Button>
-				</Link>
-			</div>
-		)
+		return <KurioListEmptyState />
 	}
 
 	return (

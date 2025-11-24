@@ -1,6 +1,7 @@
 "use client"
 
 import type { User } from "@supabase/supabase-js"
+import { Plus } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -42,9 +43,15 @@ export function AuthenticatedNavbar({ initialUser }: AuthenticatedNavbarProps) {
 					Kurio
 				</Link>
 				<div className="flex items-center gap-4">
+					<Link href="/create-kurio">
+						<Button aria-label="Create new Kurio" size="icon" variant="ghost">
+							<Plus className="size-5" />
+						</Button>
+					</Link>
 					<Link href="/kurio">
 						<Button variant="ghost">My Kurios</Button>
 					</Link>
+
 					<UserMenu user={user} />
 				</div>
 			</div>

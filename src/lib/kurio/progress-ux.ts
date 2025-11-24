@@ -1,5 +1,3 @@
-import { calculateKurioProgress } from "./progress-calculator"
-
 export function getProgressMessage(
 	currentProgress: number,
 	threshold: number,

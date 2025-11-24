@@ -69,7 +69,7 @@ export const unitProgress = createTable(
 export const unitProgressRelations = relations(unitProgress, ({ one }) => ({
 	player: one(userProfiles, {
 		fields: [unitProgress.playerId],
-		references: [userProfiles.id],
+		references: [userProfiles.userId], // playerId references user_id, not id
 	}),
 	unit: one(units, {
 		fields: [unitProgress.unitId],

@@ -18,6 +18,11 @@ import { Label } from "@/components/ui/label"
 import { Spinner } from "@/components/ui/spinner"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { api } from "@/trpc/react"
 import { DeleteKurioButton } from "./delete-kurio-button"
 import type { KurioForCard } from "./types"
@@ -98,15 +103,24 @@ export function ManageKurioDialog({ kurio }: ManageKurioDialogProps) {
 							value={description}
 						/>
 					</div>
-					<div className="flex items-center justify-between">
-						<Label htmlFor="autoGenEnabled">Auto-generate games</Label>
-						<Switch
-							checked={autoGenEnabled}
-							disabled={updateKurio.isPending}
-							id="autoGenEnabled"
-							onCheckedChange={setAutoGenEnabled}
-						/>
-					</div>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<div className="flex items-center justify-between">
+								<Label htmlFor="autoGenEnabled">Auto-generate games</Label>
+								<Switch
+									checked={autoGenEnabled}
+									disabled={updateKurio.isPending}
+									id="autoGenEnabled"
+									onCheckedChange={setAutoGenEnabled}
+								/>
+							</div>
+						</TooltipTrigger>
+						<TooltipContent>
+							<p>
+								Automatically generate new units when you complete existing ones
+							</p>
+						</TooltipContent>
+					</Tooltip>
 					<DialogFooter className="flex-col gap-2 sm:flex-row">
 						<div className="flex flex-1 justify-start">
 							<DeleteKurioButton kurioId={kurio.id} kurioTitle={kurio.title} />

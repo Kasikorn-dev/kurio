@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { TIMING_CONSTANTS } from "@/lib/constants"
 
 type UseExerciseTimerReturn = {
 	timeSpent: number

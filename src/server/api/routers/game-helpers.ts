@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm"
+import { sql } from "drizzle-orm"
 import type { db } from "@/server/db"
 import { games, unitProgress, units } from "@/server/db/schemas"
 
@@ -26,45 +26,35 @@ export async function getUserProfileId(
 }
 
 /**
- * Update or create unit progress for a player
+ * Update or create unit progress for a player using ON CONFLICT DO UPDATE
+ * This is faster than findFirst + update/insert
+ * playerId should be userId (from auth) because unit_progress.player_id references user_profile.user_id
  */
 export async function upsertUnitProgress(
 	database: Database,
-	playerId: string,
+	playerId: string, // This is userId from auth, not userProfile.id
 	unitId: string,
 	totalGames: number,
 ): Promise<void> {
-	const existingProgress = await database.query.unitProgress.findFirst({
-		where: (progress, { eq, and }) =>
-			and(eq(progress.playerId, playerId), eq(progress.unitId, unitId)),
-	})
-
-	if (existingProgress) {
-		await database
-			.update(unitProgress)
-			.set({
-				completedGames: existingProgress.completedGames + 1,
-				isCompleted:
-					existingProgress.completedGames + 1 >= existingProgress.totalGames,
-				lastPlayedAt: new Date(),
-				updatedAt: new Date(),
-			})
-			.where(
-				and(
-					eq(unitProgress.playerId, playerId),
-					eq(unitProgress.unitId, unitId),
-				),
-			)
-	} else {
-		await database.insert(unitProgress).values({
-			playerId,
+	await database
+		.insert(unitProgress)
+		.values({
+			playerId, // This is userId from auth
 			unitId,
 			completedGames: 1,
 			totalGames,
-			isCompleted: 1 >= totalGames,
+			isCompleted: false,
 			lastPlayedAt: new Date(),
 		})
-	}
+		.onConflictDoUpdate({
+			target: [unitProgress.playerId, unitProgress.unitId],
+			set: {
+				completedGames: sql`${unitProgress.completedGames} + 1`,
+				isCompleted: sql`(${unitProgress.completedGames} + 1) >= ${unitProgress.totalGames}`,
+				lastPlayedAt: new Date(),
+				updatedAt: new Date(),
+			},
+		})
 }
 
 /**

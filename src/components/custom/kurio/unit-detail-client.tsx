@@ -3,6 +3,7 @@
 import { ArrowLeft, Check, Lock, Play } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { api } from "@/trpc/react"
@@ -25,6 +26,15 @@ type UnitDetailClientProps = {
 
 export function UnitDetailClient({ kurioId, unit }: UnitDetailClientProps) {
 	const router = useRouter()
+	const utils = api.useUtils()
+
+	// Prefetch unit progress when component mounts
+	useEffect(() => {
+		if (unit.id) {
+			void utils.game.getUnitProgress.prefetch({ unitId: unit.id })
+		}
+	}, [unit.id, utils.game.getUnitProgress])
+
 	const { data: unitProgress } = api.game.getUnitProgress.useQuery(
 		{
 			unitId: unit.id,
@@ -87,8 +97,7 @@ export function UnitDetailClient({ kurioId, unit }: UnitDetailClientProps) {
 					return (
 						<Link
 							className={cn(
-								"group relative overflow-hidden rounded-lg border bg-card p-6 transition-all",
-								!isLocked && "hover:scale-105 hover:shadow-lg",
+								"group relative overflow-hidden rounded-lg border bg-card p-6",
 								isLocked && "cursor-not-allowed opacity-60",
 							)}
 							href={isLocked ? "#" : `/game/${game.id}`}

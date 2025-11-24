@@ -1,7 +1,19 @@
 "use client"
 
-import { Check, Lock, Play } from "lucide-react"
-import { useMemo } from "react"
+import { BookOpen, Check, Lock, Play } from "lucide-react"
+import { useEffect, useMemo } from "react"
+import {
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty"
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { api } from "@/trpc/react"
 import {
@@ -22,6 +34,15 @@ export function KurioPathViewer({ kurio, onUnitClick }: KurioPathViewerProps) {
 		() => kurio.units.map((unit) => unit.id),
 		[kurio.units],
 	)
+
+	const utils = api.useUtils()
+
+	// Prefetch unit progress when component mounts or unitIds change
+	useEffect(() => {
+		if (unitIds.length > 0) {
+			void utils.game.getAllUnitProgress.prefetch({ unitIds })
+		}
+	}, [unitIds, utils.game.getAllUnitProgress])
 
 	const { data: allProgress } = api.game.getAllUnitProgress.useQuery(
 		{ unitIds },
@@ -57,21 +78,30 @@ export function KurioPathViewer({ kurio, onUnitClick }: KurioPathViewerProps) {
 				)}
 
 				{/* Progress bar */}
-				<div className="mt-4 max-w-full sm:mt-6 sm:max-w-md">
-					<div className="flex items-center justify-between text-sm">
-						<span className="text-muted-foreground">Progress</span>
-						<span className="font-medium">{progressPercentage}%</span>
-					</div>
-					<div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-						<div
-							className="h-full bg-primary transition-all duration-500"
-							style={{ width: `${progressPercentage}%` }}
-						/>
-					</div>
-					<p className="mt-2 text-muted-foreground text-xs">
-						{completedGames} / {kurio.totalGames} games completed
-					</p>
-				</div>
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<div className="mt-4 max-w-full sm:mt-6 sm:max-w-md">
+							<div className="flex items-center justify-between text-sm">
+								<span className="text-muted-foreground">Progress</span>
+								<span className="font-medium">{progressPercentage}%</span>
+							</div>
+							<div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+								<div
+									className="h-full bg-primary transition-all duration-300"
+									style={{ width: `${progressPercentage}%` }}
+								/>
+							</div>
+							<p className="mt-2 text-muted-foreground text-xs">
+								{completedGames} / {kurio.totalGames} games completed
+							</p>
+						</div>
+					</TooltipTrigger>
+					<TooltipContent>
+						<p>
+							{completedGames} of {kurio.totalGames} games completed
+						</p>
+					</TooltipContent>
+				</Tooltip>
 			</div>
 
 			{/* Winding Path */}
@@ -97,102 +127,120 @@ export function KurioPathViewer({ kurio, onUnitClick }: KurioPathViewerProps) {
 								key={unit.id}
 							>
 								{/* Unit Node */}
-								<button
-									className={cn(
-										"group relative flex flex-col items-center gap-4 transition-all duration-300",
-										!isLocked &&
-											"hover:-translate-y-1 cursor-pointer hover:scale-110",
-										isLocked && "cursor-not-allowed",
-									)}
-									disabled={isLocked}
-									onClick={() => !isLocked && onUnitClick(unit.id)}
-								>
-									{/* Circle */}
-									<div
-										className={cn(
-											"relative flex size-24 items-center justify-center rounded-full border-4 transition-all duration-300",
-											isCompleted &&
-												"border-green-500 bg-green-500/20 shadow-green-500/30 shadow-xl",
-											!isCompleted &&
-												!isLocked &&
-												"border-primary bg-primary/20 shadow-primary/30 shadow-xl group-hover:shadow-2xl group-hover:shadow-primary/40",
-											isLocked && "cursor-not-allowed border-muted bg-muted/10",
-										)}
-									>
-										{isCompleted ? (
-											<Check
-												className="size-12 text-green-600"
-												strokeWidth={3}
-											/>
-										) : isLocked ? (
-											<Lock className="size-10 text-muted-foreground" />
-										) : (
-											<Play
-												className="size-10 text-primary"
-												fill="currentColor"
-											/>
-										)}
-
-										{/* Unit number badge */}
-										<div
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<button
 											className={cn(
-												"-right-2 -top-2 absolute flex size-8 items-center justify-center rounded-full border-2 border-background font-bold text-sm shadow-lg",
-												isCompleted && "bg-green-500 text-white",
-												!isCompleted &&
-													!isLocked &&
-													"bg-primary text-primary-foreground",
-												isLocked && "bg-muted text-muted-foreground",
+												"group relative flex flex-col items-center gap-4",
+												isLocked && "cursor-not-allowed",
 											)}
+											disabled={isLocked}
+											onClick={() => !isLocked && onUnitClick(unit.id)}
+											type="button"
 										>
-											{index + 1}
-										</div>
-									</div>
+											{/* Circle */}
+											<div
+												className={cn(
+													"relative flex size-24 items-center justify-center rounded-full border-4",
+													isCompleted && "border-green-500 bg-green-500/20",
+													!isCompleted &&
+														!isLocked &&
+														"border-primary bg-primary/20",
+													isLocked &&
+														"cursor-not-allowed border-muted bg-muted/10",
+												)}
+											>
+												{isCompleted ? (
+													<Check
+														className="size-12 text-green-600"
+														strokeWidth={3}
+													/>
+												) : isLocked ? (
+													<Lock className="size-10 text-muted-foreground" />
+												) : (
+													<Play
+														className="size-10 text-primary"
+														fill="currentColor"
+													/>
+												)}
 
-									{/* Unit info */}
-									<div className="max-w-[220px] text-center">
-										<p
-											className={cn(
-												"font-semibold text-base leading-tight",
-												isLocked && "text-muted-foreground",
-											)}
-										>
-											{unit.title}
+												{/* Unit number badge */}
+												<div
+													className={cn(
+														"-right-2 -top-2 absolute flex size-8 items-center justify-center rounded-full border-2 border-background font-bold text-sm",
+														isCompleted && "bg-green-500 text-white",
+														!isCompleted &&
+															!isLocked &&
+															"bg-primary text-primary-foreground",
+														isLocked && "bg-muted text-muted-foreground",
+													)}
+												>
+													{index + 1}
+												</div>
+											</div>
+
+											{/* Unit info */}
+											<div className="max-w-[220px] text-center">
+												<p
+													className={cn(
+														"font-semibold text-base leading-tight",
+														isLocked && "text-muted-foreground",
+													)}
+												>
+													{unit.title}
+												</p>
+												<p className="mt-2 text-muted-foreground text-sm">
+													{completedGamesInUnit} / {totalGamesInUnit} games
+												</p>
+											</div>
+										</button>
+									</TooltipTrigger>
+									<TooltipContent>
+										<p>
+											{isLocked
+												? "Complete previous unit to unlock"
+												: `Click to view ${unit.title}`}
 										</p>
-										<p className="mt-2 text-muted-foreground text-sm">
-											{completedGamesInUnit} / {totalGamesInUnit} games
-										</p>
-									</div>
-								</button>
+									</TooltipContent>
+								</Tooltip>
 							</div>
 						)
 					})}
 
 					{/* Render skeleton placeholders for units still being generated */}
-					{kurio.unitCount !== null && kurio.units.length < kurio.unitCount && (
-						<>
-							{Array.from({ length: kurio.unitCount - kurio.units.length }).map(
-								(_, skeletonIndex) => {
-									const actualIndex = kurio.units.length + skeletonIndex
-									const position = calculateUnitPosition(actualIndex)
+					{kurio.unitCount !== null &&
+						kurio.units.length < kurio.unitCount &&
+						Array.from({ length: kurio.unitCount - kurio.units.length }).map(
+							(_, skeletonIndex) => {
+								const actualIndex = kurio.units.length + skeletonIndex
+								const position = calculateUnitPosition(actualIndex)
 
-									return (
-										<UnitSkeleton
-											key={`skeleton-${actualIndex}`}
-											position={position}
-											unitNumber={actualIndex + 1}
-										/>
-									)
-								},
-							)}
-						</>
-					)}
+								return (
+									<UnitSkeleton
+										key={`skeleton-${actualIndex}`}
+										position={position}
+										unitNumber={actualIndex + 1}
+									/>
+								)
+							},
+						)}
 				</div>
 			</div>
 
 			{/* Empty state */}
 			{kurio.units.length === 0 && kurio.unitCount === null && (
-				<div className="mt-12 text-center text-muted-foreground">
-					No units available yet
+				<div className="mt-12">
+					<Empty>
+						<EmptyHeader>
+							<EmptyMedia variant="icon">
+								<BookOpen className="size-8" />
+							</EmptyMedia>
+							<EmptyTitle>No units available yet</EmptyTitle>
+							<EmptyDescription>
+								Units will appear here once generation is complete
+							</EmptyDescription>
+						</EmptyHeader>
+					</Empty>
 				</div>
 			)}
 		</div>

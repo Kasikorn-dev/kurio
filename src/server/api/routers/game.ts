@@ -1,7 +1,8 @@
+import { count, eq } from "drizzle-orm"
 import { z } from "zod"
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc"
-import { gameAttempts } from "@/server/db/schemas"
-import { getUserProfileId, upsertUnitProgress } from "./game-helpers"
+import { gameAttempts, games } from "@/server/db/schemas"
+import { upsertUnitProgress } from "./game-helpers"
 
 export const gameRouter = createTRPCRouter({
 	getById: protectedProcedure
@@ -29,18 +30,16 @@ export const gameRouter = createTRPCRouter({
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
-			// Get user profile ID
-			const playerId = await getUserProfileId(ctx.db, ctx.user.id)
+			// playerId should be userId (from auth) not userProfile.id
+			// because both game_attempt.player_id and unit_progress.player_id
+			// reference user_profile.user_id (not user_profile.id)
+			const playerId = ctx.user.id
 
-			// Get game with unit info
+			// Get only unitId (fastest query - no joins)
 			const game = await ctx.db.query.games.findFirst({
 				where: (games, { eq }) => eq(games.id, input.gameId),
-				with: {
-					unit: {
-						with: {
-							games: true,
-						},
-					},
+				columns: {
+					unitId: true,
 				},
 			})
 
@@ -48,13 +47,28 @@ export const gameRouter = createTRPCRouter({
 				throw new Error("Game not found")
 			}
 
-			const totalGames = game.unit.games.length
+			// Get totalGames count separately (faster than loading all games)
+			const result = await ctx.db
+				.select({ count: count() })
+				.from(games)
+				.where(eq(games.unitId, game.unitId))
+
+			const totalGames = result[0]?.count ?? 0
+
+			// Get kurioId for auto-gen (only if needed)
+			const unit = await ctx.db.query.units.findFirst({
+				where: (units, { eq }) => eq(units.id, game.unitId),
+				columns: {
+					kurioId: true,
+				},
+			})
 
 			// Use transaction for atomic operations
 			await ctx.db.transaction(async (tx) => {
 				// Record the attempt
+				// playerId must be userId (from auth) to match foreign key constraint
 				await tx.insert(gameAttempts).values({
-					playerId,
+					playerId, // This is ctx.user.id (userId from auth)
 					gameId: input.gameId,
 					userAnswer: input.userAnswer,
 					isCorrect: input.isCorrect,
@@ -62,25 +76,21 @@ export const gameRouter = createTRPCRouter({
 					timeSpent: input.timeSpent,
 				})
 
-				// Update unit progress
+				// Update unit progress using ON CONFLICT (faster than findFirst + update)
 				await upsertUnitProgress(tx, playerId, game.unitId, totalGames)
 			})
 
-			// Check if we should trigger auto-gen (after transaction completes)
-			const unit = await ctx.db.query.units.findFirst({
-				where: (units, { eq }) => eq(units.id, game.unitId),
-			})
-
+			// Trigger auto-gen check in background (fire-and-forget, don't await)
 			if (unit?.kurioId) {
-				// Call auto-gen helper directly (fire-and-forget)
-				// In production, consider using a background job queue
-				try {
-					const { checkAndGenerateUnits } = await import("./auto-gen-helpers")
-					await checkAndGenerateUnits(ctx.db, unit.kurioId, ctx.user.id)
-				} catch (error) {
-					// Log error but don't fail the game submission
-					console.error("Auto-gen check failed:", error)
-				}
+				setImmediate(async () => {
+					try {
+						const { checkAndGenerateUnits } = await import("./auto-gen-helpers")
+						await checkAndGenerateUnits(ctx.db, unit.kurioId, ctx.user.id)
+					} catch (error) {
+						// Log error but don't fail the game submission
+						console.error("Auto-gen check failed:", error)
+					}
+				})
 			}
 
 			return { success: true }
@@ -93,7 +103,8 @@ export const gameRouter = createTRPCRouter({
 				return []
 			}
 
-			const playerId = await getUserProfileId(ctx.db, ctx.user.id)
+			// playerId should be userId (from auth) not userProfile.id
+			const playerId = ctx.user.id
 
 			const progress = await ctx.db.query.unitProgress.findMany({
 				where: (progress, { eq, and, inArray }) =>
@@ -109,7 +120,8 @@ export const gameRouter = createTRPCRouter({
 	getUnitProgress: protectedProcedure
 		.input(z.object({ unitId: z.string().uuid() }))
 		.query(async ({ ctx, input }) => {
-			const playerId = await getUserProfileId(ctx.db, ctx.user.id)
+			// playerId should be userId (from auth) not userProfile.id
+			const playerId = ctx.user.id
 
 			const progress = await ctx.db.query.unitProgress.findFirst({
 				where: (progress, { eq, and }) =>

@@ -1,10 +1,9 @@
 "use client"
 
 import { ArrowLeft, ArrowRight } from "lucide-react"
+import { useEffect } from "react"
 import { GameRenderer } from "@/components/custom/game/game-renderer"
 import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
-import { api } from "@/trpc/react"
 
 type GamePlayerViewProps = {
 	gameId: string
@@ -13,37 +12,39 @@ type GamePlayerViewProps = {
 	onBack: () => void
 	onNext?: () => void
 	onPrevious?: () => void
+	// Game data from kurio (already fetched, no need to fetch again)
+	game: {
+		id: string
+		title: string
+		gameType: string
+		difficultyLevel: "easy" | "medium" | "hard"
+		content: Record<string, unknown>
+	}
 }
 
 export function GamePlayerView({
-	gameId,
 	unitTitle,
 	gameTitle,
 	onBack,
 	onNext,
 	onPrevious,
+	game,
 }: GamePlayerViewProps) {
-	// Fetch full game data
-	const { data: game, isLoading } = api.game.getById.useQuery({ id: gameId })
+	// Keyboard navigation
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "ArrowLeft" && onPrevious) {
+				onPrevious()
+			} else if (e.key === "ArrowRight" && onNext) {
+				onNext()
+			} else if (e.key === "Escape") {
+				onBack()
+			}
+		}
 
-	if (isLoading) {
-		return (
-			<div className="flex min-h-[400px] items-center justify-center">
-				<Spinner className="size-12" />
-			</div>
-		)
-	}
-
-	if (!game) {
-		return (
-			<div className="text-center">
-				<p className="text-muted-foreground">Game not found</p>
-				<Button className="mt-4" onClick={onBack}>
-					Back to Journey
-				</Button>
-			</div>
-		)
-	}
+		window.addEventListener("keydown", handleKeyDown)
+		return () => window.removeEventListener("keydown", handleKeyDown)
+	}, [onBack, onNext, onPrevious])
 
 	return (
 		<>

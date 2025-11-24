@@ -1,7 +1,13 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { KurioList } from "@/components/custom/kurio/kurio-list"
 import { Button } from "@/components/ui/button"
 import { api } from "@/trpc/server"
+
+export const metadata: Metadata = {
+	title: "My Kurios",
+	description: "View and manage your learning journeys",
+}
 
 export default async function KuriosPage() {
 	const kurios = await api.kurio.getAll()

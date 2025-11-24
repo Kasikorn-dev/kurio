@@ -1,14 +1,19 @@
-"use client"
-
+import type { Metadata } from "next"
 import Link from "next/link"
+import { LogoutButton } from "@/components/custom/profile/logout-button"
 import { ProfileSkeleton } from "@/components/custom/profile/profile-skeleton"
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/hooks/use-auth"
+import { api } from "@/trpc/server"
 
-export default function ProfilePage() {
-	const { profile, isLoading, logout } = useAuth()
+export const metadata: Metadata = {
+	title: "Profile",
+	description: "Manage your profile and account settings",
+}
 
-	if (isLoading) {
+export default async function ProfilePage() {
+	const profile = await api.auth.getProfile()
+
+	if (!profile) {
 		return <ProfileSkeleton />
 	}
 
@@ -30,17 +35,10 @@ export default function ProfilePage() {
 				<div>
 					<p className="text-muted-foreground text-sm">Display Name</p>
 					<p className="text-base sm:text-lg">
-						{profile?.displayName || "Not set"}
+						{profile.displayName || "Not set"}
 					</p>
 				</div>
-				<Button
-					className="w-full sm:size-default sm:w-auto"
-					onClick={logout}
-					size="sm"
-					variant="destructive"
-				>
-					Logout
-				</Button>
+				<LogoutButton className="w-full sm:size-default sm:w-auto" />
 			</div>
 		</div>
 	)

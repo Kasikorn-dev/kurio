@@ -56,8 +56,8 @@ export const GAME_CONSTANTS = {
 // AI Constants
 export const AI_CONSTANTS = {
 	// Default AI model
-	// DEFAULT_MODEL: "gpt-5-nano-2025-08-07",
-	DEFAULT_MODEL: "gpt-5-mini-2025-08-07",
+	DEFAULT_MODEL: "gpt-5-nano-2025-08-07",
+	// DEFAULT_MODEL: "gpt-5-mini-2025-08-07",
 
 	// AI Generation Settings
 	GENERATION: {

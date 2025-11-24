@@ -55,7 +55,7 @@ export const gameAttempts = createTable(
 export const gameAttemptsRelations = relations(gameAttempts, ({ one }) => ({
 	player: one(userProfiles, {
 		fields: [gameAttempts.playerId],
-		references: [userProfiles.id],
+		references: [userProfiles.userId], // playerId references user_id, not id
 	}),
 	game: one(games, {
 		fields: [gameAttempts.gameId],

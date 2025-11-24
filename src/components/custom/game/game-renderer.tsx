@@ -8,7 +8,6 @@ import { MultipleChoiceGame } from "@/components/custom/game/multiple-choice-gam
 import { QuizGame } from "@/components/custom/game/quiz-game"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useExerciseTimer } from "@/hooks/use-exercise-timer"
-import { TIMING_CONSTANTS } from "@/lib/constants"
 import { calculateScore, checkAnswer } from "@/lib/game/answer-checker"
 import { api } from "@/trpc/react"
 
@@ -82,6 +81,7 @@ export function GameRenderer({ game, onComplete }: GameRendererProps) {
 		const score = calculateScore(correct, game.difficultyLevel, timeSpent)
 
 		try {
+			// Submit answer (optimized - faster now)
 			await submitAnswer.mutateAsync({
 				gameId: game.id,
 				userAnswer: selectedAnswer,
@@ -92,23 +92,28 @@ export function GameRenderer({ game, onComplete }: GameRendererProps) {
 
 			if (correct) {
 				toast.success(`Correct! You scored ${score} points.`)
-			} else {
-				toast.error("Incorrect. Try again!")
-			}
-
-			if (onComplete) {
-				setTimeout(() => {
+				// Auto-advance to next game if correct
+				if (onComplete) {
+					// Small delay for toast visibility, then auto-advance
+					// setTimeout(() => {
 					onComplete()
 					reset()
 					setIsSubmitted(false)
 					setIsCorrect(null)
 					setSelectedAnswer(null)
-				}, TIMING_CONSTANTS.GAME_COMPLETION_DELAY)
+					// }, 800) // Reduced from TIMING_CONSTANTS.GAME_COMPLETION_DELAY
+				}
+			} else {
+				toast.error("Incorrect. Try again!")
+				// Don't auto-advance if incorrect - let user try again
 			}
 		} catch (error) {
 			const errorMessage =
 				error instanceof Error ? error.message : "Failed to submit answer"
 			toast.error(errorMessage)
+			// Reset state on error so user can try again
+			setIsSubmitted(false)
+			setIsCorrect(null)
 		}
 	}
 

@@ -33,10 +33,12 @@ export async function generateMetadata({ params }: KurioDetailPageProps) {
 		const kurio = await api.kurio.getById({ id: kurioId })
 		return {
 			title: kurio?.title ?? "Kurio",
+			description: kurio?.description ?? "Interactive learning journey",
 		}
 	} catch {
 		return {
 			title: "Kurio",
+			description: "Interactive learning journey",
 		}
 	}
 }
