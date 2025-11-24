@@ -7,7 +7,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client"
 
 type LogoutButtonProps = {
 	className?: string
-	size?: "sm" | "md" | "lg" | "icon" | "default"
+	size?: "sm" | "lg" | "icon" | "default"
 	variant?:
 		| "default"
 		| "destructive"
