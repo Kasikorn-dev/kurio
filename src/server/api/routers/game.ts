@@ -1,5 +1,6 @@
 import { count, eq } from "drizzle-orm"
 import { z } from "zod"
+import { logger } from "@/lib/monitoring/logger"
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc"
 import { gameAttempts, games } from "@/server/db/schemas"
 import { upsertUnitProgress } from "./game-helpers"
@@ -88,7 +89,10 @@ export const gameRouter = createTRPCRouter({
 						await checkAndGenerateUnits(ctx.db, unit.kurioId, ctx.user.id)
 					} catch (error) {
 						// Log error but don't fail the game submission
-						console.error("Auto-gen check failed:", error)
+						logger.error("Auto-gen check failed", error, {
+							kurioId: unit.kurioId,
+							userId: ctx.user.id,
+						})
 					}
 				})
 			}

@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm"
 
 import { generateGameContent } from "@/lib/ai/game-generator"
 import { AI_CONSTANTS } from "@/lib/constants"
+import { logger } from "@/lib/monitoring/logger"
 import {
 	calculateCompletedGames,
 	calculateKurioProgress,
@@ -143,7 +144,10 @@ export async function checkAndGenerateUnits(
 		}
 	} catch (error) {
 		// Log the error for debugging
-		console.error("Auto-gen generation error:", error)
+		logger.error("Auto-gen generation error", error, {
+			kurioId,
+			userId,
+		})
 
 		// Return user-friendly error
 		const errorMessage =

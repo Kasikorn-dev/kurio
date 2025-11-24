@@ -3,10 +3,11 @@ import {
 	handleDuplicateAccount,
 	isAccountLinkingError,
 } from "@/lib/auth/oauth-callback-utils"
+import { logger } from "@/lib/monitoring/logger"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 
-export async function GET(request: Request) {
+export async function GET(request: Request): Promise<NextResponse> {
 	const requestUrl = new URL(request.url)
 	const code = requestUrl.searchParams.get("code")
 	const error = requestUrl.searchParams.get("error")
@@ -70,7 +71,10 @@ export async function GET(request: Request) {
 				requestUrl.origin,
 			)
 
-			console.log("duplicateRedirect", duplicateRedirect)
+			logger.debug("OAuth callback duplicate account check", {
+				email: sessionData.user.email,
+				hasRedirect: !!duplicateRedirect,
+			})
 			if (duplicateRedirect) {
 				return NextResponse.redirect(duplicateRedirect)
 			}

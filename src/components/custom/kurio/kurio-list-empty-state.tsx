@@ -2,6 +2,7 @@
 
 import { BookOpen } from "lucide-react"
 import Link from "next/link"
+import type { ReactElement } from "react"
 import { Button } from "@/components/ui/button"
 import {
 	Empty,
@@ -12,7 +13,7 @@ import {
 	EmptyTitle,
 } from "@/components/ui/empty"
 
-export function KurioListEmptyState() {
+export function KurioListEmptyState(): ReactElement {
 	return (
 		<div>
 			<Empty className="py-12">

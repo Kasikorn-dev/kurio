@@ -10,6 +10,7 @@ import {
 } from "@/lib/ai/game-generator"
 import type { Resource } from "@/lib/ai/resource-utils"
 import { AI_CONSTANTS } from "@/lib/constants"
+import { logger } from "@/lib/monitoring/logger"
 import type { db } from "@/server/db"
 import { kurios } from "@/server/db/schemas"
 import { insertSingleUnitAndGames } from "./game-helpers"
@@ -114,9 +115,10 @@ export async function generateKurioUnitsInBackground(
 								})
 								.where(eq(kurios.id, kurioId))
 						} catch (metadataError) {
-							console.error(
-								"Failed to generate course metadata:",
+							logger.error(
+								"Failed to generate course metadata",
 								metadataError,
+								{ kurioId, unitIndex },
 							)
 							// Use fallback title if metadata generation fails
 							courseTitle = courseTitle ?? "Course"
@@ -141,7 +143,11 @@ export async function generateKurioUnitsInBackground(
 						.where(eq(kurios.id, kurioId))
 				}
 			} catch (unitError) {
-				console.error(`Failed to generate unit ${unitIndex + 1}:`, unitError)
+				logger.error(
+					`Failed to generate unit ${unitIndex + 1}`,
+					unitError,
+					{ kurioId, unitIndex },
+				)
 				// Continue with next unit even if one fails
 				hasError = true
 			}
@@ -157,7 +163,7 @@ export async function generateKurioUnitsInBackground(
 			.where(eq(kurios.id, kurioId))
 	} catch (error) {
 		// Update status to error if generation fails completely
-		console.error("Background generation error:", error)
+		logger.error("Background generation error", error, { kurioId })
 		await database
 			.update(kurios)
 			.set({
@@ -166,7 +172,11 @@ export async function generateKurioUnitsInBackground(
 			})
 			.where(eq(kurios.id, kurioId))
 			.catch((updateError) => {
-				console.error("Failed to update kurio status:", updateError)
+				logger.error(
+					"Failed to update kurio status",
+					updateError,
+					{ kurioId },
+				)
 			})
 	}
 }
