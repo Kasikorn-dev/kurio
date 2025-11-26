@@ -18,12 +18,12 @@ const rootDir = join(__dirname, "..", "..")
 // Load environment variables from .env
 config({ path: join(rootDir, ".env") })
 
-// Get DATABASE_URL from environment
-const databaseUrl = process.env.DATABASE_URL
+// Get SUPABASE_DB_URL from environment
+const databaseUrl = process.env.SUPABASE_DB_URL
 
 if (!databaseUrl) {
-	console.error("❌ DATABASE_URL is not set in environment variables")
-	console.error("Please set DATABASE_URL in .env file")
+	console.error("❌ SUPABASE_DB_URL is not set in environment variables")
+	console.error("Please set SUPABASE_DB_URL in .env file")
 	process.exit(1)
 }
 

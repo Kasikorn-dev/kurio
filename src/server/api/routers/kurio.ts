@@ -1,10 +1,10 @@
 import { desc, eq } from "drizzle-orm"
 import { z } from "zod"
-import type { Resource } from "@/lib/ai/resource-utils"
 import { AI_CONSTANTS } from "@/lib/constants"
+import { logger } from "@/lib/monitoring/logger"
+import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc"
 import { kurioResources, kurios } from "@/server/db/schemas"
-import { generateKurioUnitsInBackground } from "./kurio-generation"
 
 export const kurioRouter = createTRPCRouter({
 	getAll: protectedProcedure.query(async ({ ctx }) => {
@@ -51,10 +51,6 @@ export const kurioRouter = createTRPCRouter({
 	create: protectedProcedure
 		.input(
 			z.object({
-				autoGenEnabled: z.boolean().default(true),
-				autoGenThreshold: z.number().int().min(0).max(100).default(80),
-				unitCount: z.number().int().min(1).optional(),
-				aiModel: z.string().default(AI_CONSTANTS.DEFAULT_MODEL),
 				resources: z.array(
 					z.object({
 						resourceType: z.enum(["text", "file", "image"]),
@@ -64,28 +60,25 @@ export const kurioRouter = createTRPCRouter({
 						orderIndex: z.number().int(),
 					}),
 				),
+				autoGenEnabled: z.boolean().optional(),
+				autoGenThreshold: z.number().optional(),
+				unitCount: z.number().int().optional(),
+				aiModel: z.string().optional(),
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
-
-			console.log(ctx,input)
-			// Calculate total unit count based on auto-gen setting
-			const totalUnitCount = input.autoGenEnabled
-				? AI_CONSTANTS.AUTO_GEN.INITIAL_UNITS
-				: (input.unitCount ?? 1)
-
-			// Create kurio with temporary title (will be updated by AI)
+			// Create kurio
 			const [newKurio] = await ctx.db
 				.insert(kurios)
 				.values({
 					userId: ctx.user.id,
-					title: "Generating...",
-					description: null,
-					autoGenEnabled: input.autoGenEnabled,
-					autoGenThreshold: input.autoGenThreshold,
-					unitCount: totalUnitCount,
-					aiModel: input.aiModel,
-					status: "generating",
+					title: input.unitCount ? "Generating..." : "New Kurio",
+					description: input.unitCount ? "Generating..." : null,
+					autoGenEnabled: input.autoGenEnabled ?? false,
+					autoGenThreshold: input.autoGenThreshold ?? 80,
+					unitCount: input.unitCount ?? null,
+					aiModel: input.aiModel ?? "gpt-4o-mini",
+					status: input.unitCount ? "generating" : "ready", // Set to generating if unitCount provided
 				})
 				.returning()
 
@@ -107,22 +100,37 @@ export const kurioRouter = createTRPCRouter({
 				)
 			}
 
-			// // Trigger background generation (fire-and-forget)
-			// setImmediate(async () => {
-			// 	await generateKurioUnitsInBackground({
-			// 		database: ctx.db,
-			// 		kurioId: newKurio.id,
-			// 		resources: input.resources.map((r) => ({
-			// 			resourceType: r.resourceType,
-			// 			resourceContent: r.resourceContent ?? undefined,
-			// 			resourceFileUrl: r.resourceFileUrl ?? undefined,
-			// 		})) as Resource[],
-			// 		aiModel: input.aiModel,
-			// 		totalUnitCount,
-			// 	})
-			// })
+			// If unitCount is provided, trigger background generation via Edge Function
+			if (input.unitCount && input.unitCount > 0) {
+				const supabaseAdmin = createSupabaseAdminClient()
+				const resources = input.resources.map((r) => ({
+					resourceType: r.resourceType,
+					resourceContent: r.resourceContent,
+					resourceFileUrl: r.resourceFileUrl,
+				}))
 
-			// Return immediately - generation happens in background
+				// Call Edge Function in background (fire-and-forget)
+				// Don't await - let it run in background while we return immediately
+				supabaseAdmin.functions
+					.invoke("generate-kurio-units", {
+						body: {
+							kurioId: newKurio.id,
+							resources,
+							unitCount: input.unitCount,
+							gamesPerUnit: AI_CONSTANTS.GAMES_PER_UNIT,
+							userId: ctx.user.id,
+							aiModel: newKurio.aiModel,
+						},
+					})
+					.catch((error) => {
+						// Log error but don't fail the kurio creation
+						// Edge Function will handle retries or we can update status to error later
+						logger.error("Failed to start unit generation", error, {
+							kurioId: newKurio.id,
+						})
+					})
+			}
+
 			return newKurio
 		}),
 
@@ -133,7 +141,8 @@ export const kurioRouter = createTRPCRouter({
 				title: z.string().min(1).max(255).optional(),
 				description: z.string().optional(),
 				autoGenEnabled: z.boolean().optional(),
-				autoGenThreshold: z.number().int().min(0).max(100).optional(),
+				autoGenThreshold: z.number().optional(),
+				unitCount: z.number().optional(),
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {

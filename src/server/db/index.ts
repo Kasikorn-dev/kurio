@@ -4,7 +4,7 @@ import postgres from "postgres"
 import { env } from "@/env"
 import * as schemas from "@/server/db/schemas"
 
-const connectionString = env.DATABASE_URL
+const connectionString = env.SUPABASE_DB_URL
 
 // Disable prefetch as it is not supported for "Transaction" pool mode
 export const client = postgres(connectionString, { prepare: false })

@@ -28,7 +28,7 @@ type KurioFormState = {
 const initialState = {
 	autoGenEnabled: true,
 	autoGenThreshold: 80,
-	unitCount: undefined as number | undefined,
+	unitCount: 10,
 	resources: [] as Resource[],
 }
 

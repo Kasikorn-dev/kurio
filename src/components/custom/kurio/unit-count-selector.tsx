@@ -12,7 +12,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { GAME_CONSTANTS } from "@/lib/constants"
+import { UNIT_CONSTANTS } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 
 type UnitCountSelectorProps = {
@@ -43,7 +43,7 @@ export function UnitCountSelector({
 							<SelectValue placeholder="Units" />
 						</SelectTrigger>
 						<SelectContent>
-							{GAME_CONSTANTS.UNIT_COUNT_OPTIONS.map((count) => (
+							{UNIT_CONSTANTS.UNIT_COUNT_OPTIONS.map((count) => (
 								<SelectItem key={count} value={count.toString()}>
 									{count} units
 								</SelectItem>

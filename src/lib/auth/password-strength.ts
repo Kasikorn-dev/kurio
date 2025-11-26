@@ -1,4 +1,4 @@
-import { GAME_CONSTANTS } from "@/lib/constants"
+import { PASSWORD_STRENGTH } from "@/lib/constants"
 
 export type PasswordStrength = "weak" | "medium" | "strong"
 
@@ -15,16 +15,14 @@ export function calculatePasswordStrength(
 	let score = 0
 
 	// Length check
-	if (password.length >= GAME_CONSTANTS.PASSWORD_STRENGTH.MIN_LENGTH) {
+	if (password.length >= PASSWORD_STRENGTH.MIN_LENGTH) {
 		score += 1
 	} else {
-		suggestions.push(
-			`Add at least ${GAME_CONSTANTS.PASSWORD_STRENGTH.MIN_LENGTH} characters`,
-		)
+		suggestions.push(`Add at least ${PASSWORD_STRENGTH.MIN_LENGTH} characters`)
 	}
 
 	// Length bonus
-	if (password.length >= GAME_CONSTANTS.PASSWORD_STRENGTH.STRONG_LENGTH) {
+	if (password.length >= PASSWORD_STRENGTH.STRONG_LENGTH) {
 		score += 1
 	}
 
@@ -67,9 +65,6 @@ export function calculatePasswordStrength(
 	return {
 		strength,
 		score,
-		suggestions: suggestions.slice(
-			0,
-			GAME_CONSTANTS.PASSWORD_STRENGTH.MAX_SUGGESTIONS,
-		),
+		suggestions: suggestions.slice(0, PASSWORD_STRENGTH.MAX_SUGGESTIONS),
 	}
 }

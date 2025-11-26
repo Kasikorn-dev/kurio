@@ -7,6 +7,6 @@ export default {
 	schema: "./src/server/db/schemas",
 	dialect: "postgresql",
 	dbCredentials: {
-		url: env.DATABASE_URL,
+		url: env.SUPABASE_DB_URL,
 	},
 } satisfies Config

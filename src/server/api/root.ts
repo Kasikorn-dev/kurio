@@ -1,6 +1,4 @@
 import { authRouter } from "@/server/api/routers/auth"
-import { autoGenRouter } from "@/server/api/routers/auto-gen"
-import { gameRouter } from "@/server/api/routers/game"
 import { kurioRouter } from "@/server/api/routers/kurio"
 import { createCallerFactory, createTRPCRouter } from "@/server/api/trpc"
 
@@ -12,8 +10,6 @@ import { createCallerFactory, createTRPCRouter } from "@/server/api/trpc"
 export const appRouter = createTRPCRouter({
 	auth: authRouter,
 	kurio: kurioRouter,
-	game: gameRouter,
-	autoGen: autoGenRouter,
 })
 
 // export type definition of API

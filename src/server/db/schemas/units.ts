@@ -1,10 +1,16 @@
 import { relations, sql } from "drizzle-orm"
-import { index, pgPolicy } from "drizzle-orm/pg-core"
+import { index, pgEnum, pgPolicy } from "drizzle-orm/pg-core"
 import { authenticatedRole, authUid } from "drizzle-orm/supabase"
 import { createTable } from "../lib/utils"
 import { games } from "./games"
 import { kurios } from "./kurios"
 import { unitProgress } from "./unit-progress"
+
+export const unitStatusEnum = pgEnum("unit_status", [
+	"generating",
+	"ready",
+	"error",
+])
 
 export const units = createTable(
 	"unit",
@@ -16,6 +22,11 @@ export const units = createTable(
 			.references(() => kurios.id, { onDelete: "cascade" }),
 		title: d.varchar({ length: 255 }).notNull(),
 		orderIndex: d.integer("order_index").notNull(),
+		status: d
+			.varchar({ length: 50 })
+			.$type<"generating" | "ready" | "error">()
+			.default("generating")
+			.notNull(),
 		createdAt: d
 			.timestamp("created_at", { withTimezone: true })
 			.$defaultFn(() => new Date())

@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
-import { useUploadKurioResource } from "@/hooks/use-upload-kurio-resource"
 import { useNavigation } from "@/hooks/use-navigation"
-import { AI_CONSTANTS } from "@/lib/constants"
+import { useUploadKurioResource } from "@/hooks/use-upload-kurio-resource"
+import { AI_CONSTANTS, UNIT_CONSTANTS } from "@/lib/constants"
 import { useKurioStore } from "@/stores/kurio-store"
 import { api } from "@/trpc/react"
 import { KurioInput } from "./kurio-input"
@@ -59,7 +59,9 @@ export function KurioCreateForm() {
 						resource.resourceFile
 					) {
 						// Upload file to storage
-						const uploadResult = await uploadKuiroResource(resource.resourceFile)
+						const uploadResult = await uploadKuiroResource(
+							resource.resourceFile,
+						)
 						return {
 							resourceType: resource.resourceType,
 							resourceContent: resource.resourceContent,
@@ -82,7 +84,7 @@ export function KurioCreateForm() {
 			const payload = {
 				autoGenEnabled,
 				autoGenThreshold,
-				unitCount: autoGenEnabled ? undefined : unitCount,
+				unitCount: autoGenEnabled ? UNIT_CONSTANTS.INITIAL_UNITS : unitCount,
 				aiModel: AI_CONSTANTS.DEFAULT_MODEL,
 				resources: uploadedResources,
 			}
