@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
-import { useFileUpload } from "@/hooks/use-file-upload"
+import { useUploadKurioResource } from "@/hooks/use-upload-kurio-resource"
 import { useNavigation } from "@/hooks/use-navigation"
 import { AI_CONSTANTS } from "@/lib/constants"
 import { useKurioStore } from "@/stores/kurio-store"
@@ -11,7 +11,7 @@ import { KurioInput } from "./kurio-input"
 
 export function KurioCreateForm() {
 	const { navigate } = useNavigation()
-	const { uploadFile, isUploading } = useFileUpload()
+	const { uploadKuiroResource, isUploading } = useUploadKurioResource()
 	const { resources, autoGenEnabled, autoGenThreshold, unitCount, reset } =
 		useKurioStore()
 	const [isSubmitting, setIsSubmitting] = useState(false)
@@ -59,10 +59,7 @@ export function KurioCreateForm() {
 						resource.resourceFile
 					) {
 						// Upload file to storage
-						const uploadResult = await uploadFile(resource.resourceFile)
-						if (!uploadResult) {
-							throw new Error(`Failed to upload ${resource.resourceFile.name}`)
-						}
+						const uploadResult = await uploadKuiroResource(resource.resourceFile)
 						return {
 							resourceType: resource.resourceType,
 							resourceContent: resource.resourceContent,

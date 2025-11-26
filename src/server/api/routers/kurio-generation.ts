@@ -143,11 +143,10 @@ export async function generateKurioUnitsInBackground(
 						.where(eq(kurios.id, kurioId))
 				}
 			} catch (unitError) {
-				logger.error(
-					`Failed to generate unit ${unitIndex + 1}`,
-					unitError,
-					{ kurioId, unitIndex },
-				)
+				logger.error(`Failed to generate unit ${unitIndex + 1}`, unitError, {
+					kurioId,
+					unitIndex,
+				})
 				// Continue with next unit even if one fails
 				hasError = true
 			}
@@ -172,11 +171,7 @@ export async function generateKurioUnitsInBackground(
 			})
 			.where(eq(kurios.id, kurioId))
 			.catch((updateError) => {
-				logger.error(
-					"Failed to update kurio status",
-					updateError,
-					{ kurioId },
-				)
+				logger.error("Failed to update kurio status", updateError, { kurioId })
 			})
 	}
 }

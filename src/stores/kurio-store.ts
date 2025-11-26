@@ -12,8 +12,6 @@ type Resource = {
 }
 
 type KurioFormState = {
-	title: string
-	description: string
 	autoGenEnabled: boolean
 	autoGenThreshold: number
 	unitCount: number | undefined
@@ -21,8 +19,6 @@ type KurioFormState = {
 	addResource: (resource: Resource) => void
 	removeResource: (index: number) => void
 	updateResource: (index: number, resource: Partial<Resource>) => void
-	setTitle: (title: string) => void
-	setDescription: (description: string) => void
 	setAutoGenEnabled: (enabled: boolean) => void
 	setAutoGenThreshold: (threshold: number) => void
 	setUnitCount: (count: number | undefined) => void
@@ -30,8 +26,6 @@ type KurioFormState = {
 }
 
 const initialState = {
-	title: "",
-	description: "",
 	autoGenEnabled: true,
 	autoGenThreshold: 80,
 	unitCount: undefined as number | undefined,
@@ -54,8 +48,6 @@ export const useKurioStore = create<KurioFormState>((set) => ({
 				i === index ? { ...r, ...resource } : r,
 			),
 		})),
-	setTitle: (title) => set({ title }),
-	setDescription: (description) => set({ description }),
 	setAutoGenEnabled: (autoGenEnabled) => set({ autoGenEnabled }),
 	setAutoGenThreshold: (autoGenThreshold) => set({ autoGenThreshold }),
 	setUnitCount: (unitCount) => set({ unitCount }),

@@ -67,6 +67,8 @@ export const kurioRouter = createTRPCRouter({
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
+
+			console.log(ctx,input)
 			// Calculate total unit count based on auto-gen setting
 			const totalUnitCount = input.autoGenEnabled
 				? AI_CONSTANTS.AUTO_GEN.INITIAL_UNITS
@@ -105,20 +107,20 @@ export const kurioRouter = createTRPCRouter({
 				)
 			}
 
-			// Trigger background generation (fire-and-forget)
-			setImmediate(async () => {
-				await generateKurioUnitsInBackground({
-					database: ctx.db,
-					kurioId: newKurio.id,
-					resources: input.resources.map((r) => ({
-						resourceType: r.resourceType,
-						resourceContent: r.resourceContent ?? undefined,
-						resourceFileUrl: r.resourceFileUrl ?? undefined,
-					})) as Resource[],
-					aiModel: input.aiModel,
-					totalUnitCount,
-				})
-			})
+			// // Trigger background generation (fire-and-forget)
+			// setImmediate(async () => {
+			// 	await generateKurioUnitsInBackground({
+			// 		database: ctx.db,
+			// 		kurioId: newKurio.id,
+			// 		resources: input.resources.map((r) => ({
+			// 			resourceType: r.resourceType,
+			// 			resourceContent: r.resourceContent ?? undefined,
+			// 			resourceFileUrl: r.resourceFileUrl ?? undefined,
+			// 		})) as Resource[],
+			// 		aiModel: input.aiModel,
+			// 		totalUnitCount,
+			// 	})
+			// })
 
 			// Return immediately - generation happens in background
 			return newKurio

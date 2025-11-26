@@ -1,7 +1,6 @@
 "use client"
 
 import { ArrowLeft, Check, Lock, Play } from "lucide-react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
@@ -95,12 +94,11 @@ export function UnitDetailClient({ kurioId, unit }: UnitDetailClientProps) {
 					const isLocked = index > 0 && completedGames < index
 
 					return (
-						<Link
+						<div
 							className={cn(
 								"group relative overflow-hidden rounded-lg border bg-card p-6",
-								isLocked && "cursor-not-allowed opacity-60",
+								isLocked && "opacity-60",
 							)}
-							href={isLocked ? "#" : `/game/${game.id}`}
 							key={game.id}
 						>
 							{/* Game number badge */}
@@ -170,7 +168,7 @@ export function UnitDetailClient({ kurioId, unit }: UnitDetailClientProps) {
 									<Lock className="size-8 text-muted-foreground" />
 								</div>
 							)}
-						</Link>
+						</div>
 					)
 				})}
 			</div>
