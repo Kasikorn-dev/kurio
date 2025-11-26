@@ -6,7 +6,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { AI_CONSTANTS } from "@/lib/constants"
+import { UNIT_CONSTANTS } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import { useKurioStore } from "@/stores/kurio-store"
 import { AutoGenToggle } from "./auto-gen-toggle"
@@ -19,7 +19,7 @@ export function KurioAutoGenControls() {
 	// Set default unitCount to 10 when auto-gen is enabled
 	useEffect(() => {
 		if (autoGenEnabled && unitCount === undefined) {
-			setUnitCount(AI_CONSTANTS.AUTO_GEN.INITIAL_UNITS)
+			setUnitCount(UNIT_CONSTANTS.INITIAL_UNITS)
 		}
 	}, [autoGenEnabled, unitCount, setUnitCount])
 
