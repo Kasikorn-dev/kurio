@@ -5,19 +5,6 @@
 import "./src/env.js"
 
 /** @type {import("next").NextConfig} */
-const config = {
-	// Exclude supabase functions from build
-	webpack: (config) => {
-		config.watchOptions = {
-			...config.watchOptions,
-			ignored: ["**/supabase/**"],
-		}
-		return config
-	},
-	// Exclude supabase from TypeScript checking during build
-	typescript: {
-		ignoreBuildErrors: false,
-	},
-}
+const config = {}
 
 export default config

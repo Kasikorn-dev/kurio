@@ -3,6 +3,7 @@
 import { Eye, File, X } from "lucide-react"
 import Image from "next/image"
 import { useState } from "react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
 	Dialog,
@@ -13,30 +14,30 @@ import {
 } from "@/components/ui/dialog"
 
 type FileCardProps = {
-	resourceType: "text" | "file" | "image"
-	resourceContent?: string
-	resourceFileUrl?: string
-	resourceFileType?: string
+	type: "text" | "file" | "image"
+	content?: string
+	fileUrl?: string
+	fileType?: string
 	fileName?: string
 	onRemove: () => void
 }
 
 export function FileCard({
-	resourceType,
-	resourceContent,
-	resourceFileUrl,
-	resourceFileType,
+	type,
+	content,
+	fileUrl,
+	fileType,
 	fileName,
 	onRemove,
 }: FileCardProps) {
 	const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
-	if (resourceType === "text") {
+	if (type === "text") {
 		return (
 			<div className="group relative flex items-center gap-2 rounded-lg border bg-card p-3">
 				<div className="flex-1 overflow-hidden">
 					<p className="line-clamp-2 text-muted-foreground text-sm">
-						{resourceContent}
+						{content}
 					</p>
 				</div>
 				<Button
@@ -52,7 +53,7 @@ export function FileCard({
 		)
 	}
 
-	if (resourceType === "image" && resourceFileUrl) {
+	if (type === "image" && fileUrl) {
 		return (
 			<div className="group relative overflow-hidden rounded-lg border bg-card">
 				{/* Image Preview */}
@@ -61,7 +62,7 @@ export function FileCard({
 						alt={fileName || "Preview"}
 						className="object-cover"
 						fill
-						src={resourceFileUrl}
+						src={fileUrl}
 					/>
 					{/* Overlay with actions */}
 					<div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/40">
@@ -86,7 +87,7 @@ export function FileCard({
 											alt={fileName || "Preview"}
 											className="object-contain"
 											fill
-											src={resourceFileUrl}
+											src={fileUrl}
 										/>
 									</div>
 								</DialogContent>
@@ -124,7 +125,7 @@ export function FileCard({
 				{/* Overlay with actions */}
 				<div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/40">
 					<div className="flex h-full items-center justify-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-						{resourceFileUrl && (
+						{fileUrl && (
 							<Dialog onOpenChange={setIsPreviewOpen} open={isPreviewOpen}>
 								<DialogTrigger asChild>
 									<Button
@@ -141,19 +142,19 @@ export function FileCard({
 										<DialogTitle>{fileName || "File Preview"}</DialogTitle>
 									</DialogHeader>
 									<div className="flex h-[50vh] items-center justify-center">
-										{resourceFileType?.startsWith("image/") ? (
+										{fileType?.startsWith("image/") ? (
 											<div className="relative h-full w-full">
 												<Image
 													alt={fileName || "Preview"}
 													className="object-contain"
 													fill
-													src={resourceFileUrl}
+													src={fileUrl}
 												/>
 											</div>
 										) : (
 											<iframe
 												className="h-full w-full rounded-lg border"
-												src={resourceFileUrl}
+												src={fileUrl}
 												title={fileName || "File Preview"}
 											/>
 										)}
@@ -177,10 +178,10 @@ export function FileCard({
 			{fileName && (
 				<div className="border-t bg-card px-2 py-1.5">
 					<p className="truncate text-muted-foreground text-xs">{fileName}</p>
-					{resourceFileType && (
-						<p className="text-[10px] text-muted-foreground">
-							{resourceFileType}
-						</p>
+					{fileType && (
+						<Badge className="text-xs" variant="secondary">
+							{fileType}
+						</Badge>
 					)}
 				</div>
 			)}

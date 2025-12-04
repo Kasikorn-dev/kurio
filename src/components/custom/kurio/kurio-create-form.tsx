@@ -31,9 +31,9 @@ export function KurioCreateForm() {
 		// Add text content as a resource if it exists
 		if (textContent.trim()) {
 			allResources.push({
-				resourceType: "text",
-				resourceContent: textContent.trim(),
-				orderIndex: allResources.length,
+				type: "text",
+				content: textContent.trim(),
+				orderIndex: resources.length,
 			})
 		}
 
@@ -54,28 +54,25 @@ export function KurioCreateForm() {
 			const uploadedResources = await Promise.all(
 				allResources.map(async (resource) => {
 					if (
-						(resource.resourceType === "file" ||
-							resource.resourceType === "image") &&
-						resource.resourceFile
+						(resource.type === "file" || resource.type === "image") &&
+						resource.file
 					) {
 						// Upload file to storage
-						const uploadResult = await uploadKuiroResource(
-							resource.resourceFile,
-						)
+						const uploadResult = await uploadKuiroResource(resource.file)
 						return {
-							resourceType: resource.resourceType,
-							resourceContent: resource.resourceContent,
-							resourceFileUrl: uploadResult.url,
-							resourceFileType: resource.resourceFileType,
+							type: resource.type,
+							content: resource.content,
+							fileUrl: uploadResult.url,
+							fileType: resource.fileType,
 							orderIndex: resource.orderIndex,
 						}
 					}
 					// Text resource - no upload needed
 					return {
-						resourceType: resource.resourceType,
-						resourceContent: resource.resourceContent,
-						resourceFileUrl: resource.resourceFileUrl,
-						resourceFileType: resource.resourceFileType,
+						type: resource.type,
+						content: resource.content,
+						fileUrl: resource.fileUrl,
+						fileType: resource.fileType,
 						orderIndex: resource.orderIndex,
 					}
 				}),

@@ -6,7 +6,12 @@ import { useKurioRealtime } from "@/hooks/use-kurio-realtime"
 
 type KurioGenerationStatusProps = {
 	kurioId: string
-	status: "generating" | "generating_games" | "ready" | "error"
+	status:
+		| "generating"
+		| "generating_units"
+		| "generating_games"
+		| "ready"
+		| "error"
 	onComplete?: () => void
 	onCourseMetadataUpdated?: () => void
 }
@@ -19,7 +24,10 @@ export function KurioGenerationStatus({
 }: KurioGenerationStatusProps) {
 	const { progress, isComplete } = useKurioRealtime({
 		kurioId,
-		enabled: status === "generating" || status === "generating_games",
+		enabled:
+			status === "generating" ||
+			status === "generating_units" ||
+			status === "generating_games",
 		onCourseMetadataUpdated: () => {
 			onCourseMetadataUpdated?.()
 		},
@@ -48,9 +56,11 @@ export function KurioGenerationStatus({
 				<Spinner className="size-5" />
 				<div className="flex-1">
 					<p className="font-medium">
-						{status === "generating"
+						{status === "generating" || status === "generating_units"
 							? "Generating units..."
-							: "Generating games..."}
+							: status === "generating_games"
+								? "Generating games..."
+								: "Processing..."}
 					</p>
 					{status === "generating_games" && (
 						<p className="text-muted-foreground text-sm">

@@ -21,12 +21,9 @@ export const units = createTable(
 			.notNull()
 			.references(() => kurios.id, { onDelete: "cascade" }),
 		title: d.varchar({ length: 255 }).notNull(),
+		description: d.text("description"),
 		orderIndex: d.integer("order_index").notNull(),
-		status: d
-			.varchar({ length: 50 })
-			.$type<"generating" | "ready" | "error">()
-			.default("generating")
-			.notNull(),
+		status: unitStatusEnum("status").default("generating").notNull(),
 		createdAt: d
 			.timestamp("created_at", { withTimezone: true })
 			.$defaultFn(() => new Date())

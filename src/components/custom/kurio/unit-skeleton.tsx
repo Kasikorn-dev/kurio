@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils"
 
 type UnitSkeletonProps = {
 	position?: "center" | "left" | "right"
-	unitNumber: number
 }
 
 export function UnitSkeleton({ position = "center" }: UnitSkeletonProps) {

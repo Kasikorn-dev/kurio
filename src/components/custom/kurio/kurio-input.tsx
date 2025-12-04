@@ -49,10 +49,10 @@ export function KurioInput({
 				}
 
 				addResource({
-					resourceType: file.type.startsWith("image/") ? "image" : "file",
-					resourceFile: file, // Store File object
-					resourceFileUrl: previewUrl, // Use preview URL for display
-					resourceFileType: file.type,
+					type: file.type.startsWith("image/") ? "image" : "file",
+					file: file, // Store File object
+					fileUrl: previewUrl, // Use preview URL for display
+					fileType: file.type,
 					previewUrl, // Store preview URL for cleanup
 					orderIndex: resourceIndex,
 				})
@@ -154,7 +154,7 @@ export function KurioInput({
 	)
 
 	const fileResources = resources.filter(
-		(r) => r.resourceType === "file" || r.resourceType === "image",
+		(r) => r.type === "file" || r.type === "image",
 	)
 
 	return (
@@ -167,12 +167,13 @@ export function KurioInput({
 							const resourceIndex = resources.indexOf(resource)
 							return (
 								<FileCard
-									fileName={resource.resourceFile?.name}
-									key={`${resource.resourceType}-${resourceIndex}-${resource.resourceFileUrl || resource.resourceContent || resource.resourceFile?.name}`}
+									content={resource.content}
+									fileName={resource.file?.name}
+									fileType={resource.fileType}
+									fileUrl={resource.fileUrl}
+									key={`${resource.type}-${resourceIndex}-${resource.fileUrl || resource.content || resource.file?.name}`}
 									onRemove={() => handleRemoveResource(resourceIndex)}
-									resourceFileType={resource.resourceFileType}
-									resourceFileUrl={resource.resourceFileUrl}
-									resourceType={resource.resourceType}
+									type={resource.type}
 								/>
 							)
 						})}

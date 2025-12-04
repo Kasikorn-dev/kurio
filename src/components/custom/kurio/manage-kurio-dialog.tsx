@@ -23,6 +23,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { invalidateKurio } from "@/lib/utils/kurio"
 import { api } from "@/trpc/react"
 import { DeleteKurioButton } from "./delete-kurio-button"
 import type { KurioForCard } from "./types"
@@ -50,7 +51,7 @@ export function ManageKurioDialog({ kurio }: ManageKurioDialogProps) {
 	const updateKurio = api.kurio.update.useMutation({
 		onSuccess: () => {
 			toast.success("Kurio updated successfully")
-			utils.kurio.getById.invalidate({ id: kurio.id })
+			invalidateKurio(utils, kurio.id)
 			setOpen(false)
 		},
 		onError: (error) => {

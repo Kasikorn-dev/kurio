@@ -1,5 +1,7 @@
 "use client"
 
+import { getGenerationStatus, invalidateKurio } from "@/lib/utils/kurio"
+import type { RouterOutputs } from "@/trpc/react"
 import { api } from "@/trpc/react"
 import { KurioGenerationStatus } from "./kurio-generation-status"
 import { ManageKurioDialog } from "./manage-kurio-dialog"
@@ -16,21 +18,18 @@ export function KurioDetailClient({ kurio }: KurioDetailClientProps) {
 
 	// Refresh data when course metadata is updated (title/description)
 	const handleCourseMetadataUpdated = () => {
-		void utils.kurio.getById.invalidate({ id })
+		invalidateKurio(utils, id)
 	}
 
 	// Refresh data when generation completes
 	const handleGenerationComplete = () => {
-		void utils.kurio.getById.invalidate({ id })
+		invalidateKurio(utils, id)
 	}
 
 	// Determine status for generation component
-	const generationStatus =
-		kurio.status === "generating" || kurio.status === "generating_games"
-			? (kurio.status as "generating" | "generating_games")
-			: kurio.status === "error"
-				? "error"
-				: "ready"
+	const generationStatus = getGenerationStatus(
+		status as RouterOutputs["kurio"]["getById"]["status"],
+	)
 
 	return (
 		<div className="relative min-h-screen">

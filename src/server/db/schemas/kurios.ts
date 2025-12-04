@@ -2,13 +2,15 @@ import { relations, sql } from "drizzle-orm"
 import { index, pgEnum, pgPolicy } from "drizzle-orm/pg-core"
 import { authenticatedRole, authUid } from "drizzle-orm/supabase"
 import { createTable } from "../lib/utils"
-import { kurioResources } from "./kurio-resources"
+import { resources } from "./resources"
 import { units } from "./units"
 import { userProfiles } from "./user-profiles"
 
 export const kurioStatusEnum = pgEnum("kurio_status", [
 	"draft",
 	"generating",
+	"generating_units",
+	"generating_games",
 	"ready",
 	"error",
 ])
@@ -30,16 +32,16 @@ export const kurios = createTable(
 			.varchar("ai_model", { length: 50 })
 			.default("gpt-5-nano-2025-08-07")
 			.notNull(),
-		status: d
-			.varchar({ length: 50 })
-			.$type<"draft" | "generating" | "ready" | "error">()
-			.default("draft")
-			.notNull(),
+		status: kurioStatusEnum("status").default("draft").notNull(),
 		totalGames: d.integer("total_games").default(0).notNull(),
 		hasAutoGenTriggered: d
 			.boolean("has_auto_gen_triggered")
 			.default(false)
 			.notNull(),
+		// Progress tracking for generation
+		generationProgress: d.integer("generation_progress").default(0).notNull(),
+		generationStep: d.varchar("generation_step", { length: 50 }),
+		unitsCompleted: d.integer("units_completed").default(0).notNull(),
 		createdAt: d
 			.timestamp("created_at", { withTimezone: true })
 			.$defaultFn(() => new Date())
@@ -83,6 +85,6 @@ export const kuriosRelations = relations(kurios, ({ one, many }) => ({
 		fields: [kurios.userId],
 		references: [userProfiles.id],
 	}),
-	resources: many(kurioResources),
+	resources: many(resources),
 	units: many(units),
 }))

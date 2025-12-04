@@ -1,12 +1,13 @@
 import { create } from "zustand"
+import type { ResourceType } from "@/components/custom/kurio/types"
 
 type Resource = {
 	id?: string
-	resourceType: "text" | "file" | "image"
-	resourceContent?: string
-	resourceFileUrl?: string // URL จาก storage (หลัง upload) หรือ object URL (ก่อน upload)
-	resourceFileType?: string
-	resourceFile?: File // File object สำหรับไฟล์ที่ยังไม่ได้ upload
+	type: ResourceType
+	content?: string
+	fileUrl?: string // URL จาก storage (หลัง upload) หรือ object URL (ก่อน upload)
+	fileType?: string
+	file?: File // File object สำหรับไฟล์ที่ยังไม่ได้ upload
 	previewUrl?: string // Object URL สำหรับ preview (ต้อง revoke เมื่อไม่ใช้)
 	orderIndex: number
 }
@@ -28,7 +29,7 @@ type KurioFormState = {
 const initialState = {
 	autoGenEnabled: true,
 	autoGenThreshold: 80,
-	unitCount: 10,
+	unitCount: 2,
 	resources: [] as Resource[],
 }
 

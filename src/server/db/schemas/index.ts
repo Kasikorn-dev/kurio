@@ -2,8 +2,8 @@
 
 export * from "./game-attempts"
 export * from "./games"
-export * from "./kurio-resources"
 export * from "./kurios"
+export * from "./resources"
 export * from "./unit-progress"
 export * from "./units"
 export * from "./user-profiles"

@@ -27,15 +27,9 @@ export const games = createTable(
 			.notNull()
 			.references(() => units.id, { onDelete: "cascade" }),
 		title: d.varchar({ length: 255 }).notNull(),
-		gameType: d
-			.varchar("game_type", { length: 50 })
-			.$type<"quiz" | "matching" | "fill_blank" | "multiple_choice">()
-			.notNull(),
+		gameType: gameTypeEnum("game_type").notNull(),
 		content: d.jsonb("content").$type<Record<string, unknown>>().notNull(),
-		difficultyLevel: d
-			.varchar("difficulty_level", { length: 50 })
-			.$type<"easy" | "medium" | "hard">()
-			.notNull(),
+		difficultyLevel: gameDifficultyLevelEnum("difficulty_level").notNull(),
 		orderIndex: d.integer("order_index").notNull(),
 		createdAt: d
 			.timestamp("created_at", { withTimezone: true })

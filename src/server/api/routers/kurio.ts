@@ -4,7 +4,7 @@ import { AI_CONSTANTS } from "@/lib/constants"
 import { logger } from "@/lib/monitoring/logger"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc"
-import { kurioResources, kurios } from "@/server/db/schemas"
+import { kurios, resources } from "@/server/db/schemas"
 
 export const kurioRouter = createTRPCRouter({
 	getAll: protectedProcedure.query(async ({ ctx }) => {
@@ -53,10 +53,10 @@ export const kurioRouter = createTRPCRouter({
 			z.object({
 				resources: z.array(
 					z.object({
-						resourceType: z.enum(["text", "file", "image"]),
-						resourceContent: z.string().optional(),
-						resourceFileUrl: z.string().url().optional(),
-						resourceFileType: z.string().optional(),
+						type: z.enum(["text", "file", "image"]),
+						content: z.string().optional(),
+						fileUrl: z.string().url().optional(),
+						fileType: z.string().optional(),
 						orderIndex: z.number().int(),
 					}),
 				),
@@ -77,7 +77,7 @@ export const kurioRouter = createTRPCRouter({
 					autoGenEnabled: input.autoGenEnabled ?? false,
 					autoGenThreshold: input.autoGenThreshold ?? 80,
 					unitCount: input.unitCount ?? null,
-					aiModel: input.aiModel ?? "gpt-4o-mini",
+					aiModel: input.aiModel,
 					status: input.unitCount ? "generating" : "ready", // Set to generating if unitCount provided
 				})
 				.returning()
@@ -88,13 +88,13 @@ export const kurioRouter = createTRPCRouter({
 
 			// Insert resources
 			if (input.resources.length > 0) {
-				await ctx.db.insert(kurioResources).values(
+				await ctx.db.insert(resources).values(
 					input.resources.map((resource) => ({
 						kurioId: newKurio.id,
-						resourceType: resource.resourceType,
-						resourceContent: resource.resourceContent,
-						resourceFileUrl: resource.resourceFileUrl,
-						resourceFileType: resource.resourceFileType,
+						type: resource.type,
+						content: resource.content,
+						fileUrl: resource.fileUrl,
+						fileType: resource.fileType,
 						orderIndex: resource.orderIndex,
 					})),
 				)
@@ -104,9 +104,9 @@ export const kurioRouter = createTRPCRouter({
 			if (input.unitCount && input.unitCount > 0) {
 				const supabaseAdmin = createSupabaseAdminClient()
 				const resources = input.resources.map((r) => ({
-					resourceType: r.resourceType,
-					resourceContent: r.resourceContent,
-					resourceFileUrl: r.resourceFileUrl,
+					type: r.type,
+					content: r.content,
+					fileUrl: r.fileUrl,
 				}))
 
 				// Call Edge Function in background (fire-and-forget)
