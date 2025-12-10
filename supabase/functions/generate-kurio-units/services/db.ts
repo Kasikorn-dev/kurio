@@ -23,22 +23,48 @@ export async function updateKurioProgress(params: {
 }
 
 // ===================================================================
+// Pre-processing Queries (PHASE 0)
+// ===================================================================
+
+/**
+ * Update Kurio with pre-processed summary (PHASE 0)
+ */
+export async function updateKurioWithPreprocessedData(params: {
+	kurioId: string
+	summary: string
+}) {
+	await sql`
+    UPDATE kurio 
+    SET 
+      summary = ${params.summary},
+      processed_at = NOW(),
+      generation_step = 'preprocessed',
+      generation_progress = 2,
+      updated_at = NOW()
+    WHERE id = ${params.kurioId}
+  `
+}
+
+// ===================================================================
 // Kurio Queries (PHASE 1)
 // ===================================================================
 
 /**
  * Update Kurio with AI-generated title and description (PHASE 1)
+ * Also updates unit count
  */
 export async function updateKurioWithTitleAndDescription(params: {
 	kurioId: string
 	title: string
 	description: string
+	unitCount: number
 }) {
 	await sql`
     UPDATE kurio 
     SET 
       title = ${params.title},
       description = ${params.description},
+      unit_count = ${params.unitCount},
       status = 'generating_units'::kurio_status,
       generation_step = 'kurio',
       generation_progress = 5,
@@ -76,18 +102,16 @@ export async function insertUnits(params: {
 
 /**
  * Update Kurio after units are created (PHASE 2)
- * Sets progress to 30%, updates unit count, and marks status as generating_games
+ * Sets progress to 30% and marks status as generating_games
  */
 export async function updateKurioAfterUnitsCreated(params: {
 	kurioId: string
-	unitCount: number
 }) {
 	await sql`
     UPDATE kurio 
     SET 
       generation_step = 'units',
       generation_progress = 30,
-      unit_count = ${params.unitCount},
       status = 'generating_games'::kurio_status,
       updated_at = NOW()
     WHERE id = ${params.kurioId}

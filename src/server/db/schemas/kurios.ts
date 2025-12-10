@@ -42,6 +42,9 @@ export const kurios = createTable(
 		generationProgress: d.integer("generation_progress").default(0).notNull(),
 		generationStep: d.varchar("generation_step", { length: 50 }),
 		unitsCompleted: d.integer("units_completed").default(0).notNull(),
+		// Pre-processing fields
+		summary: d.text("summary"),
+		processedAt: d.timestamp("processed_at", { withTimezone: true }),
 		createdAt: d
 			.timestamp("created_at", { withTimezone: true })
 			.$defaultFn(() => new Date())
