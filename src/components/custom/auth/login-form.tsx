@@ -17,11 +17,9 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
-import { getEmailCheckErrorMessage } from "@/lib/auth/email-check-utils"
 import { getAuthErrorMessage } from "@/lib/auth/error-messages"
 import { type LoginInput, loginSchema } from "@/lib/auth/validation-schemas"
 import { createBrowserSupabaseClient } from "@/lib/supabase/client"
-import { api } from "@/trpc/react"
 import { GoogleSignInButton } from "./google-signin-button"
 import { PasswordInput } from "./password-input"
 
@@ -36,8 +34,6 @@ export function LoginForm() {
 		},
 	})
 
-	const utils = api.useUtils()
-
 	const onSubmit = async (data: LoginInput) => {
 		setIsLoading(true)
 
@@ -49,26 +45,10 @@ export function LoginForm() {
 			})
 
 			if (signInError) {
-				// Check if error is "Invalid login credentials"
-				if (signInError.message.includes("Invalid login credentials")) {
-					try {
-						const checkResult = await utils.auth.checkEmail.fetch({
-							email: data.email,
-						})
-						const errorMessage = getEmailCheckErrorMessage(
-							checkResult as Parameters<typeof getEmailCheckErrorMessage>[0],
-						)
-						toast.error(errorMessage)
-					} catch {
-						toast.error(
-							"Invalid email or password. Please check your credentials and try again.",
-						)
-					}
-					return
-				}
-
-				// For other errors, use the standard error message handler
-				toast.error(getAuthErrorMessage(signInError))
+				// Generic error message for security (prevents email enumeration)
+				toast.error(
+					"Invalid email or password. Please check your credentials and try again.",
+				)
 				return
 			}
 

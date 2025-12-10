@@ -5,10 +5,9 @@ import type { RouterOutputs } from "@/trpc/react"
 import { api } from "@/trpc/react"
 import { KurioGenerationStatus } from "./kurio-generation-status"
 import { ManageKurioDialog } from "./manage-kurio-dialog"
-import type { Kurio } from "./types"
 
 type KurioDetailClientProps = {
-	kurio: Kurio
+	kurio: RouterOutputs["kurio"]["getById"]
 }
 
 export function KurioDetailClient({ kurio }: KurioDetailClientProps) {
@@ -27,9 +26,7 @@ export function KurioDetailClient({ kurio }: KurioDetailClientProps) {
 	}
 
 	// Determine status for generation component
-	const generationStatus = getGenerationStatus(
-		status as RouterOutputs["kurio"]["getById"]["status"],
-	)
+	const generationStatus = getGenerationStatus(status)
 
 	return (
 		<div className="relative min-h-screen">

@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server"
 import { desc, eq } from "drizzle-orm"
 import { z } from "zod"
 import { AI_CONSTANTS } from "@/lib/constants"
@@ -38,11 +39,17 @@ export const kurioRouter = createTRPCRouter({
 			})
 
 			if (!kurio) {
-				throw new Error("Kurio not found")
+				throw new TRPCError({
+					code: "NOT_FOUND",
+					message: "Kurio not found",
+				})
 			}
 
 			if (kurio.userId !== ctx.user.id) {
-				throw new Error("Unauthorized")
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "You do not have permission to access this kurio",
+				})
 			}
 
 			return kurio
@@ -83,7 +90,10 @@ export const kurioRouter = createTRPCRouter({
 				.returning()
 
 			if (!newKurio) {
-				throw new Error("Failed to create kurio")
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to create kurio",
+				})
 			}
 
 			// Insert resources
@@ -158,11 +168,17 @@ export const kurioRouter = createTRPCRouter({
 				.returning()
 
 			if (!updated) {
-				throw new Error("Kurio not found")
+				throw new TRPCError({
+					code: "NOT_FOUND",
+					message: "Kurio not found",
+				})
 			}
 
 			if (updated.userId !== ctx.user.id) {
-				throw new Error("Unauthorized")
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "You do not have permission to update this kurio",
+				})
 			}
 
 			return updated
@@ -176,11 +192,17 @@ export const kurioRouter = createTRPCRouter({
 			})
 
 			if (!kurio) {
-				throw new Error("Kurio not found")
+				throw new TRPCError({
+					code: "NOT_FOUND",
+					message: "Kurio not found",
+				})
 			}
 
 			if (kurio.userId !== ctx.user.id) {
-				throw new Error("Unauthorized")
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "You do not have permission to delete this kurio",
+				})
 			}
 
 			await ctx.db.delete(kurios).where(eq(kurios.id, input.id))

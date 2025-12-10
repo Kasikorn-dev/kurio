@@ -16,11 +16,9 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
-import { getSignupEmailErrorMessage } from "@/lib/auth/email-check-utils"
 import { getAuthErrorMessage } from "@/lib/auth/error-messages"
 import { type SignupInput, signupSchema } from "@/lib/auth/validation-schemas"
 import { createBrowserSupabaseClient } from "@/lib/supabase/client"
-import { api } from "@/trpc/react"
 import { GoogleSignInButton } from "./google-signin-button"
 import { PasswordInput } from "./password-input"
 import { PasswordStrengthIndicator } from "./password-strength-indicator"
@@ -38,27 +36,11 @@ export function SignupForm() {
 	})
 
 	const password = form.watch("password")
-	const utils = api.useUtils()
 
 	const onSubmit = async (data: SignupInput) => {
 		setIsLoading(true)
 
 		try {
-			// Check if email already exists before signup
-			const checkResult = await utils.auth.checkEmail.fetch({
-				email: data.email,
-			})
-
-			if (checkResult.exists) {
-				toast.error(
-					getSignupEmailErrorMessage(
-						checkResult as Parameters<typeof getSignupEmailErrorMessage>[0],
-					),
-				)
-				setIsLoading(false)
-				return
-			}
-
 			const supabase = createBrowserSupabaseClient()
 			const { data: signUpData, error: signUpError } =
 				await supabase.auth.signUp({
@@ -72,6 +54,7 @@ export function SignupForm() {
 				})
 
 			if (signUpError) {
+				// Supabase will return specific errors like "User already registered"
 				toast.error(getAuthErrorMessage(signUpError))
 				return
 			}
