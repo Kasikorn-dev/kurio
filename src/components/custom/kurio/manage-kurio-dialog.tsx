@@ -23,7 +23,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { invalidateKurio } from "@/lib/utils/kurio"
+import { invalidateKurio } from "@/lib/kurio"
 import { api } from "@/trpc/react"
 import { DeleteKurioButton } from "./delete-kurio-button"
 import type { KurioForCard } from "./types"

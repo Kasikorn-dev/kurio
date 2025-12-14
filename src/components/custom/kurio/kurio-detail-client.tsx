@@ -1,6 +1,6 @@
 "use client"
 
-import { getGenerationStatus, invalidateKurio } from "@/lib/utils/kurio"
+import { getGenerationStatus, invalidateKurio } from "@/lib/kurio"
 import type { RouterOutputs } from "@/trpc/react"
 import { api } from "@/trpc/react"
 import { KurioGenerationStatus } from "./kurio-generation-status"
