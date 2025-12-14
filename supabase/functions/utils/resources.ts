@@ -2,9 +2,8 @@ import type { Resource } from "../generate-kurio-units/types.ts"
 
 export type ProcessedResources = {
 	textContent: string
-	fileUrls: string[]
-	imageUrls: string[]
-	fullTextContent: string
+	fileFilePaths: string[]
+	imageFilePaths: string[]
 }
 
 export function extractTextContent(resources: Resource[]): string {
@@ -14,43 +13,26 @@ export function extractTextContent(resources: Resource[]): string {
 		.join("\n\n")
 }
 
-export function extractFileUrls(resources: Resource[]): string[] {
+export function extractFileFilePaths(resources: Resource[]): string[] {
 	return resources
-		.filter((r) => r.type === "file" && r.fileUrl)
-		.map((r) => r.fileUrl as string)
+		.filter((r) => r.type === "file" && r.filePath)
+		.map((r) => r.filePath as string)
 }
 
-export function extractImageUrls(resources: Resource[]): string[] {
+export function extractImageFilePaths(resources: Resource[]): string[] {
 	return resources
-		.filter((r) => r.type === "image" && r.fileUrl)
-		.map((r) => r.fileUrl as string)
-}
-
-export function buildTextContent(
-	textContent: string,
-	fileUrls: string[],
-): string {
-	let content = textContent
-	if (fileUrls.length > 0) {
-		content += `\n\nFile URLs to analyze: ${fileUrls.join(", ")}`
-	}
-	return content
+		.filter((r) => r.type === "image" && r.filePath)
+		.map((r) => r.filePath as string)
 }
 
 /**
- * Process resources once - extract all content, URLs, and build full text
+ * Process resources once - extract all content and file paths
  * This should be called once before PHASE 1 and the result passed to all generation functions
  */
 export function processResources(resources: Resource[]): ProcessedResources {
-	const textContent = extractTextContent(resources)
-	const fileUrls = extractFileUrls(resources)
-	const imageUrls = extractImageUrls(resources)
-	const fullTextContent = buildTextContent(textContent, fileUrls)
-
 	return {
-		textContent,
-		fileUrls,
-		imageUrls,
-		fullTextContent,
+		textContent: extractTextContent(resources),
+		fileFilePaths: extractFileFilePaths(resources),
+		imageFilePaths: extractImageFilePaths(resources),
 	}
 }

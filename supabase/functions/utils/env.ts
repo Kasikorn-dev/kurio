@@ -7,7 +7,7 @@ export type EnvironmentVariables = {
 	supabaseUrl: string
 	supabaseServiceKey: string
 	databaseUrl: string
-	openaiApiKey: string
+	geminiApiKey: string
 	aiModel: string
 }
 
@@ -19,14 +19,14 @@ export function getEnvironmentVariables(): EnvironmentVariables {
 	const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? ""
 	const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
 	const databaseUrl = Deno.env.get("SUPABASE_DB_URL") ?? ""
-	const openaiApiKey = Deno.env.get("OPENAI_API_KEY") ?? ""
-	const aiModel = Deno.env.get("AI_MODEL") ?? "gpt-4o-mini"
+	const geminiApiKey = Deno.env.get("GEMINI_API_KEY") ?? ""
+	const aiModel = Deno.env.get("AI_MODEL") ?? ""
 
 	if (
 		!supabaseUrl ||
 		!supabaseServiceKey ||
 		!databaseUrl ||
-		!openaiApiKey ||
+		!geminiApiKey ||
 		!aiModel
 	) {
 		throw new Error("Missing required environment variables")
@@ -36,7 +36,7 @@ export function getEnvironmentVariables(): EnvironmentVariables {
 		supabaseUrl,
 		supabaseServiceKey,
 		databaseUrl,
-		openaiApiKey,
+		geminiApiKey,
 		aiModel,
 	}
 }

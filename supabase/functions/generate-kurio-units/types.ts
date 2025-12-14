@@ -4,6 +4,7 @@ export type Resource = {
 	type: "text" | "file" | "image"
 	content?: string
 	fileUrl?: string
+	filePath?: string
 }
 
 export type Game = {

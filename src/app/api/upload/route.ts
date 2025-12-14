@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 
 export async function POST(request: NextRequest) {
 	try {
+		// 1. Authenticate user
 		const supabase = await createServerSupabaseClient()
 		const {
 			data: { user },
@@ -13,6 +14,7 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 		}
 
+		// 2. Get file from request
 		const formData = await request.formData()
 		const file = formData.get("file") as File
 
@@ -20,45 +22,45 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "No file provided" }, { status: 400 })
 		}
 
+		// 3. Generate unique file path
 		const fileExt = file.name.split(".").pop()
-		const fileName = `${user.id}/${Date.now()}.${fileExt}`
-		const filePath = fileName // ไม่ต้องใส่ bucket name เพราะ .from() จะจัดการให้
+		const filePath = `${user.id}/${Date.now()}.${fileExt}`
 
-		const { error: uploadError } = await supabase.storage
+		// 4. Upload file to storage (using admin client for full permissions)
+		const adminClient = createSupabaseAdminClient()
+		const { error: uploadError } = await adminClient.storage
 			.from("kurio-resources")
 			.upload(filePath, file)
 
 		if (uploadError) {
-			return NextResponse.json({ error: uploadError.message }, { status: 500 })
+			return NextResponse.json(
+				{ error: `Upload failed: ${uploadError.message}` },
+				{ status: 500 },
+			)
 		}
 
-		// ใช้ Admin Client เพื่อสร้าง signed URL ที่มี expiration time นาน (2 ชั่วโมง)
-		// เพื่อให้ AI สามารถเข้าถึงได้แม้ bucket เป็น private
-		const adminClient = createSupabaseAdminClient()
+		// 5. Create signed URL (expires in 2 hours)
+		// This allows AI to access files even if bucket is private
 		const { data: signedUrlData, error: signedUrlError } =
 			await adminClient.storage
 				.from("kurio-resources")
-				.createSignedUrl(filePath, 7200) // 2 hours expiration
+				.createSignedUrl(filePath, 7200)
 
 		if (signedUrlError || !signedUrlData?.signedUrl) {
-			// Fallback to public URL if signed URL fails (for public buckets)
-			const {
-				data: { publicUrl },
-			} = supabase.storage.from("kurio-resources").getPublicUrl(filePath)
-
-			return NextResponse.json({
-				url: publicUrl,
-				path: filePath,
-				type: file.type,
-			})
+			return NextResponse.json(
+				{ error: `Failed to create signed URL: ${signedUrlError?.message}` },
+				{ status: 500 },
+			)
 		}
 
+		// 6. Return signed URL
 		return NextResponse.json({
 			url: signedUrlData.signedUrl,
 			path: filePath,
 			type: file.type,
 		})
-	} catch (_error) {
+	} catch (error) {
+		console.error("Upload error:", error)
 		return NextResponse.json(
 			{ error: "Internal server error" },
 			{ status: 500 },

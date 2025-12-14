@@ -24,85 +24,58 @@ export function KurioCreateForm() {
 		},
 	})
 
-	const handleSubmit = async (): Promise<void> => {
-		// Combine text content with file resources
-		const allResources = [...resources]
-
-		// Add text content as a resource if it exists
-		if (textContent.trim()) {
-			allResources.push({
-				type: "text",
-				content: textContent.trim(),
-				orderIndex: resources.length,
-			})
-		}
+	// Validate form inputs
+	const validateForm = () => {
+		const allResources = textContent.trim()
+			? [...resources, { type: "text" as const, content: textContent.trim(), orderIndex: resources.length }]
+			: resources
 
 		if (allResources.length === 0) {
-			toast.error("Please add content or files")
-			return
+			throw new Error("Please add content or files")
 		}
 
 		if (!autoGenEnabled && !unitCount) {
-			toast.error("Please select number of units")
-			return
+			throw new Error("Please select number of units")
 		}
 
+		return allResources
+	}
+
+	// Upload files and prepare resources
+	const prepareResources = async (allResources: typeof resources) => {
+		return Promise.all(
+			allResources.map(async (resource) => {
+				// Upload file if needed
+				if ((resource.type === "file" || resource.type === "image") && resource.file) {
+					const { url ,path } = await uploadKuiroResource(resource.file)
+					return { ...resource, fileUrl: url ,filePath:path}
+				}
+				return resource
+			})
+		)
+	}
+
+	const handleSubmit = async (): Promise<void> => {
 		setIsSubmitting(true)
 
 		try {
-			// Upload all files first
-			const uploadedResources = await Promise.all(
-				allResources.map(async (resource) => {
-					if (
-						(resource.type === "file" || resource.type === "image") &&
-						resource.file
-					) {
-						// Upload file to storage
-						const uploadResult = await uploadKuiroResource(resource.file)
-						return {
-							type: resource.type,
-							content: resource.content,
-							fileUrl: uploadResult.url,
-							fileType: resource.fileType,
-							orderIndex: resource.orderIndex,
-						}
-					}
-					// Text resource - no upload needed
-					return {
-						type: resource.type,
-						content: resource.content,
-						fileUrl: resource.fileUrl,
-						fileType: resource.fileType,
-						orderIndex: resource.orderIndex,
-					}
-				}),
-			)
+			const allResources = validateForm()
+			const uploadedResources = await prepareResources(allResources)
 
-			const payload = {
+			const kurio = await createKurio.mutateAsync({
 				autoGenEnabled,
 				autoGenThreshold,
 				unitCount: autoGenEnabled ? UNIT_CONSTANTS.INITIAL_UNITS : unitCount,
-				aiModel: AI_CONSTANTS.DEFAULT_MODEL,
 				resources: uploadedResources,
-			}
+			})
 
-			// Start generation and redirect immediately
-			const kurio = await createKurio.mutateAsync(payload)
-
-			// Reset form and redirect
 			reset()
 			setTextContent("")
-			setIsSubmitting(false)
-
-			// Show success message and redirect
 			toast.success("Creating your Kurio...")
 			navigate(`/kurio/${kurio.id}`)
 		} catch (error) {
-			toast.error(
-				error instanceof Error
-					? error.message
-					: "Failed to upload files. Please try again.",
-			)
+			toast.error(error instanceof Error ? error.message : "Failed to create Kurio")
+		} finally {
 			setIsSubmitting(false)
 		}
 	}

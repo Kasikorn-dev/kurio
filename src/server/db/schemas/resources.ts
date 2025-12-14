@@ -20,7 +20,8 @@ export const resources = createTable(
 			.references(() => kurios.id, { onDelete: "cascade" }),
 		type: resourceTypeEnum("type").notNull(),
 		content: d.text("content"), // For text input
-		fileUrl: d.text("file_url"), // For file/image URLs (changed from varchar to text for long URLs)
+		fileUrl: d.text("file_url"), // For file/image URLs (signed or public)
+		filePath: d.text("file_path"), // Storage path (e.g., "user-id/file.png")
 		fileType: d.varchar("file_type", { length: 100 }), // MIME type
 		orderIndex: d.integer("order_index").notNull(),
 		createdAt: d

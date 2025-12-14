@@ -1,526 +1,207 @@
-import { createOpenAICall } from "../../utils/openai.ts"
+import { createGeminiCall } from "../../utils/gemini.ts"
 import { log } from "../../utils/other.ts"
 import type { ProcessedResources } from "../../utils/resources.ts"
 import type { Game } from "../types.ts"
 import { insertGamesBatch, updateUnitStatusesBatch } from "./db.ts"
 
+// ===================================================================
+// TWO-PASS WORKFLOW: Phase 1 - Generate Structure
+// ===================================================================
+
 /**
- * Generate Kurio title and description based on processed resources
+ * Generate complete course structure (Kurio + Units) in one AI call
+ * This is Phase 1 of the Two-Pass workflow
  */
-export async function generateKurioInfo(params: {
+export async function generateCourseStructure(params: {
 	processedResources: ProcessedResources
-}): Promise<{ title: string; description: string }> {
-	const { processedResources } = params
+	unitCount: number
+}): Promise<{
+	kurio: { title: string; description: string }
+	units: Array<{ title: string; description: string }>
+	aiModel: string
+}> {
+	const { processedResources, unitCount } = params
+	const { textContent, imageFilePaths, fileFilePaths } = processedResources
 
-	const { fullTextContent, fileUrls, imageUrls } = processedResources
+	const prompt = `Create a complete educational course structure from this content:
 
-	const prompt = `Based on this educational content, create a compelling course title and description:
+${textContent}
 
-Content:
-${fullTextContent}
-${fileUrls.length > 0 ? `\n\nIMPORTANT: Analyze the provided file(s) (PDF/document) and extract all relevant content.` : ""}
-${imageUrls.length > 0 ? "\nAnalyze provided images for context.\n" : ""}
+Generate:
+1. Course title (max 60 characters) and description (max 200 characters)
+2. ${unitCount} units with titles and descriptions
 
 Requirements:
-- Title: Short, engaging, and descriptive (max 60 characters)
-- Description: 2-3 sentences explaining what students will learn (max 200 characters)
-- Title should capture the essence of the entire course
-- Make it appealing and educational
+- Course title should be engaging and descriptive
+- Course description should explain what students will learn
+- Unit titles: NO "Unit X:" prefix, just the topic name
+- Unit descriptions: 1-2 sentences, max 200 characters each
+- Units should be progressive (basic to advanced)
+- Each unit should be unique and distinct
 
-Return JSON:
+Return JSON (EXACT FORMAT):
 {
-  "title": "Course Title Here",
-  "description": "Course description here..."
-}`
+  "kurio": {
+    "title": "Course Title Here",
+    "description": "Course description here..."
+  },
+  "units": [
+    {
+      "title": "Unit Title 1",
+      "description": "Unit description 1..."
+    },
+    {
+      "title": "Unit Title 2", 
+      "description": "Unit description 2..."
+    }
+  ]
+}
 
-	const response = await createOpenAICall<{
-		title: string
-		description: string
+IMPORTANT: Return exactly ${unitCount} units.`
+
+	const response = await createGeminiCall<{
+		kurio: { title: string; description: string }
+		units: Array<{ title: string; description: string }>
+		aiModel: string
 	}>({
 		prompt,
-		imageUrls,
-		fileUrls,
+		imageFilePaths,
+		fileFilePaths,
 	})
 
-	if (!response.title || !response.description) {
+	// Validate response
+	if (!response.kurio?.title || !response.kurio?.description) {
 		throw new Error("Failed to generate kurio info")
 	}
 
-	return {
-		title: response.title.trim(),
-		description: response.description.trim(),
-	}
-}
-
-/**
- * Generate unit titles and descriptions (fast)
- */
-export async function generateUnitTitles(params: {
-	processedResources: ProcessedResources
-	kurioTitle: string
-	kurioDescription: string
-	unitCount: number
-}): Promise<{ titles: string[]; descriptions: string[] }> {
-	const { processedResources, kurioTitle, kurioDescription, unitCount } = params
-
-	const { fullTextContent, fileUrls, imageUrls } = processedResources
-
-	const prompt = `Create ${unitCount} educational unit titles and descriptions for this course:
-
-Course Title: "${kurioTitle}"
-Course Description: "${kurioDescription}"
-
-These units are part of the course above. Create unit titles and descriptions that align with the course theme and learning objectives.
-
-Content:
-${fullTextContent}
-${fileUrls.length > 0 ? `\n\nIMPORTANT: Analyze the provided file(s) (PDF/document) and extract all relevant content. Create unit titles and descriptions based on the actual content structure.` : ""}
-${imageUrls.length > 0 ? "\nAnalyze provided images for context.\n" : ""}
-
-CRITICAL TITLE REQUIREMENTS:
-- Exactly ${unitCount} unique, descriptive titles
-- Titles MUST align with the course theme: "${kurioTitle}"
-- Titles should help achieve the course goal: "${kurioDescription}"
-- NO prefixes: NO "Unit 1:", "Unit 2:", "Unit X -", or any numbering
-- NO suffixes: NO difficulty indicators like "(easy)", "(medium)", "(hard)" in parentheses
-- NO game indicators: NO "Game 1:", "Game X:" in the title
-- Clean titles: Just the topic/subject name only
-- Progressive and sequential (each builds on previous)
-- NO duplicates - each title must be unique
-- Each title should represent a distinct learning topic
-- Titles should flow logically from basic to advanced
-
-CRITICAL DESCRIPTION REQUIREMENTS:
-- Exactly ${unitCount} descriptions (one for each title)
-- Each description should be 1-2 sentences explaining what students will learn in that unit
-- Descriptions should align with the course description: "${kurioDescription}"
-- Descriptions should be specific to the unit title
-- Max 200 characters per description
-
-CORRECT EXAMPLES:
-✅ Title: "การทักทายและการแนะนำตัว"
-✅ Description: "เรียนรู้วิธีการทักทายและแนะนำตัวในสถานการณ์ต่างๆ"
-
-✅ Title: "คำศัพท์เกี่ยวกับครอบครัว"
-✅ Description: "ศึกษาคำศัพท์เกี่ยวกับสมาชิกในครอบครัวและความสัมพันธ์"
-
-WRONG EXAMPLES:
-❌ Title: "Unit 1: การทักทาย"
-❌ Title: "การทักทาย (easy)"
-❌ Description: "Unit 1 description" (should not mention unit number)
-
-Return JSON (EXACT FORMAT):
-{
-  "titles": ["Title 1", "Title 2", ..., "Title ${unitCount}"],
-  "descriptions": ["Description 1", "Description 2", ..., "Description ${unitCount}"]
-}
-
-EXAMPLE RESPONSE FORMAT:
-{
-  "titles": [
-    "การทักทายและการแนะนำตัว",
-    "คำศัพท์เกี่ยวกับครอบครัว",
-    "การใช้คำกริยาในประโยค",
-    "การสร้างประโยคพื้นฐาน"
-  ],
-  "descriptions": [
-    "เรียนรู้วิธีการทักทายและแนะนำตัวในสถานการณ์ต่างๆ",
-    "ศึกษาคำศัพท์เกี่ยวกับสมาชิกในครอบครัวและความสัมพันธ์",
-    "เข้าใจการใช้คำกริยาในประโยคและรูปแบบต่างๆ",
-    "ฝึกสร้างประโยคพื้นฐานด้วยโครงสร้างที่ถูกต้อง"
-  ]
-}`
-
-	const response = await createOpenAICall<{
-		titles: string[]
-		descriptions: string[]
-	}>({
-		prompt,
-		imageUrls,
-		fileUrls,
-	})
-
-	if (
-		!response.titles ||
-		!Array.isArray(response.titles) ||
-		response.titles.length !== unitCount ||
-		!response.descriptions ||
-		!Array.isArray(response.descriptions) ||
-		response.descriptions.length !== unitCount
-	) {
+	if (!Array.isArray(response.units) || response.units.length !== unitCount) {
 		throw new Error(
-			`Failed to generate ${unitCount} unit titles and descriptions. Got ${response.titles?.length ?? 0} titles and ${response.descriptions?.length ?? 0} descriptions.`,
+			`Expected ${unitCount} units, got ${response.units?.length ?? 0}`,
 		)
 	}
 
-	// Clean titles: Remove any unwanted prefixes/suffixes
-	const cleanedTitles = response.titles.map((title) => {
-		let cleaned = title.trim()
-		// Remove "Unit X:", "Unit X -", "Game X:" prefixes
-		cleaned = cleaned.replace(/^(Unit\s+\d+[:-\s]+|Game\s+\d+[:-\s]+)/i, "")
-		// Remove difficulty suffixes in parentheses like "(easy)", "(medium)", "(hard)"
-		cleaned = cleaned.replace(
-			/\s*\(easy\)|\s*\(medium\)|\s*\(hard\)|\s*\(ง่าย\)|\s*\(ปานกลาง\)|\s*\(ยาก\)$/i,
-			"",
-		)
-		// Remove trailing parentheses with partial text like "(medium"
-		cleaned = cleaned.replace(/\s*\([^)]*$/, "")
-		return cleaned.trim()
-	})
-
-	// Clean descriptions: Remove any unwanted prefixes/suffixes
-	const cleanedDescriptions = response.descriptions.map((desc) => {
-		let cleaned = desc.trim()
-		// Remove "Unit X:" prefixes if any
-		cleaned = cleaned.replace(/^(Unit\s+\d+[:-\s]+)/i, "")
-		return cleaned.trim()
-	})
+	// Clean titles (remove any unwanted prefixes)
+	const cleanedUnits = response.units.map((unit) => ({
+		title: unit.title.replace(/^(Unit\s+\d+[:-\s]+)/i, "").trim(),
+		description: unit.description.trim(),
+	}))
 
 	return {
-		titles: cleanedTitles,
-		descriptions: cleanedDescriptions,
+		kurio: {
+			title: response.kurio.title.trim(),
+			description: response.kurio.description.trim(),
+		},
+		units: cleanedUnits,
+		aiModel: response.aiModel,
 	}
 }
 
-/**
- * Generate unit titles and descriptions (separate from kurio - for parallel processing)
- * This function works independently using only resources, without kurio context
- */
-export async function generateUnitTitlesAndDescriptions(params: {
-	processedResources: ProcessedResources
-	unitCount: number
-}): Promise<{ titles: string[]; descriptions: string[] }> {
-	const { processedResources, unitCount } = params
-
-	const { fullTextContent, fileUrls, imageUrls } = processedResources
-
-	const prompt = `Create ${unitCount} educational unit titles and descriptions from this content:
-
-Content:
-${fullTextContent}
-${fileUrls.length > 0 ? `\n\nIMPORTANT: Analyze the provided file(s) (PDF/document) and extract all relevant content. Create unit titles and descriptions based on the actual content structure.` : ""}
-${imageUrls.length > 0 ? "\nAnalyze provided images for context.\n" : ""}
-
-CRITICAL TITLE REQUIREMENTS:
-- Exactly ${unitCount} unique, descriptive titles
-- NO prefixes: NO "Unit 1:", "Unit 2:", "Unit X -", or any numbering
-- NO suffixes: NO difficulty indicators like "(easy)", "(medium)", "(hard)" in parentheses
-- NO game indicators: NO "Game 1:", "Game X:" in the title
-- Clean titles: Just the topic/subject name only
-- Progressive and sequential (each builds on previous)
-- NO duplicates - each title must be unique
-- Each title should represent a distinct learning topic
-- Titles should flow logically from basic to advanced
-
-CRITICAL DESCRIPTION REQUIREMENTS:
-- Exactly ${unitCount} descriptions (one for each title)
-- Each description should be 1-2 sentences explaining what students will learn in that unit
-- Descriptions should be specific to the unit title
-- Max 200 characters per description
-
-CORRECT EXAMPLES:
-✅ Title: "การทักทายและการแนะนำตัว"
-✅ Description: "เรียนรู้วิธีการทักทายและแนะนำตัวในสถานการณ์ต่างๆ"
-
-✅ Title: "คำศัพท์เกี่ยวกับครอบครัว"
-✅ Description: "ศึกษาคำศัพท์เกี่ยวกับสมาชิกในครอบครัวและความสัมพันธ์"
-
-WRONG EXAMPLES:
-❌ Title: "Unit 1: การทักทาย"
-❌ Title: "การทักทาย (easy)"
-❌ Description: "Unit 1 description" (should not mention unit number)
-
-Return JSON (EXACT FORMAT):
-{
-  "titles": ["Title 1", "Title 2", ..., "Title ${unitCount}"],
-  "descriptions": ["Description 1", "Description 2", ..., "Description ${unitCount}"]
-}
-
-EXAMPLE RESPONSE FORMAT:
-{
-  "titles": [
-    "การทักทายและการแนะนำตัว",
-    "คำศัพท์เกี่ยวกับครอบครัว",
-    "การใช้คำกริยาในประโยค",
-    "การสร้างประโยคพื้นฐาน"
-  ],
-  "descriptions": [
-    "เรียนรู้วิธีการทักทายและแนะนำตัวในสถานการณ์ต่างๆ",
-    "ศึกษาคำศัพท์เกี่ยวกับสมาชิกในครอบครัวและความสัมพันธ์",
-    "เข้าใจการใช้คำกริยาในประโยคและรูปแบบต่างๆ",
-    "ฝึกสร้างประโยคพื้นฐานด้วยโครงสร้างที่ถูกต้อง"
-  ]
-}`
-
-	const response = await createOpenAICall<{
-		titles: string[]
-		descriptions: string[]
-	}>({
-		prompt,
-		imageUrls,
-		fileUrls,
-	})
-
-	if (
-		!response.titles ||
-		!Array.isArray(response.titles) ||
-		response.titles.length !== unitCount ||
-		!response.descriptions ||
-		!Array.isArray(response.descriptions) ||
-		response.descriptions.length !== unitCount
-	) {
-		throw new Error(
-			`Failed to generate ${unitCount} unit titles and descriptions. Got ${response.titles?.length ?? 0} titles and ${response.descriptions?.length ?? 0} descriptions.`,
-		)
-	}
-
-	// Clean titles: Remove any unwanted prefixes/suffixes
-	const cleanedTitles = response.titles.map((title) => {
-		let cleaned = title.trim()
-		// Remove "Unit X:", "Unit X -", "Game X:" prefixes
-		cleaned = cleaned.replace(/^(Unit\s+\d+[:-\s]+|Game\s+\d+[:-\s]+)/i, "")
-		// Remove difficulty suffixes in parentheses like "(easy)", "(medium)", "(hard)"
-		cleaned = cleaned.replace(
-			/\s*\(easy\)|\s*\(medium\)|\s*\(hard\)|\s*\(ง่าย\)|\s*\(ปานกลาง\)|\s*\(ยาก\)$/i,
-			"",
-		)
-		// Remove trailing parentheses with partial text like "(medium"
-		cleaned = cleaned.replace(/\s*\([^)]*$/, "")
-		return cleaned.trim()
-	})
-
-	// Clean descriptions: Remove any unwanted prefixes/suffixes
-	const cleanedDescriptions = response.descriptions.map((desc) => {
-		let cleaned = desc.trim()
-		// Remove "Unit X:" prefixes if any
-		cleaned = cleaned.replace(/^(Unit\s+\d+[:-\s]+)/i, "")
-		return cleaned.trim()
-	})
-
-	return {
-		titles: cleanedTitles,
-		descriptions: cleanedDescriptions,
-	}
-}
+// ===================================================================
+// TWO-PASS WORKFLOW: Phase 2 - Generate Games
+// ===================================================================
 
 /**
  * Generate games for a specific unit
+ * This is Phase 2 of the Two-Pass workflow
  */
 export async function generateGamesForUnit(params: {
 	processedResources: ProcessedResources
-	kurioTitle: string
-	kurioDescription: string
 	unitTitle: string
 	unitDescription: string
 	unitIndex: number
 	totalUnits: number
-	allUnitTitles: string[]
 	gamesPerUnit: number
 }): Promise<{ games: Game[] }> {
 	const {
 		processedResources,
-		kurioTitle,
-		kurioDescription,
 		unitTitle,
 		unitDescription,
 		unitIndex,
 		totalUnits,
-		allUnitTitles,
 		gamesPerUnit,
 	} = params
 
-	const { fullTextContent, fileUrls, imageUrls } = processedResources
-
-	const allTitlesContext = allUnitTitles
-		.map((title, idx) => `${idx + 1}. ${title}`)
-		.join("\n")
+	const { textContent, imageFilePaths, fileFilePaths } = processedResources
 
 	const prompt = `Create ${gamesPerUnit} educational games for this unit:
 
-Course Context:
-- Course Title: "${kurioTitle}"
-- Course Description: "${kurioDescription}"
+Unit ${unitIndex + 1} of ${totalUnits}: "${unitTitle}"
+Unit Description: "${unitDescription}"
 
-Unit Context:
-- Unit Title: "${unitTitle}"
-- Unit Description: "${unitDescription}"
-- Position: Unit ${unitIndex + 1} of ${totalUnits}
+Content:
+${textContent}
 
-All Units in Course (for context continuity):
-${allTitlesContext}
+Create exactly ${gamesPerUnit} games that test knowledge about "${unitTitle}":
+- Mix game types: quiz, matching, fill_blank, multiple_choice
+- Mix difficulty: easy, medium, hard
+- All content must relate to "${unitTitle}"
+- NO "Unit X:" or "Game X:" prefixes in titles
+- Progressive difficulty
 
-CRITICAL CONTENT REQUIREMENTS:
-- ALL games MUST align with the course theme: "${kurioTitle}"
-- Games should help achieve the course goal: "${kurioDescription}"
-- ALL games MUST align with the unit description: "${unitDescription}"
-- Games should help achieve the unit learning objective: "${unitDescription}"
-- ALL games MUST be directly related to the unit title: "${unitTitle}"
-- Game content (questions, text, items) MUST focus on the topic: "${unitTitle}"
-- Extract content from the provided resources that specifically relates to "${unitTitle}"
-- Each game should test or practice knowledge about "${unitTitle}"
-- DO NOT create generic games - they must be specific to this unit's topic
-- Games must build on previous units' content progressively
-- Content must be sequential and continuous
-- NO duplicate content from previous units
-- Each game should advance the learning from previous units
+Game Schemas:
 
-${fullTextContent}
-${fileUrls.length > 0 ? `\n\nIMPORTANT: Analyze the provided file(s) and extract content that is SPECIFICALLY related to the unit title "${unitTitle}" and unit description "${unitDescription}". Focus on sections that discuss or teach about "${unitTitle}".` : ""}
-
-CRITICAL TITLE REQUIREMENTS FOR GAMES:
-- ABSOLUTELY NO prefixes: NO "Unit", "Unit X", "Unit X:", "Unit X -", "Game X", "Game X:", "Game X -" in titles
-- NO suffixes: NO difficulty indicators like "(easy)", "(medium)", "(hard)" in parentheses
-- NO unit numbers or references: NO "Unit 3", "Unit 4", or any mention of unit number
-- Clean titles: Just describe what the game teaches or tests about "${unitTitle}"
-- Titles should be concise and descriptive (max 60 characters)
-- Title should reflect the specific topic of "${unitTitle}", not generic game types
-
-CORRECT TITLE EXAMPLES (for unit "${unitTitle}"):
-✅ "เติมคำในช่องว่าง" (if unit is about vocabulary)
-✅ "เลือกคำตอบที่ถูกต้อง" (if unit is about grammar)
-✅ "จับคู่คำศัพท์กับความหมาย" (if unit is about vocabulary)
-✅ "ประธานในประโยค" (if unit is about sentence structure)
-
-WRONG TITLE EXAMPLES:
-❌ "Unit 3 - เติมคำในช่องว่าง" (has "Unit" prefix)
-❌ "Unit 4 Game 9: ประธานในประโยค" (has "Unit" and "Game" prefix)
-❌ "เติมคำในช่องว่าง (easy)" (has difficulty suffix)
-❌ "Game 1: เลือกคำตอบ" (has "Game" prefix)
-❌ "Unit 1: การทักทาย" (has "Unit" prefix)
-❌ "Unit การทักทาย" (has "Unit" word)
-
-IMPORTANT: The title should describe what the game teaches about "${unitTitle}", NOT include the word "Unit" anywhere.
-
-Create exactly ${gamesPerUnit} games about "${unitTitle}" (${unitDescription}):
-- Mix: quiz, matching, fill_blank, multiple_choice (distribute evenly)
-- Difficulty: easy, medium, hard (distribute evenly)
-- ALL content must be about "${unitTitle}" topic
-- Progressive content building on previous units
-- Each game should test different aspects of "${unitTitle}"
-
-GAME SCHEMAS (EXACT FORMAT):
-
-1. MULTIPLE_CHOICE:
+1. QUIZ:
 {
-  "title": "คำอธิบายของเกมเกี่ยวกับหัวข้อ unit (ไม่มีคำว่า Unit/Game นำหน้า, ไม่มี difficulty suffix)",
-  "gameType": "multiple_choice",
-  "difficultyLevel": "easy",
+  "title": "Game description (no prefixes)",
+  "gameType": "quiz",
+  "difficultyLevel": "easy|medium|hard",
   "content": {
-    "question": "คำถามที่เกี่ยวกับหัวข้อ unit โดยตรง",
-    "options": ["ตัวเลือก A", "ตัวเลือก B", "ตัวเลือก C", "ตัวเลือก D"],
-    "correctAnswer": 0
+    "question": "Question about ${unitTitle}?",
+    "correctAnswer": "Answer"
   }
 }
 
-2. QUIZ:
+2. MULTIPLE_CHOICE:
 {
-  "title": "คำอธิบายของเกมเกี่ยวกับหัวข้อ unit (ไม่มีคำว่า Unit/Game นำหน้า, ไม่มี difficulty suffix)",
-  "gameType": "quiz",
-  "difficultyLevel": "medium",
+  "title": "Game description",
+  "gameType": "multiple_choice",
+  "difficultyLevel": "easy|medium|hard",
   "content": {
-    "question": "คำถามที่เกี่ยวกับหัวข้อ unit โดยตรง",
-    "correctAnswer": "คำตอบที่ถูกต้องเกี่ยวกับหัวข้อ unit"
+    "question": "Question?",
+    "options": ["A", "B", "C", "D"],
+    "correctAnswer": 0
   }
 }
 
 3. FILL_BLANK:
 {
-  "title": "คำอธิบายของเกมเกี่ยวกับหัวข้อ unit (ไม่มีคำว่า Unit/Game นำหน้า, ไม่มี difficulty suffix)",
+  "title": "Game description",
   "gameType": "fill_blank",
-  "difficultyLevel": "hard",
+  "difficultyLevel": "easy|medium|hard",
   "content": {
-    "text": "ประโยคเกี่ยวกับหัวข้อ unit ที่มี ___ ช่องว่าง ___ หลายจุด",
-    "blanks": [
-      {"answer": "คำตอบสำหรับช่องว่างแรกที่เกี่ยวกับหัวข้อ unit"},
-      {"answer": "คำตอบสำหรับช่องว่างที่สองที่เกี่ยวกับหัวข้อ unit"}
-    ]
+    "text": "Text with ___ blanks",
+    "blanks": [{"answer": "word1"}, {"answer": "word2"}]
   }
 }
 
 4. MATCHING:
 {
-  "title": "คำอธิบายของเกมเกี่ยวกับหัวข้อ unit (ไม่มีคำว่า Unit/Game นำหน้า, ไม่มี difficulty suffix)",
+  "title": "Game description",
   "gameType": "matching",
-  "difficultyLevel": "easy",
+  "difficultyLevel": "easy|medium|hard",
   "content": {
-    "leftItems": ["รายการซ้าย 1 ที่เกี่ยวกับหัวข้อ unit", "รายการซ้าย 2 ที่เกี่ยวกับหัวข้อ unit"],
-    "rightItems": ["รายการขวา 1 ที่เกี่ยวกับหัวข้อ unit", "รายการขวา 2 ที่เกี่ยวกับหัวข้อ unit"],
+    "leftItems": ["Item 1", "Item 2"],
+    "rightItems": ["Match 1", "Match 2"],
     "correctPairs": [
-      {"left": "รายการซ้าย 1 ที่เกี่ยวกับหัวข้อ unit", "right": "รายการขวา 1 ที่เกี่ยวกับหัวข้อ unit"},
-      {"left": "รายการซ้าย 2 ที่เกี่ยวกับหัวข้อ unit", "right": "รายการขวา 2 ที่เกี่ยวกับหัวข้อ unit"}
+      {"left": "Item 1", "right": "Match 1"},
+      {"left": "Item 2", "right": "Match 2"}
     ]
   }
 }
 
-Return JSON (EXACT FORMAT - NO COMMENTS):
+Return JSON:
 {
   "games": [
-    {
-      "title": "string (clean, no prefixes/suffixes)",
-      "gameType": "quiz|matching|fill_blank|multiple_choice",
-      "difficultyLevel": "easy|medium|hard",
-      "content": { /* see schemas above */ }
-    }
-    /* ... exactly ${gamesPerUnit} games total */
+    { /* game 1 */ },
+    { /* game 2 */ },
+    ...
   ]
-}
+}`
 
-EXAMPLE RESPONSE FORMAT (for unit "${unitTitle}"):
-{
-  "games": [
-    {
-      "title": "เติมคำในช่องว่าง",
-      "gameType": "fill_blank",
-      "difficultyLevel": "easy",
-      "content": {
-        "text": "เนื้อหาที่เกี่ยวกับ ${unitTitle} มี ___ ช่องว่าง",
-        "blanks": [{"answer": "คำตอบที่เกี่ยวกับ ${unitTitle}"}]
-      }
-    },
-    {
-      "title": "เลือกคำตอบที่ถูกต้อง",
-      "gameType": "multiple_choice",
-      "difficultyLevel": "medium",
-      "content": {
-        "question": "คำถามที่เกี่ยวกับ ${unitTitle}?",
-        "options": ["ตัวเลือกที่เกี่ยวกับ ${unitTitle} 1", "ตัวเลือกที่เกี่ยวกับ ${unitTitle} 2", "ตัวเลือกที่เกี่ยวกับ ${unitTitle} 3", "ตัวเลือกที่เกี่ยวกับ ${unitTitle} 4"],
-        "correctAnswer": 0
-      }
-    },
-    {
-      "title": "จับคู่คำศัพท์",
-      "gameType": "matching",
-      "difficultyLevel": "hard",
-      "content": {
-        "leftItems": ["คำศัพท์ที่เกี่ยวกับ ${unitTitle} 1", "คำศัพท์ที่เกี่ยวกับ ${unitTitle} 2"],
-        "rightItems": ["ความหมายที่เกี่ยวกับ ${unitTitle} 1", "ความหมายที่เกี่ยวกับ ${unitTitle} 2"],
-        "correctPairs": [
-          {"left": "คำศัพท์ที่เกี่ยวกับ ${unitTitle} 1", "right": "ความหมายที่เกี่ยวกับ ${unitTitle} 1"},
-          {"left": "คำศัพท์ที่เกี่ยวกับ ${unitTitle} 2", "right": "ความหมายที่เกี่ยวกับ ${unitTitle} 2"}
-        ]
-      }
-    },
-    {
-      "title": "ตอบคำถาม",
-      "gameType": "quiz",
-      "difficultyLevel": "easy",
-      "content": {
-        "question": "คำถามเกี่ยวกับ ${unitTitle}?",
-        "correctAnswer": "คำตอบที่เกี่ยวกับ ${unitTitle}"
-      }
-    }
-  ]
-}
-
-REMEMBER:
-- Title must NOT contain "Unit" anywhere
-- All content must be about "${unitTitle}"
-- Title should describe what the game teaches about "${unitTitle}"`
-
-	const response = await createOpenAICall<{ games: Game[] }>({
+	const response = await createGeminiCall<{ games: Game[] }>({
 		prompt,
-		imageUrls,
-		fileUrls,
+		imageFilePaths,
+		fileFilePaths,
 	})
 
 	if (!response.games || !Array.isArray(response.games)) {
@@ -533,46 +214,20 @@ REMEMBER:
 		)
 	}
 
-	// Clean game titles: Remove any unwanted prefixes/suffixes
-	const cleanedGames = response.games.map((game) => {
-		let cleanedTitle = game.title.trim()
-		// Remove "Unit X:", "Unit X -", "Game X:" prefixes
-		cleanedTitle = cleanedTitle.replace(
-			/^(Unit\s+\d+[:-\s]+|Game\s+\d+[:-\s]+)/i,
-			"",
-		)
-		// Remove "Unit" word at the beginning (with or without number)
-		cleanedTitle = cleanedTitle.replace(/^Unit\s+/i, "")
-		// Remove "Unit X" anywhere in the title (more aggressive)
-		cleanedTitle = cleanedTitle.replace(/\bUnit\s+\d+\b/gi, "")
-		// Remove standalone "Unit" word anywhere
-		cleanedTitle = cleanedTitle.replace(/\bUnit\b/gi, "")
-		// Remove "Game X:" prefixes
-		cleanedTitle = cleanedTitle.replace(/^Game\s+\d+[:-\s]+/i, "")
-		// Remove difficulty suffixes in parentheses like "(easy)", "(medium)", "(hard)"
-		cleanedTitle = cleanedTitle.replace(
-			/\s*\(easy\)|\s*\(medium\)|\s*\(hard\)|\s*\(ง่าย\)|\s*\(ปานกลาง\)|\s*\(ยาก\)$/i,
-			"",
-		)
-		// Remove trailing parentheses with partial text like "(medium"
-		cleanedTitle = cleanedTitle.replace(/\s*\([^)]*$/, "")
-		// Clean up multiple spaces
-		cleanedTitle = cleanedTitle.replace(/\s+/g, " ")
+	// Clean game titles
+	const cleanedGames = response.games.map((game) => ({
+		...game,
+		title: game.title
+			.replace(/^(Unit\s+\d+[:-\s]+|Game\s+\d+[:-\s]+)/i, "")
+			.replace(/\s*\(easy\)|\s*\(medium\)|\s*\(hard\)$/i, "")
+			.trim(),
+	}))
 
-		return {
-			...game,
-			title: cleanedTitle.trim(),
-		}
-	})
-
-	return {
-		games: cleanedGames,
-	}
+	return { games: cleanedGames }
 }
 
 /**
  * Generate games for all units in parallel
- * Uses Promise.allSettled to handle errors gracefully
  */
 export async function generateGamesForAllUnits(params: {
 	insertedUnits: Array<{
@@ -582,21 +237,14 @@ export async function generateGamesForAllUnits(params: {
 		order_index: number
 	}>
 	processedResources: ProcessedResources
-	kurioTitle: string
-	kurioDescription: string
-	unitTitles: string[]
 	gamesPerUnit: number
 }): Promise<{
 	successfulUnits: Array<{ unitId: string; games: Game[] }>
 	failedUnitIds: string[]
-	totalGames: number
 }> {
 	const {
 		insertedUnits,
 		processedResources,
-		kurioTitle,
-		kurioDescription,
-		unitTitles,
 		gamesPerUnit,
 	} = params
 
@@ -605,13 +253,10 @@ export async function generateGamesForAllUnits(params: {
 		insertedUnits.map(async (unit) => {
 			const games = await generateGamesForUnit({
 				processedResources,
-				kurioTitle,
-				kurioDescription,
 				unitTitle: unit.title,
 				unitDescription: unit.description,
 				unitIndex: unit.order_index,
 				totalUnits: insertedUnits.length,
-				allUnitTitles: unitTitles,
 				gamesPerUnit,
 			})
 
@@ -625,15 +270,10 @@ export async function generateGamesForAllUnits(params: {
 	// Separate successful and failed units
 	const successfulUnits: Array<{ unitId: string; games: Game[] }> = []
 	const failedUnitIds: string[] = []
-	let totalGames = 0
 
 	unitResults.forEach((result, index) => {
 		if (result.status === "fulfilled") {
-			successfulUnits.push({
-				unitId: result.value.unitId,
-				games: result.value.games,
-			})
-			totalGames += result.value.games.length
+			successfulUnits.push(result.value)
 		} else {
 			const unit = insertedUnits[index]
 			if (unit) {
@@ -650,14 +290,11 @@ export async function generateGamesForAllUnits(params: {
 	return {
 		successfulUnits,
 		failedUnitIds,
-		totalGames,
 	}
 }
 
 /**
- * Insert games and update unit statuses using batch operations
- * Much faster than individual inserts/updates
- * @param sql - Database connection (required for all database operations)
+ * Insert games and update unit statuses
  */
 export async function insertGamesAndUpdateStatuses(params: {
 	successfulUnits: Array<{ unitId: string; games: Game[] }>
@@ -665,7 +302,7 @@ export async function insertGamesAndUpdateStatuses(params: {
 }): Promise<{ totalGamesInserted: number }> {
 	const { successfulUnits, failedUnitIds } = params
 
-	// Flatten all games from all units into a single array
+	// Flatten all games
 	const gamesToInsert: Array<{
 		unitId: string
 		title: string
@@ -690,7 +327,7 @@ export async function insertGamesAndUpdateStatuses(params: {
 		})
 	})
 
-	// Batch insert all games at once
+	// Batch insert games
 	if (gamesToInsert.length > 0) {
 		await insertGamesBatch(gamesToInsert)
 		log("Games batch inserted", { totalGames: gamesToInsert.length })
@@ -714,515 +351,5 @@ export async function insertGamesAndUpdateStatuses(params: {
 
 	return {
 		totalGamesInserted: gamesToInsert.length,
-	}
-}
-
-// ===================================================================
-// Pre-processing Functions (PHASE 0)
-// ===================================================================
-
-/**
- * Pre-process resources: Summarize and create structure
- * This runs once before all other AI generations
- */
-export async function preprocessResources(params: {
-	processedResources: ProcessedResources
-}): Promise<{
-	summary: string
-}> {
-	const { processedResources } = params
-	const { fullTextContent, fileUrls, imageUrls } = processedResources
-
-	const prompt = `You are an educational content analyzer. Analyze the provided educational content and create a comprehensive summary that will be used to generate course titles, descriptions, and unit structures.
-
-Content:
-${fullTextContent}
-${fileUrls.length > 0 ? `\n\nIMPORTANT: Analyze the provided file(s) (PDF/document) and extract all relevant content.` : ""}
-${imageUrls.length > 0 ? "\nAnalyze provided images for context.\n" : ""}
-
-Requirements:
-- Summary: Comprehensive overview of the entire content (2-3 paragraphs, max 500 words)
-- Include main topics, key learning points, and important concepts
-- Make it clear and structured so it can be used to generate course titles, descriptions, and unit structures
-- Focus on educational value and learning objectives
-
-Return JSON:
-{
-  "summary": "Comprehensive summary here..."
-}`
-
-	const response = await createOpenAICall<{
-		summary: string
-	}>({
-		prompt,
-		imageUrls,
-		fileUrls,
-	})
-
-	if (!response.summary) {
-		throw new Error("Failed to preprocess resources")
-	}
-
-	return {
-		summary: response.summary.trim(),
-	}
-}
-
-// ===================================================================
-// Summary-based Generation Functions (PHASE 1 & 3)
-// ===================================================================
-
-/**
- * Generate Kurio title and description using pre-processed summary
- */
-export async function generateKurioInfoWithSummary(params: {
-	summary: string
-}): Promise<{ title: string; description: string }> {
-	const { summary } = params
-
-	const prompt = `Based on this educational content summary, create a compelling course title and description:
-
-Summary:
-${summary}
-
-Requirements:
-- Title: Short, engaging, and descriptive (max 60 characters)
-- Description: 2-3 sentences explaining what students will learn (max 200 characters)
-- Title should capture the essence of the entire course based on the summary
-- Make it appealing and educational
-- Focus on the main learning objectives and value proposition
-
-Return JSON:
-{
-  "title": "Course Title Here",
-  "description": "Course description here..."
-}`
-
-	const response = await createOpenAICall<{
-		title: string
-		description: string
-	}>({
-		prompt,
-		imageUrls: [],
-		fileUrls: [],
-	})
-
-	if (!response.title || !response.description) {
-		throw new Error("Failed to generate kurio info")
-	}
-
-	return {
-		title: response.title.trim(),
-		description: response.description.trim(),
-	}
-}
-
-/**
- * Generate unit titles and descriptions using pre-processed summary
- */
-export async function generateUnitTitlesAndDescriptionsWithSummary(params: {
-	summary: string
-	unitCount: number
-}): Promise<{ titles: string[]; descriptions: string[] }> {
-	const { summary, unitCount } = params
-
-	const prompt = `Create exactly ${unitCount} educational unit titles and descriptions from this content summary:
-
-Summary:
-${summary}
-
-CRITICAL TITLE REQUIREMENTS:
-- Exactly ${unitCount} unique, descriptive titles
-- NO prefixes: NO "Unit 1:", "Unit 2:", "Unit X -", or any numbering
-- NO suffixes: NO difficulty indicators like "(easy)", "(medium)", "(hard)" in parentheses
-- NO game indicators: NO "Game 1:", "Game X:" in the title
-- Clean titles: Just the topic/subject name only
-- Progressive and sequential (each builds on previous)
-- NO duplicates - each title must be unique
-- Each title should represent a distinct learning topic
-- Titles should flow logically from basic to advanced
-- Base titles on the main topics and concepts mentioned in the summary
-
-CRITICAL DESCRIPTION REQUIREMENTS:
-- Exactly ${unitCount} descriptions (one for each title)
-- Each description should be 1-2 sentences explaining what students will learn in that unit
-- Descriptions should be specific to the unit title and relate to the summary content
-- Max 200 characters per description
-- Focus on learning objectives and educational value
-
-CORRECT EXAMPLES:
-✅ Title: "การทักทายและการแนะนำตัว"
-✅ Description: "เรียนรู้วิธีการทักทายและแนะนำตัวในสถานการณ์ต่างๆ"
-
-✅ Title: "คำศัพท์เกี่ยวกับครอบครัว"
-✅ Description: "ศึกษาคำศัพท์เกี่ยวกับสมาชิกในครอบครัวและความสัมพันธ์"
-
-WRONG EXAMPLES:
-❌ Title: "Unit 1: การทักทาย"
-❌ Title: "การทักทาย (easy)"
-❌ Description: "Unit 1 description" (should not mention unit number)
-
-Return JSON (EXACT FORMAT):
-{
-  "titles": ["Title 1", "Title 2", ..., "Title ${unitCount}"],
-  "descriptions": ["Description 1", "Description 2", ..., "Description ${unitCount}"]
-}`
-
-	const response = await createOpenAICall<{
-		titles: string[]
-		descriptions: string[]
-	}>({
-		prompt,
-		imageUrls: [],
-		fileUrls: [],
-	})
-
-	if (
-		!response.titles ||
-		!Array.isArray(response.titles) ||
-		response.titles.length !== unitCount ||
-		!response.descriptions ||
-		!Array.isArray(response.descriptions) ||
-		response.descriptions.length !== unitCount
-	) {
-		throw new Error(
-			`Failed to generate ${unitCount} unit titles and descriptions. Got ${response.titles?.length ?? 0} titles and ${response.descriptions?.length ?? 0} descriptions.`,
-		)
-	}
-
-	// Clean titles: Remove any unwanted prefixes/suffixes
-	const cleanedTitles = response.titles.map((title) => {
-		let cleaned = title.trim()
-		cleaned = cleaned.replace(/^(Unit\s+\d+[:-\s]+|Game\s+\d+[:-\s]+)/i, "")
-		cleaned = cleaned.replace(
-			/\s*\(easy\)|\s*\(medium\)|\s*\(hard\)|\s*\(ง่าย\)|\s*\(ปานกลาง\)|\s*\(ยาก\)$/i,
-			"",
-		)
-		cleaned = cleaned.replace(/\s*\([^)]*$/, "")
-		return cleaned.trim()
-	})
-
-	// Clean descriptions: Remove any unwanted prefixes/suffixes
-	const cleanedDescriptions = response.descriptions.map((desc) => {
-		let cleaned = desc.trim()
-		cleaned = cleaned.replace(/^(Unit\s+\d+[:-\s]+)/i, "")
-		return cleaned.trim()
-	})
-
-	return {
-		titles: cleanedTitles,
-		descriptions: cleanedDescriptions,
-	}
-}
-
-/**
- * Generate games for a specific unit using pre-processed summary
- * NOTE: Does NOT receive kurioTitle or kurioDescription - focuses on unit only
- */
-export async function generateGamesForUnitWithSummary(params: {
-	summary: string
-	structure: {
-		outline: string[]
-		topics: string[]
-		keyPoints: string[]
-	}
-	unitTitle: string
-	unitDescription: string
-	unitIndex: number
-	totalUnits: number
-	allUnitTitles: string[]
-	gamesPerUnit: number
-	processedResources: ProcessedResources
-}): Promise<{ games: Game[] }> {
-	const {
-		summary,
-		structure,
-		unitTitle,
-		unitDescription,
-		unitIndex,
-		totalUnits,
-		allUnitTitles,
-		gamesPerUnit,
-		processedResources,
-	} = params
-
-	const { fileUrls, imageUrls } = processedResources
-
-	const structureText = `
-Outline:
-${structure.outline.map((item, i) => `${i + 1}. ${item}`).join("\n")}
-
-Topics:
-${structure.topics.join(", ")}
-
-Key Points:
-${structure.keyPoints.map((point, i) => `${i + 1}. ${point}`).join("\n")}`
-
-	const allTitlesContext = allUnitTitles
-		.map((title, idx) => `${idx + 1}. ${title}`)
-		.join("\n")
-
-	const prompt = `Create ${gamesPerUnit} educational games for this unit:
-
-Unit Context:
-- Unit Title: "${unitTitle}"
-- Unit Description: "${unitDescription}"
-- Position: Unit ${unitIndex + 1} of ${totalUnits}
-
-All Units in Course (for context continuity):
-${allTitlesContext}
-
-Content Summary:
-${summary}
-
-Content Structure:
-${structureText}
-${fileUrls.length > 0 ? `\n\nNote: Additional files are available for context.` : ""}
-${imageUrls.length > 0 ? "\nNote: Images are available for context.\n" : ""}
-
-CRITICAL CONTENT REQUIREMENTS:
-- ALL games MUST align with the unit description: "${unitDescription}"
-- Games should help achieve the unit learning objective: "${unitDescription}"
-- ALL games MUST be directly related to the unit title: "${unitTitle}"
-- Game content (questions, text, items) MUST focus on the topic: "${unitTitle}"
-- Extract content from the summary and structure that specifically relates to "${unitTitle}"
-- Each game should test or practice knowledge about "${unitTitle}"
-- DO NOT create generic games - they must be specific to this unit's topic
-- Games must build on previous units' content progressively
-- Content must be sequential and continuous
-- NO duplicate content from previous units
-- Each game should advance the learning from previous units
-
-CRITICAL TITLE REQUIREMENTS FOR GAMES:
-- ABSOLUTELY NO prefixes: NO "Unit", "Unit X", "Unit X:", "Unit X -", "Game X", "Game X:", "Game X -" in titles
-- NO suffixes: NO difficulty indicators like "(easy)", "(medium)", "(hard)" in parentheses
-- NO unit numbers or references: NO "Unit 3", "Unit 4", or any mention of unit number
-- Clean titles: Just describe what the game teaches or tests about "${unitTitle}"
-- Titles should be concise and descriptive (max 60 characters)
-- Title should reflect the specific topic of "${unitTitle}", not generic game types
-
-CORRECT TITLE EXAMPLES (for unit "${unitTitle}"):
-✅ "เติมคำในช่องว่าง" (if unit is about vocabulary)
-✅ "เลือกคำตอบที่ถูกต้อง" (if unit is about grammar)
-✅ "จับคู่คำศัพท์กับความหมาย" (if unit is about vocabulary)
-✅ "ประธานในประโยค" (if unit is about sentence structure)
-
-WRONG TITLE EXAMPLES:
-❌ "Unit 3 - เติมคำในช่องว่าง" (has "Unit" prefix)
-❌ "Unit 4 Game 9: ประธานในประโยค" (has "Unit" and "Game" prefix)
-❌ "เติมคำในช่องว่าง (easy)" (has difficulty suffix)
-❌ "Game 1: เลือกคำตอบ" (has "Game" prefix)
-
-IMPORTANT: The title should describe what the game teaches about "${unitTitle}", NOT include the word "Unit" anywhere.
-
-Create exactly ${gamesPerUnit} games about "${unitTitle}" (${unitDescription}):
-- Mix: quiz, matching, fill_blank, multiple_choice (distribute evenly)
-- Difficulty: easy, medium, hard (distribute evenly)
-- ALL content must be about "${unitTitle}" topic
-- Progressive content building on previous units
-- Each game should test different aspects of "${unitTitle}"
-
-GAME SCHEMAS (EXACT FORMAT):
-
-1. MULTIPLE_CHOICE:
-{
-  "title": "คำอธิบายของเกมเกี่ยวกับหัวข้อ unit (ไม่มีคำว่า Unit/Game นำหน้า, ไม่มี difficulty suffix)",
-  "gameType": "multiple_choice",
-  "difficultyLevel": "easy",
-  "content": {
-    "question": "คำถามที่เกี่ยวกับหัวข้อ unit โดยตรง",
-    "options": ["ตัวเลือก A", "ตัวเลือก B", "ตัวเลือก C", "ตัวเลือก D"],
-    "correctAnswer": 0
-  }
-}
-
-2. QUIZ:
-{
-  "title": "คำอธิบายของเกมเกี่ยวกับหัวข้อ unit (ไม่มีคำว่า Unit/Game นำหน้า, ไม่มี difficulty suffix)",
-  "gameType": "quiz",
-  "difficultyLevel": "medium",
-  "content": {
-    "question": "คำถามที่เกี่ยวกับหัวข้อ unit โดยตรง",
-    "correctAnswer": "คำตอบที่ถูกต้องเกี่ยวกับหัวข้อ unit"
-  }
-}
-
-3. FILL_BLANK:
-{
-  "title": "คำอธิบายของเกมเกี่ยวกับหัวข้อ unit (ไม่มีคำว่า Unit/Game นำหน้า, ไม่มี difficulty suffix)",
-  "gameType": "fill_blank",
-  "difficultyLevel": "hard",
-  "content": {
-    "text": "ประโยคเกี่ยวกับหัวข้อ unit ที่มี ___ ช่องว่าง ___ หลายจุด",
-    "blanks": [
-      {"answer": "คำตอบสำหรับช่องว่างแรกที่เกี่ยวกับหัวข้อ unit"},
-      {"answer": "คำตอบสำหรับช่องว่างที่สองที่เกี่ยวกับหัวข้อ unit"}
-    ]
-  }
-}
-
-4. MATCHING:
-{
-  "title": "คำอธิบายของเกมเกี่ยวกับหัวข้อ unit (ไม่มีคำว่า Unit/Game นำหน้า, ไม่มี difficulty suffix)",
-  "gameType": "matching",
-  "difficultyLevel": "easy",
-  "content": {
-    "leftItems": ["รายการซ้าย 1 ที่เกี่ยวกับหัวข้อ unit", "รายการซ้าย 2 ที่เกี่ยวกับหัวข้อ unit"],
-    "rightItems": ["รายการขวา 1 ที่เกี่ยวกับหัวข้อ unit", "รายการขวา 2 ที่เกี่ยวกับหัวข้อ unit"],
-    "correctPairs": [
-      {"left": "รายการซ้าย 1 ที่เกี่ยวกับหัวข้อ unit", "right": "รายการขวา 1 ที่เกี่ยวกับหัวข้อ unit"},
-      {"left": "รายการซ้าย 2 ที่เกี่ยวกับหัวข้อ unit", "right": "รายการขวา 2 ที่เกี่ยวกับหัวข้อ unit"}
-    ]
-  }
-}
-
-Return JSON (EXACT FORMAT - NO COMMENTS):
-{
-  "games": [
-    {
-      "title": "string (clean, no prefixes/suffixes)",
-      "gameType": "quiz|matching|fill_blank|multiple_choice",
-      "difficultyLevel": "easy|medium|hard",
-      "content": { /* see schemas above */ }
-    }
-    /* ... exactly ${gamesPerUnit} games total */
-  ]
-}
-
-REMEMBER:
-- Title must NOT contain "Unit" anywhere
-- All content must be about "${unitTitle}"
-- Title should describe what the game teaches about "${unitTitle}"`
-
-	const response = await createOpenAICall<{ games: Game[] }>({
-		prompt,
-		imageUrls,
-		fileUrls,
-	})
-
-	if (!response.games || !Array.isArray(response.games)) {
-		throw new Error("Failed to generate games array")
-	}
-
-	if (response.games.length !== gamesPerUnit) {
-		throw new Error(
-			`Expected ${gamesPerUnit} games, got ${response.games.length}`,
-		)
-	}
-
-	// Clean game titles: Remove any unwanted prefixes/suffixes
-	const cleanedGames = response.games.map((game) => {
-		let cleanedTitle = game.title.trim()
-		cleanedTitle = cleanedTitle.replace(
-			/^(Unit\s+\d+[:-\s]+|Game\s+\d+[:-\s]+)/i,
-			"",
-		)
-		cleanedTitle = cleanedTitle.replace(/^Unit\s+/i, "")
-		cleanedTitle = cleanedTitle.replace(/\bUnit\s+\d+\b/gi, "")
-		cleanedTitle = cleanedTitle.replace(/\bUnit\b/gi, "")
-		cleanedTitle = cleanedTitle.replace(/^Game\s+\d+[:-\s]+/i, "")
-		cleanedTitle = cleanedTitle.replace(
-			/\s*\(easy\)|\s*\(medium\)|\s*\(hard\)|\s*\(ง่าย\)|\s*\(ปานกลาง\)|\s*\(ยาก\)$/i,
-			"",
-		)
-		cleanedTitle = cleanedTitle.replace(/\s*\([^)]*$/, "")
-		cleanedTitle = cleanedTitle.replace(/\s+/g, " ")
-
-		return {
-			...game,
-			title: cleanedTitle.trim(),
-		}
-	})
-
-	return {
-		games: cleanedGames,
-	}
-}
-
-/**
- * Generate games for all units in parallel using pre-processed summary
- * NOTE: Does NOT receive kurioTitle or kurioDescription
- */
-export async function generateGamesForAllUnitsWithSummary(params: {
-	summary: string
-	structure: {
-		outline: string[]
-		topics: string[]
-		keyPoints: string[]
-	}
-	insertedUnits: Array<{
-		id: string
-		title: string
-		description: string
-		order_index: number
-	}>
-	unitTitles: string[]
-	gamesPerUnit: number
-	processedResources: ProcessedResources
-}): Promise<{
-	successfulUnits: Array<{ unitId: string; games: Game[] }>
-	failedUnitIds: string[]
-	totalGames: number
-}> {
-	const {
-		summary,
-		structure,
-		insertedUnits,
-		unitTitles,
-		gamesPerUnit,
-		processedResources,
-	} = params
-
-	// Generate games for all units in parallel
-	const unitResults = await Promise.allSettled(
-		insertedUnits.map(async (unit) => {
-			const games = await generateGamesForUnitWithSummary({
-				summary,
-				structure,
-				unitTitle: unit.title,
-				unitDescription: unit.description,
-				unitIndex: unit.order_index,
-				totalUnits: insertedUnits.length,
-				allUnitTitles: unitTitles,
-				gamesPerUnit,
-				processedResources,
-			})
-
-			return {
-				unitId: unit.id,
-				games: games.games,
-			}
-		}),
-	)
-
-	// Separate successful and failed units
-	const successfulUnits: Array<{ unitId: string; games: Game[] }> = []
-	const failedUnitIds: string[] = []
-	let totalGames = 0
-
-	unitResults.forEach((result, index) => {
-		if (result.status === "fulfilled") {
-			successfulUnits.push({
-				unitId: result.value.unitId,
-				games: result.value.games,
-			})
-			totalGames += result.value.games.length
-		} else {
-			const unit = insertedUnits[index]
-			if (unit) {
-				failedUnitIds.push(unit.id)
-				log("Unit game generation failed", {
-					unitId: unit.id,
-					unitTitle: unit.title,
-					error: result.reason,
-				})
-			}
-		}
-	})
-
-	return {
-		successfulUnits,
-		failedUnitIds,
-		totalGames,
 	}
 }

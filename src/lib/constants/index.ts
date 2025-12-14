@@ -24,7 +24,5 @@ export const PASSWORD_STRENGTH = {
 } as const
 
 export const AI_CONSTANTS = {
-	DEFAULT_MODEL: "gpt-5-nano-2025-08-07",
-
 	GAMES_PER_UNIT: 10,
 } as const

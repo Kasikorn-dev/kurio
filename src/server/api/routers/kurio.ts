@@ -63,6 +63,7 @@ export const kurioRouter = createTRPCRouter({
 						type: z.enum(["text", "file", "image"]),
 						content: z.string().optional(),
 						fileUrl: z.string().url().optional(),
+						filePath: z.string().optional(),
 						fileType: z.string().optional(),
 						orderIndex: z.number().int(),
 					}),
@@ -70,7 +71,6 @@ export const kurioRouter = createTRPCRouter({
 				autoGenEnabled: z.boolean().optional(),
 				autoGenThreshold: z.number().optional(),
 				unitCount: z.number().int().optional(),
-				aiModel: z.string().optional(),
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
@@ -84,7 +84,6 @@ export const kurioRouter = createTRPCRouter({
 					autoGenEnabled: input.autoGenEnabled ?? false,
 					autoGenThreshold: input.autoGenThreshold ?? 80,
 					unitCount: input.unitCount ?? null,
-					aiModel: input.aiModel,
 					status: input.unitCount ? "generating" : "ready", // Set to generating if unitCount provided
 				})
 				.returning()
@@ -104,6 +103,7 @@ export const kurioRouter = createTRPCRouter({
 						type: resource.type,
 						content: resource.content,
 						fileUrl: resource.fileUrl,
+						filePath: resource.filePath,
 						fileType: resource.fileType,
 						orderIndex: resource.orderIndex,
 					})),
@@ -113,11 +113,7 @@ export const kurioRouter = createTRPCRouter({
 			// If unitCount is provided, trigger background generation via Edge Function
 			if (input.unitCount && input.unitCount > 0) {
 				const supabaseAdmin = createSupabaseAdminClient()
-				const resources = input.resources.map((r) => ({
-					type: r.type,
-					content: r.content,
-					fileUrl: r.fileUrl,
-				}))
+			
 
 				// Call Edge Function in background (fire-and-forget)
 				// Don't await - let it run in background while we return immediately
@@ -125,11 +121,10 @@ export const kurioRouter = createTRPCRouter({
 					.invoke("generate-kurio-units", {
 						body: {
 							kurioId: newKurio.id,
-							resources,
+							resources: input.resources,
 							unitCount: input.unitCount,
 							gamesPerUnit: AI_CONSTANTS.GAMES_PER_UNIT,
 							userId: ctx.user.id,
-							aiModel: newKurio.aiModel,
 						},
 					})
 					.catch((error) => {

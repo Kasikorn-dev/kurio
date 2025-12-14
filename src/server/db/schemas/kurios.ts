@@ -28,10 +28,7 @@ export const kurios = createTable(
 		autoGenEnabled: d.boolean("auto_gen_enabled").default(true).notNull(),
 		autoGenThreshold: d.integer("auto_gen_threshold").default(80).notNull(),
 		unitCount: d.integer("unit_count"),
-		aiModel: d
-			.varchar("ai_model", { length: 50 })
-			.default("gpt-5-nano-2025-08-07")
-			.notNull(),
+		aiModel: d.varchar("ai_model", { length: 50 }),
 		status: kurioStatusEnum("status").default("draft").notNull(),
 		totalGames: d.integer("total_games").default(0).notNull(),
 		hasAutoGenTriggered: d

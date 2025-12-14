@@ -28,13 +28,18 @@ async function uploadFileToStorage(file: File): Promise<UploadResponse> {
 		throw new Error(error.error || "Failed to upload file")
 	}
 
-	return response.json()
+	const data = await response.json()
+
+	return data
 }
 
 export function useUploadKurioResource(): UseUploadKurioResourceReturn {
 	const mutation = useMutation({
 		mutationFn: uploadFileToStorage,
 		retry: 1, // Retry once on failure
+		onSuccess: (data: UploadResponse) => {
+			toast.success("File uploaded successfully")
+		},
 		onError: (error: Error) => {
 			toast.error(error.message)
 		},

@@ -23,29 +23,6 @@ export async function updateKurioProgress(params: {
 }
 
 // ===================================================================
-// Pre-processing Queries (PHASE 0)
-// ===================================================================
-
-/**
- * Update Kurio with pre-processed summary (PHASE 0)
- */
-export async function updateKurioWithPreprocessedData(params: {
-	kurioId: string
-	summary: string
-}) {
-	await sql`
-    UPDATE kurio 
-    SET 
-      summary = ${params.summary},
-      processed_at = NOW(),
-      generation_step = 'preprocessed',
-      generation_progress = 2,
-      updated_at = NOW()
-    WHERE id = ${params.kurioId}
-  `
-}
-
-// ===================================================================
 // Kurio Queries (PHASE 1)
 // ===================================================================
 
@@ -58,6 +35,7 @@ export async function updateKurioWithTitleAndDescription(params: {
 	title: string
 	description: string
 	unitCount: number
+	aiModel: string
 }) {
 	await sql`
     UPDATE kurio 
@@ -65,6 +43,7 @@ export async function updateKurioWithTitleAndDescription(params: {
       title = ${params.title},
       description = ${params.description},
       unit_count = ${params.unitCount},
+      ai_model = ${params.aiModel},
       status = 'generating_units'::kurio_status,
       generation_step = 'kurio',
       generation_progress = 5,
@@ -118,53 +97,12 @@ export async function updateKurioAfterUnitsCreated(params: {
   `
 }
 
-/**
- * Mark Kurio as ready (temporary for testing when PHASE 3 is disabled)
- */
-export async function markKurioAsReady(params: { kurioId: string }) {
-	await sql`
-    UPDATE kurio 
-    SET 
-      status = 'ready'::kurio_status,
-      generation_step = 'units',
-      generation_progress = 30,
-      updated_at = NOW()
-    WHERE id = ${params.kurioId}
-  `
-}
-
 // ===================================================================
-// Game Queries (PHASE 3)
+// Game Queries (PHASE 2)
 // ===================================================================
 
 /**
- * Insert a single game into the database (PHASE 3)
- * @deprecated Use insertGamesBatch for better performance
- */
-export async function insertGame(params: {
-	unitId: string
-	title: string
-	gameType: string
-	difficultyLevel: string
-	content: Record<string, unknown>
-	orderIndex: number
-}) {
-	await sql`
-    INSERT INTO game (unit_id, title, game_type, difficulty_level, content, order_index, created_at)
-    VALUES (
-      ${params.unitId},
-      ${params.title},
-      ${params.gameType}::game_type,
-      ${params.difficultyLevel}::game_difficulty_level,
-      ${JSON.stringify(params.content)}::jsonb,
-      ${params.orderIndex},
-      NOW()
-    )
-  `
-}
-
-/**
- * Insert multiple games in a single batch operation (PHASE 3)
+ * Insert multiple games in a single batch operation (PHASE 2)
  * Much faster than inserting games one by one
  */
 export async function insertGamesBatch(
@@ -194,21 +132,7 @@ export async function insertGamesBatch(
 }
 
 /**
- * Update unit status (PHASE 3)
- */
-export async function updateUnitStatus(params: {
-	unitId: string
-	status: "ready" | "error"
-}) {
-	await sql`
-    UPDATE unit 
-    SET status = ${params.status}::unit_status 
-    WHERE id = ${params.unitId}
-  `
-}
-
-/**
- * Batch update multiple unit statuses (PHASE 3)
+ * Batch update multiple unit statuses (PHASE 2)
  * Much faster than updating one by one
  */
 export async function updateUnitStatusesBatch(
@@ -225,7 +149,7 @@ export async function updateUnitStatusesBatch(
 }
 
 /**
- * Mark Kurio as complete after all games are generated (PHASE 3)
+ * Mark Kurio as complete after all games are generated (PHASE 2)
  * Also updates progress and units completed in a single query
  */
 export async function markKurioAsComplete(params: {
