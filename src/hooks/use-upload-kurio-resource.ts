@@ -37,7 +37,7 @@ export function useUploadKurioResource(): UseUploadKurioResourceReturn {
 	const mutation = useMutation({
 		mutationFn: uploadFileToStorage,
 		retry: 1, // Retry once on failure
-		onSuccess: (data: UploadResponse) => {
+		onSuccess: (_data: UploadResponse) => {
 			toast.success("File uploaded successfully")
 		},
 		onError: (error: Error) => {

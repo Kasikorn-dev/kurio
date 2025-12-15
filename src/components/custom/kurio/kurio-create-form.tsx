@@ -4,7 +4,7 @@ import { useState } from "react"
 import { toast } from "sonner"
 import { useNavigation } from "@/hooks/use-navigation"
 import { useUploadKurioResource } from "@/hooks/use-upload-kurio-resource"
-import { AI_CONSTANTS, UNIT_CONSTANTS } from "@/lib/constants"
+import { UNIT_CONSTANTS } from "@/lib/constants"
 import { useKurioStore } from "@/stores/kurio-store"
 import { api } from "@/trpc/react"
 import { KurioInput } from "./kurio-input"
@@ -27,7 +27,14 @@ export function KurioCreateForm() {
 	// Validate form inputs
 	const validateForm = () => {
 		const allResources = textContent.trim()
-			? [...resources, { type: "text" as const, content: textContent.trim(), orderIndex: resources.length }]
+			? [
+					...resources,
+					{
+						type: "text" as const,
+						content: textContent.trim(),
+						orderIndex: resources.length,
+					},
+				]
 			: resources
 
 		if (allResources.length === 0) {
@@ -46,12 +53,15 @@ export function KurioCreateForm() {
 		return Promise.all(
 			allResources.map(async (resource) => {
 				// Upload file if needed
-				if ((resource.type === "file" || resource.type === "image") && resource.file) {
-					const { url ,path } = await uploadKuiroResource(resource.file)
-					return { ...resource, fileUrl: url ,filePath:path}
+				if (
+					(resource.type === "file" || resource.type === "image") &&
+					resource.file
+				) {
+					const { url, path } = await uploadKuiroResource(resource.file)
+					return { ...resource, fileUrl: url, filePath: path }
 				}
 				return resource
-			})
+			}),
 		)
 	}
 
@@ -74,7 +84,9 @@ export function KurioCreateForm() {
 			toast.success("Creating your Kurio...")
 			navigate(`/kurio/${kurio.id}`)
 		} catch (error) {
-			toast.error(error instanceof Error ? error.message : "Failed to create Kurio")
+			toast.error(
+				error instanceof Error ? error.message : "Failed to create Kurio",
+			)
 		} finally {
 			setIsSubmitting(false)
 		}
@@ -83,18 +95,12 @@ export function KurioCreateForm() {
 	return (
 		<div className="flex w-full flex-col gap-4">
 			<KurioInput
-				isSubmitting={isSubmitting || isUploading}
+				isFileUploading={isUploading}
+				isSubmitting={isSubmitting}
 				onSubmit={handleSubmit}
 				onTextChange={setTextContent}
 				textValue={textContent}
 			/>
-			{(isUploading || isSubmitting) && (
-				<div className="text-center text-muted-foreground text-sm">
-					{isUploading
-						? "Uploading files..."
-						: "Generating games and content..."}
-				</div>
-			)}
 		</div>
 	)
 }

@@ -242,11 +242,7 @@ export async function generateGamesForAllUnits(params: {
 	successfulUnits: Array<{ unitId: string; games: Game[] }>
 	failedUnitIds: string[]
 }> {
-	const {
-		insertedUnits,
-		processedResources,
-		gamesPerUnit,
-	} = params
+	const { insertedUnits, processedResources, gamesPerUnit } = params
 
 	// Generate games for all units in parallel
 	const unitResults = await Promise.allSettled(

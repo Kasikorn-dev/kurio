@@ -6,7 +6,6 @@ import { log } from "./other.ts"
  * Uses Gemini REST API: https://ai.google.dev/gemini-api/docs/text-generation
  */
 
-
 /**
  * Download file from Supabase Storage and convert to base64
  */
@@ -30,7 +29,8 @@ async function downloadAndEncodeFile(
 
 		const buffer = await response.arrayBuffer()
 		const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)))
-		const mimeType = response.headers.get("content-type") || "application/octet-stream"
+		const mimeType =
+			response.headers.get("content-type") || "application/octet-stream"
 
 		return { base64, mimeType }
 	} catch (error) {
@@ -52,7 +52,10 @@ export async function createGeminiCall<T extends object>(params: {
 	const { prompt, imageFilePaths = [], fileFilePaths = [] } = params
 
 	// Build parts array for the content
-	const parts: Array<{ text?: string; inline_data?: { mime_type: string; data: string } }> = []
+	const parts: Array<{
+		text?: string
+		inline_data?: { mime_type: string; data: string }
+	}> = []
 
 	// Add text prompt
 	parts.push({ text: prompt })

@@ -2,11 +2,7 @@ import { TRPCError } from "@trpc/server"
 import { eq } from "drizzle-orm"
 import { z } from "zod"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
-import {
-	createTRPCRouter,
-	protectedProcedure,
-	publicProcedure,
-} from "@/server/api/trpc"
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc"
 import { userProfiles } from "@/server/db/schemas"
 
 export const authRouter = createTRPCRouter({

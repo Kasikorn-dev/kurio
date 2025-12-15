@@ -92,12 +92,13 @@ serve(async (req) => {
 			log("Phase 2 Starting: Generate Games")
 			const phase2StartTime = performance.now()
 
-			const { successfulUnits, failedUnitIds } =
-				await generateGamesForAllUnits({
+			const { successfulUnits, failedUnitIds } = await generateGamesForAllUnits(
+				{
 					insertedUnits,
 					processedResources,
 					gamesPerUnit,
-				})
+				},
+			)
 
 			// Insert games and update statuses
 			const { totalGamesInserted } = await insertGamesAndUpdateStatuses({

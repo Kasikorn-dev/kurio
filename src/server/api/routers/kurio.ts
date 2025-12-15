@@ -113,7 +113,6 @@ export const kurioRouter = createTRPCRouter({
 			// If unitCount is provided, trigger background generation via Edge Function
 			if (input.unitCount && input.unitCount > 0) {
 				const supabaseAdmin = createSupabaseAdminClient()
-			
 
 				// Call Edge Function in background (fire-and-forget)
 				// Don't await - let it run in background while we return immediately

@@ -13,6 +13,7 @@ import { KurioAutoGenControls } from "./kurio-auto-gen-controls"
 type KurioInputProps = {
 	onSubmit: () => void
 	isSubmitting?: boolean
+	isFileUploading?: boolean
 	textValue?: string
 	onTextChange?: (value: string) => void
 }
@@ -20,6 +21,7 @@ type KurioInputProps = {
 export function KurioInput({
 	onSubmit,
 	isSubmitting = false,
+	isFileUploading = false,
 	textValue = "",
 	onTextChange,
 }: KurioInputProps) {
@@ -264,6 +266,16 @@ export function KurioInput({
 					</Button>
 				</div>
 			</section>
+			{isFileUploading && (
+				<div className="text-center text-muted-foreground text-sm">
+					Uploading files...
+				</div>
+			)}
+			{isSubmitting && (
+				<div className="text-center text-muted-foreground text-sm">
+					Generating games and content...
+				</div>
+			)}
 		</div>
 	)
 }

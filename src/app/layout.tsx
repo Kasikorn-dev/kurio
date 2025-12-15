@@ -8,7 +8,7 @@ import { ErrorBoundary } from "@/components/custom/error-boundary"
 import { Toaster } from "@/components/ui/sonner"
 import { TRPCReactProvider } from "@/trpc/react"
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
 export const metadata: Metadata = {
 	title: "Kurio",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 	icons: [{ rel: "icon", url: "/favicon.ico" }],
 }
 
-const geist = Geist({
+const _geist = Geist({
 	subsets: ["latin"],
 	variable: "--font-geist-sans",
 })
