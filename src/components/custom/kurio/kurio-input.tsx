@@ -161,28 +161,6 @@ export function KurioInput({
 
 	return (
 		<div className="flex w-full flex-col gap-3">
-			{/* File Cards - Above input */}
-			{fileResources.length > 0 && (
-				<div className="max-h-[400px] overflow-y-auto">
-					<div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-						{fileResources.map((resource) => {
-							const resourceIndex = resources.indexOf(resource)
-							return (
-								<FileCard
-									content={resource.content}
-									fileName={resource.file?.name}
-									fileType={resource.fileType}
-									fileUrl={resource.fileUrl}
-									key={`${resource.type}-${resourceIndex}-${resource.fileUrl || resource.content || resource.file?.name}`}
-									onRemove={() => handleRemoveResource(resourceIndex)}
-									type={resource.type}
-								/>
-							)
-						})}
-					</div>
-				</div>
-			)}
-
 			{/* Main Input Area */}
 			<section
 				aria-label="Content input area"
@@ -266,6 +244,28 @@ export function KurioInput({
 					</Button>
 				</div>
 			</section>
+			{/* File Cards - Above input */}
+			{fileResources.length > 0 && (
+				<div className="max-h-[400px] overflow-y-auto p-4">
+					<div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+						{fileResources.map((resource) => {
+							const resourceIndex = resources.indexOf(resource)
+							return (
+								<FileCard
+									content={resource.content}
+									fileName={resource.file?.name}
+									fileType={resource.fileType}
+									fileUrl={resource.fileUrl}
+									key={`${resource.type}-${resourceIndex}-${resource.fileUrl || resource.content || resource.file?.name}`}
+									onRemove={() => handleRemoveResource(resourceIndex)}
+									type={resource.type}
+								/>
+							)
+						})}
+					</div>
+				</div>
+			)}
+
 			{isFileUploading && (
 				<div className="text-center text-muted-foreground text-sm">
 					Uploading files...
