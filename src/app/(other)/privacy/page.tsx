@@ -123,8 +123,8 @@ export default function PrivacyPage() {
 							When you upload content to Kurio, we use artificial intelligence
 							models to analyze and generate educational content. Your content
 							may be processed by third-party AI service providers (such as
-							OpenAI) to generate games, and learning materials. We ensure that
-							any third-party AI providers comply with appropriate data
+							Gemini AI) to generate games, and learning materials. We ensure
+							that any third-party AI providers comply with appropriate data
 							protection standards.
 						</p>
 					</section>

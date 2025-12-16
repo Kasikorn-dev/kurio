@@ -11,7 +11,6 @@ export const env = createEnv({
 		NODE_ENV: z
 			.enum(["development", "test", "production"])
 			.default("development"),
-		OPENAI_API_KEY: z.string().min(1),
 		SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
 	},
 
@@ -32,7 +31,6 @@ export const env = createEnv({
 	runtimeEnv: {
 		NODE_ENV: process.env.NODE_ENV,
 		SUPABASE_DB_URL: process.env.SUPABASE_DB_URL,
-		OPENAI_API_KEY: process.env.OPENAI_API_KEY,
 		SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
 		NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
 		NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
